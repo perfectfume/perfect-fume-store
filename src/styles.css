@@ -6,47 +6,76 @@
 
 body{
   font-family:Arial, sans-serif;
-  background:#0f0f14;
+  background:linear-gradient(135deg,#0b0b12,#141420,#1b1b2e);
   color:#fff;
+}
+
+a{
+  text-decoration:none;
 }
 
 .app{
   padding:20px;
 }
 
-.header{
+.hero{
   text-align:center;
-  margin-bottom:30px;
+  padding:40px 20px;
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:24px;
+  backdrop-filter:blur(12px);
 }
 
-.header h1{
+.hero h1{
+  font-size:42px;
   color:#7C6FE9;
-  font-size:34px;
+  margin-bottom:10px;
 }
 
-.header p{
-  color:#bbb;
-  margin-top:8px;
+.hero p{
+  color:#cfcfcf;
+  margin-bottom:20px;
+}
+
+.heroBtns{
+  display:flex;
+  gap:12px;
+  justify-content:center;
+  flex-wrap:wrap;
+}
+
+.heroBtns a{
+  background:#7C6FE9;
+  color:#fff;
+  padding:12px 18px;
+  border-radius:12px;
+  font-weight:bold;
+}
+
+.title{
+  margin:28px 0 16px;
+  font-size:28px;
 }
 
 .grid{
   display:grid;
   grid-template-columns:repeat(2,1fr);
-  gap:15px;
+  gap:16px;
 }
 
 .card{
   background:rgba(255,255,255,0.05);
   border:1px solid rgba(255,255,255,0.08);
-  border-radius:18px;
+  border-radius:20px;
   padding:18px;
   text-align:center;
-  backdrop-filter:blur(12px);
+  backdrop-filter:blur(10px);
 }
 
 .emoji{
-  font-size:42px;
-  margin-bottom:10px;
+  font-size:46px;
+  margin-bottom:12px;
 }
 
 .card h3{
@@ -55,27 +84,60 @@ body{
 
 .card p{
   color:#34D399;
+  font-size:20px;
+  font-weight:bold;
+  margin-bottom:10px;
+}
+
+.stock{
+  display:inline-block;
+  background:#ff9800;
+  color:#111;
+  padding:6px 10px;
+  border-radius:999px;
+  font-size:12px;
   font-weight:bold;
   margin-bottom:12px;
 }
 
-button{
+.buyBtn{
+  display:block;
   background:#7C6FE9;
-  border:none;
   color:#fff;
-  padding:10px 14px;
-  border-radius:10px;
-  width:100%;
+  padding:12px;
+  border-radius:12px;
+  margin-top:10px;
+  font-weight:bold;
+}
+
+.reviews{
+  margin-top:35px;
+  padding:24px;
+  background:rgba(255,255,255,0.04);
+  border-radius:22px;
+}
+
+.reviews h2{
+  margin-bottom:14px;
+}
+
+.reviews p{
+  color:#ddd;
+  margin:8px 0;
 }
 
 .footer{
   text-align:center;
   margin-top:30px;
-  color:#777;
+  color:#888;
 }
 
 @media(min-width:768px){
   .grid{
     grid-template-columns:repeat(4,1fr);
   }
-}
+
+  .hero h1{
+    font-size:56px;
+  }
+  }
