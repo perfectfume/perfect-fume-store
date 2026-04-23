@@ -28,7 +28,7 @@ export default function App() {
   return (
     <div className="app">
       <section className="hero">
-        <h1>Perfect Fume 😈</h1>
+        <h1>Perfect Fume</h1>
         <p>Luxury Fragrance at Affordable Price</p>
 
         <div className="heroBtns">
@@ -58,7 +58,7 @@ export default function App() {
       </section>
 
       <section className="reviews">
-        <h2>Customers Love Us ❤️</h2>
+        <h2>Customers Love Us</h2>
         <p>⭐️⭐️⭐️⭐️⭐️ “Amazing lasting fragrance!”</p>
         <p>⭐️⭐️⭐️⭐️⭐️ “Worth every rupee.”</p>
       </section>
