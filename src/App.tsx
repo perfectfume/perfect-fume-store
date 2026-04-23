@@ -33,7 +33,7 @@ export default function App() {
 
         <div className="heroBtns">
           <a href="https://www.instagram.com/prfectfumeofficial" target="_blank">Instagram</a>
-          <a href="https://wa.me/91YOURNUMBER" target="_blank">Order Now</a>
+          <a href="https://wa.me/918777789394" target="_blank">Order Now</a>
         </div>
       </section>
 
@@ -48,7 +48,7 @@ export default function App() {
             <span className="stock">Limited Stock</span>
             <a
               className="buyBtn"
-              href="https://wa.me/91YOURNUMBER"
+              href="https://wa.me/918777789394"
               target="_blank"
             >
               Buy Now
