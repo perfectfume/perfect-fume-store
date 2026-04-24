@@ -1,4 +1,5 @@
 // .env file theke URL ta tene nicche
+// @ts-ignore
 const API_URL = import.meta.env.VITE_API_URL;
 
 // 1. Backend theke Product Catalog anar function
