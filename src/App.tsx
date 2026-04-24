@@ -117,7 +117,7 @@ export default function App() {
   return (
     <div className="app">
       <section className="hero">
-        <h1>Perfect Fume 😈</h1>
+        <h1>Perfect Fume</h1>
         <p>Luxury Fragrance Crafted For Confidence</p>
 
         <input
