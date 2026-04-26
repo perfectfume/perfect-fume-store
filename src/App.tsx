@@ -1,18 +1,22 @@
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Home from './pages/Home';
-import Checkout from './pages/Checkout';
+import Navbar from './components/Navbar'; // File path thik na thakle ektu adjust kore niben
+import HomePage from './pages/Home';      // Ekhane apnar Home page
+import AdminPanel from './pages/Admin';   // Ekhane apnar Admin page
 
-function App() {
+const App = () => {
   return (
     <Router>
-      <div className="min-h-screen bg-[#050508]">
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/checkout" element={<Checkout />} />
-        </Routes>
-      </div>
+      {/* Navbar sob page-ei thakbe */}
+      <Navbar />
+      
+      {/* Routes: Kon link-e kon page dekhabe */}
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/admin" element={<AdminPanel />} />
+      </Routes>
     </Router>
   );
-}
+};
 
 export default App;
