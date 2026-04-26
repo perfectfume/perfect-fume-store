@@ -1,8 +1,28 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 const HomePage = () => {
-  // Category list
   const categories = ['All', 'Men', 'Women', 'Unisex', 'Luxury', 'Travel Size'];
+  
+  // Product dhore rakhar state
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Backend theke data anar logic
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const API_URL = import.meta.env.VITE_API_URL || "https://perfect-fume-backend.perfectfumeofficial.workers.dev";
+        const res = await fetch(`${API_URL}/api/catalog`);
+        const data = await res.json();
+        setProducts(data); // Database theke asa product set kora holo
+      } catch (error) {
+        console.error("Failed to fetch products");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProducts();
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white pt-20">
@@ -19,12 +39,11 @@ const HomePage = () => {
               Shop Now
             </button>
           </div>
-          {/* Transparent Blur Circle for Design */}
           <div className="absolute right-[-50px] top-[-50px] w-64 h-64 bg-purple-600/20 rounded-full blur-[80px]"></div>
         </div>
       </section>
 
-      {/* 2. Category Tabs (Flipkart Style Scroll) */}
+      {/* 2. Category Tabs */}
       <section className="max-w-7xl mx-auto px-4 py-4 flex gap-4 overflow-x-auto no-scrollbar">
         {categories.map((cat) => (
           <button 
@@ -36,30 +55,36 @@ const HomePage = () => {
         ))}
       </section>
 
-      {/* 3. Product Grid Placeholder */}
+      {/* 3. Dynamic Product Grid */}
       <section className="max-w-7xl mx-auto px-4 py-8">
         <h3 className="text-xl font-semibold mb-6 flex items-center gap-2">
           Trending Now <span className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></span>
         </h3>
+        
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {/* Skeleton Loaders (Temporary placeholders) */}
-          {[1, 2, 3, 4].map((item) => (
-            <div key={item} className="h-64 rounded-xl bg-white/5 border border-white/10 flex flex-col items-center justify-center gap-2 overflow-hidden">
-               <div className="w-full h-40 bg-white/5 animate-pulse"></div>
-               <div className="w-3/4 h-4 bg-white/10 rounded animate-pulse"></div>
-               <div className="w-1/2 h-4 bg-white/10 rounded animate-pulse"></div>
-            </div>
-          ))}
+          {loading ? (
+            // Loading thakle skeleton dekhabe
+            [1, 2, 3, 4].map((item) => (
+              <div key={item} className="h-64 rounded-xl bg-white/5 border border-white/10 flex flex-col items-center justify-center gap-2 overflow-hidden animate-pulse">
+              </div>
+            ))
+          ) : products.length > 0 ? (
+            // Asol product dekhabe
+            products.map((product) => (
+              <div key={product.id} className="rounded-xl bg-white/5 border border-white/10 flex flex-col overflow-hidden hover:border-purple-500 transition-colors">
+                <img src={product.image} alt={product.name} className="w-full h-40 object-cover bg-black" />
+                <div className="p-4">
+                  <p className="text-xs text-purple-400 mb-1">{product.category}</p>
+                  <h4 className="font-semibold text-sm truncate">{product.name}</h4>
+                  <p className="text-lg font-bold mt-2">₹{product.price}</p>
+                </div>
+              </div>
+            ))
+          ) : (
+            <p className="text-gray-400">Kono product pawa jayni.</p>
+          )}
         </div>
       </section>
-
-      {/* 4. Bottom Navbar Placeholder (Mobile Version) */}
-      <div className="md:hidden fixed bottom-0 w-full bg-black/40 backdrop-blur-xl border-t border-white/10 flex justify-around py-3">
-          <div className="text-[10px] flex flex-col items-center opacity-100 text-purple-400"><span>Home</span></div>
-          <div className="text-[10px] flex flex-col items-center opacity-60"><span>Category</span></div>
-          <div className="text-[10px] flex flex-col items-center opacity-60"><span>Cart</span></div>
-          <div className="text-[10px] flex flex-col items-center opacity-60"><span>Account</span></div>
-      </div>
     </div>
   );
 };
