@@ -32,14 +32,13 @@ const HomePage = () => {
     setSelectedProduct(product);
     setCheckoutStep(1); 
   };
-
   // Step 1: OTP Pathano
   const sendOtp = async () => {
     if (!email.includes('@')) return alert("Sothik email din!");
     setIsProcessing(true);
     try {
-      // 🔥 Ekhane Backtick (` `) thik kora hoyeche r send-otp dewa ache
-      const res = await fetch(`${API_URL}/api/verify-email`, {
+      // 🔥 EKHANE ASOL MAGIC: /api/verify-email kete /api/order kora holo
+      const res = await fetch(`${API_URL}/api/order`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -64,7 +63,7 @@ const HomePage = () => {
     }
     setIsProcessing(false);
   };
-
+  
   // Step 2: OTP Verify & Order Confirm
   const verifyOtp = async () => {
     if (otp.length < 4) return alert("OTP din!");
