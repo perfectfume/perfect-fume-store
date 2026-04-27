@@ -39,7 +39,7 @@ const HomePage = () => {
     setIsProcessing(true);
     try {
       // 🔥 Ekhane Backtick (` `) thik kora hoyeche r send-otp dewa ache
-      const res = await fetch(`${API_URL}/api/send-otp`, {
+      const res = await fetch(`${API_URL}/api/verify-email`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
