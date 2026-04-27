@@ -121,7 +121,7 @@ const AdminPanel = () => {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white p-4 md:p-8 pt-36 font-sans">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-6xl mx-auto mt-20">
         
         <div className="flex gap-4 mb-8 bg-white/5 p-1 rounded-xl border border-white/10 w-fit">
           <button onClick={() => setActiveTab('products')} className={`px-6 py-2 rounded-lg font-medium transition-all ${activeTab === 'products' ? 'bg-purple-600 text-white' : 'text-gray-400 hover:text-white'}`}>Products</button>
