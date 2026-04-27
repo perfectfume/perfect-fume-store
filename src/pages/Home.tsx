@@ -5,16 +5,14 @@ const HomePage = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Checkout (Order) States
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
-  const [checkoutStep, setCheckoutStep] = useState(0); // 0: bondho, 1: Email dawar box, 2: OTP dawar box
+  const [checkoutStep, setCheckoutStep] = useState(0); 
   const [isProcessing, setIsProcessing] = useState(false);
 
   const API_URL = import.meta.env.VITE_API_URL || "https://perfect-fume-backend.perfectfumeofficial.workers.dev";
 
-  // Database theke product anar function
   useEffect(() => {
     const fetchProducts = async () => {
       try {
@@ -30,10 +28,9 @@ const HomePage = () => {
     fetchProducts();
   }, []);
 
-  // Buy Now click korle Popup khulbe
   const handleBuyNow = (product) => {
     setSelectedProduct(product);
-    setCheckoutStep(1); // Email chaibe
+    setCheckoutStep(1); 
   };
 
   // Step 1: OTP Pathano
@@ -41,20 +38,30 @@ const HomePage = () => {
     if (!email.includes('@')) return alert("Sothik email din!");
     setIsProcessing(true);
     try {
-      const res = await fetch(`${API_URL}/api/verify-email`, {  // Ba apnar backend route onujayi /api/send-otp hobe
+      // 👉 Ekhane Send OTP hobe
+      const res = await fetch(`${API_URL}/api/verify-email`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, cart: [{ id: selectedProduct.id, name: selectedProduct.name, price: selectedProduct.price, qty: 1 }] }) 
+        body: JSON.stringify({ 
+          email, 
+          // 🔥 FIX: Vercel Error er jonno '?' dewa hoyeche
+          cart: [{ 
+            id: selectedProduct?.id, 
+            name: selectedProduct?.name, 
+            price: selectedProduct?.price, 
+            qty: 1 
+          }] 
+        }) 
       });
       const data = await res.json();
-      if (data.success) {
-        setCheckoutStep(2); // OTP dawar box ashbe
+      if (res.ok && data.success) {
+        setCheckoutStep(2); 
         alert("OTP Pathano hoyeche! Mail check korun.");
       } else {
-        alert("Error: " + data.error);
+        alert("Error: " + (data.error || "Backend e somossya"));
       }
     } catch (err) {
-      alert("Network Error!");
+      alert("Network Error! Backend live nei ba URL vul achhe.");
     }
     setIsProcessing(false);
   };
@@ -64,7 +71,8 @@ const HomePage = () => {
     if (otp.length < 4) return alert("OTP din!");
     setIsProcessing(true);
     try {
-      const res = await fetch(${API_URL}/api/send-otp,{
+      // 👉 Ekhane Verify OTP hobe
+      const res = await fetch(`${API_URL}/api/verify-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, otp })
@@ -73,7 +81,7 @@ const HomePage = () => {
       
       if (res.ok && data.success) {
         alert("🎉 Order Confirmed! Apnar Admin mail-ta check korun.");
-        setCheckoutStep(0); // Popup bondho
+        setCheckoutStep(0); 
         setEmail('');
         setOtp('');
       } else {
@@ -88,7 +96,6 @@ const HomePage = () => {
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white pt-24 font-sans">
       
-      {/* 1. Hero Banner */}
       <section className="px-4 py-6">
         <div className="max-w-7xl mx-auto h-[200px] md:h-[400px] rounded-2xl bg-gradient-to-br from-purple-900/40 to-black border border-white/10 overflow-hidden flex items-center px-8 relative">
           <div className="z-10">
@@ -98,7 +105,6 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* 2. Categories */}
       <section className="max-w-7xl mx-auto px-4 py-4 flex gap-4 overflow-x-auto no-scrollbar">
         {categories.map((cat) => (
           <button key={cat} className="whitespace-nowrap px-6 py-2 rounded-full bg-white/5 border border-white/10 hover:bg-purple-600 hover:border-purple-500 transition-all text-sm font-semibold">
@@ -107,7 +113,6 @@ const HomePage = () => {
         ))}
       </section>
 
-      {/* 3. Product Grid with "Buy Now" Button */}
       <section className="max-w-7xl mx-auto px-4 py-8">
         <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
           Trending Now <span className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></span>
@@ -125,7 +130,6 @@ const HomePage = () => {
                   <h4 className="font-bold text-sm truncate">{product.name}</h4>
                   <p className="text-lg font-bold mt-1 mb-4">₹{product.price}</p>
                   
-                  {/* 🔥 NOTUN: Buy Now Button */}
                   <button 
                     onClick={() => handleBuyNow(product)}
                     className="mt-auto w-full bg-white/10 group-hover:bg-purple-600 text-white text-sm font-bold py-2.5 rounded-lg transition-all"
@@ -141,16 +145,14 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* 4. Checkout Popup Modal */}
+      {/* Checkout Popup Modal */}
       {checkoutStep > 0 && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 px-4">
           <div className="bg-[#111] border border-white/10 p-6 rounded-2xl w-full max-w-md relative shadow-2xl animate-in zoom-in-95 duration-200">
-            {/* Close Button */}
             <button onClick={() => setCheckoutStep(0)} className="absolute top-4 right-4 text-gray-500 hover:text-white bg-white/5 p-2 rounded-full">✕</button>
             
             <h2 className="text-2xl font-bold mb-4 italic text-purple-400">Express Checkout</h2>
             
-            {/* Selected Product Details */}
             <div className="flex gap-4 mb-6 bg-white/5 p-3 rounded-xl border border-white/10">
               <img src={selectedProduct?.image} className="w-16 h-16 rounded-lg object-cover bg-black" />
               <div>
@@ -159,7 +161,6 @@ const HomePage = () => {
               </div>
             </div>
 
-            {/* Email Input */}
             {checkoutStep === 1 && (
               <div>
                 <label className="block text-sm text-gray-400 mb-2">Apnar Email Din</label>
@@ -174,7 +175,6 @@ const HomePage = () => {
               </div>
             )}
 
-            {/* OTP Input */}
             {checkoutStep === 2 && (
               <div>
                 <p className="text-xs text-green-400 mb-4 bg-green-900/20 p-2 rounded-lg border border-green-500/20">✅ OTP sent to {email}</p>
