@@ -64,7 +64,7 @@ const HomePage = () => {
     if (otp.length < 4) return alert("OTP din!");
     setIsProcessing(true);
     try {
-      const res = await fetch(`${API_URL}/api/verify-otp`, {
+      const res = await fetch(${API_URL}/api/send-otp,{
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, otp })
