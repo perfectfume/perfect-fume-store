@@ -20,7 +20,7 @@ const Navbar = () => {
   // Step 1: Send OTP to Email
   const handleSendOtp = async (e: any) => {
     e.preventDefault();
-    if (!emailInput.includes('@') || phoneInput.length < 10) {
+    if (!emailInput.includes('@') || phoneInput.length !== 10) {
       return alert("⚠️ Sothik Email ebong 10 digit Phone Number din!");
     }
     setIsProcessing(true);
