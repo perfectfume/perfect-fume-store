@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useStore } from '../store/useStore'; // 🔥 NOTUN: Brain (Store) import kora holo
 
 const HomePage = () => {
   const categories = ['All', 'Men', 'Women', 'Unisex', 'Luxury', 'Travel Size'];
@@ -10,6 +11,9 @@ const HomePage = () => {
   const [otp, setOtp] = useState('');
   const [checkoutStep, setCheckoutStep] = useState(0); 
   const [isProcessing, setIsProcessing] = useState(false);
+
+  // 🔥 NOTUN: Store theke user data r addToCart function nilam
+  const { userEmail, addToCart } = useStore();
 
   const API_URL = import.meta.env.VITE_API_URL || "https://perfect-fume-backend.perfectfumeofficial.workers.dev";
 
@@ -28,16 +32,31 @@ const HomePage = () => {
     fetchProducts();
   }, []);
 
+  // 🔥 NOTUN: Add to Cart Logic
+  const handleAddToCart = (product) => {
+    if (!userEmail) {
+      alert("⚠️ Sobaiprothome upore 'Account'-e click kore Login korun!");
+      return;
+    }
+    addToCart(product);
+    alert(`✅ ${product.name} apnar Jhhuri-te (Cart) add hoyeche!`);
+  };
+
+  // 🔥 NOTUN: Buy Now Logic (Login Check + Auto Email Fill)
   const handleBuyNow = (product) => {
+    if (!userEmail) {
+      alert("⚠️ Sobaiprothome upore 'Account'-e click kore Login korun!");
+      return;
+    }
     setSelectedProduct(product);
+    setEmail(userEmail); // Customer er email auto-fill hoye jabe
     setCheckoutStep(1); 
   };
-  // Step 1: OTP Pathano
+
   const sendOtp = async () => {
     if (!email.includes('@')) return alert("Sothik email din!");
     setIsProcessing(true);
     try {
-      // 🔥 EKHANE ASOL MAGIC: /api/verify-email kete /api/order kora holo
       const res = await fetch(`${API_URL}/api/order`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -63,8 +82,7 @@ const HomePage = () => {
     }
     setIsProcessing(false);
   };
-  
-  // Step 2: OTP Verify & Order Confirm
+
   const verifyOtp = async () => {
     if (otp.length < 4) return alert("OTP din!");
     setIsProcessing(true);
@@ -79,7 +97,6 @@ const HomePage = () => {
       if (res.ok && data.success) {
         alert("🎉 Order Confirmed! Apnar Admin mail-ta check korun.");
         setCheckoutStep(0); 
-        setEmail('');
         setOtp('');
       } else {
         alert(data.error || "Vul OTP!");
@@ -127,12 +144,22 @@ const HomePage = () => {
                   <h4 className="font-bold text-sm truncate">{product.name}</h4>
                   <p className="text-lg font-bold mt-1 mb-4">₹{product.price}</p>
                   
-                  <button 
-                    onClick={() => handleBuyNow(product)}
-                    className="mt-auto w-full bg-white/10 group-hover:bg-purple-600 text-white text-sm font-bold py-2.5 rounded-lg transition-all"
-                  >
-                    Buy Now
-                  </button>
+                  {/* 🔥 NOTUN: Add to Cart r Buy Now Button Duto eksathe */}
+                  <div className="flex gap-2 mt-auto">
+                    <button 
+                      onClick={() => handleAddToCart(product)}
+                      className="w-full bg-white/10 hover:bg-purple-600 text-white text-xs font-bold py-2.5 rounded-lg transition-all"
+                    >
+                      Add to Cart
+                    </button>
+                    <button 
+                      onClick={() => handleBuyNow(product)}
+                      className="w-full bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold py-2.5 rounded-lg transition-all shadow-lg shadow-purple-900/20"
+                    >
+                      Buy Now
+                    </button>
+                  </div>
+
                 </div>
               </div>
             ))
@@ -160,11 +187,10 @@ const HomePage = () => {
 
             {checkoutStep === 1 && (
               <div>
-                <label className="block text-sm text-gray-400 mb-2">Apnar Email Din</label>
+                <label className="block text-sm text-gray-400 mb-2">Apnar Email</label>
                 <input 
-                  type="email" value={email} onChange={(e) => setEmail(e.target.value)} 
-                  className="w-full bg-black border border-white/10 rounded-lg p-3 outline-none text-white mb-4 focus:border-purple-500"
-                  placeholder="example@gmail.com"
+                  type="email" value={email} readOnly 
+                  className="w-full bg-black/50 border border-white/5 rounded-lg p-3 outline-none text-gray-500 mb-4 cursor-not-allowed"
                 />
                 <button onClick={sendOtp} disabled={isProcessing} className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-lg transition-all shadow-lg shadow-purple-900/20">
                   {isProcessing ? 'Sending...' : 'Send OTP securely'}
