@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 const AdminPanel = () => {
   const [password, setPassword] = useState('');
@@ -8,7 +8,7 @@ const AdminPanel = () => {
   const [title, setTitle] = useState('');
   const [price, setPrice] = useState('');
   const [category, setCategory] = useState('Men');
-  const [stock, setStock] = useState(''); // 🔥 NOTUN: Stock State
+  const [stock, setStock] = useState(''); 
   const [description, setDescription] = useState('');
   const [image, setImage] = useState('');
   const [isUploading, setIsUploading] = useState(false);
@@ -55,7 +55,7 @@ const AdminPanel = () => {
         description, 
         image, 
         category,
-        stock: Number(stock) // 🔥 NOTUN: Stock backend e pathano hoche
+        stock: Number(stock) 
       })
     });
     const data = await res.json();
@@ -120,8 +120,9 @@ const AdminPanel = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white p-4 md:p-8 pt-36 font-sans">
-      <div className="max-w-6xl mx-auto mt-20">
+    <div className="min-h-screen bg-[#0a0a0a] text-white p-4 md:p-8 font-sans">
+      {/* 🔥 FIX: Margin Top (mt-24) dewa hoyeche jate Tab niche neme ashe */}
+      <div className="max-w-6xl mx-auto mt-24">
         
         <div className="flex gap-4 mb-8 bg-white/5 p-1 rounded-xl border border-white/10 w-fit">
           <button onClick={() => setActiveTab('products')} className={`px-6 py-2 rounded-lg font-medium transition-all ${activeTab === 'products' ? 'bg-purple-600 text-white' : 'text-gray-400 hover:text-white'}`}>Products</button>
@@ -139,7 +140,6 @@ const AdminPanel = () => {
                 <div className="grid grid-cols-3 gap-4">
                   <input type="number" placeholder="Price (₹)" value={price} onChange={(e) => setPrice(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg p-2.5 outline-none" />
                   
-                  {/* 🔥 NOTUN: Stock Input */}
                   <input type="number" placeholder="Stock (Qty)" value={stock} onChange={(e) => setStock(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg p-2.5 outline-none" />
                   
                   <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg p-2.5 outline-none text-gray-300 md:bg-gray-900">
@@ -166,7 +166,6 @@ const AdminPanel = () => {
                         <p className="text-xs text-purple-400">₹{p.price}</p>
                         <span className="text-gray-600 text-xs">•</span>
                         
-                        {/* 🔥 NOTUN: Low Stock Alert Logic */}
                         {p.stock !== undefined && p.stock < 5 ? (
                           <p className="text-[10px] bg-red-600/20 text-red-400 px-2 py-0.5 rounded-full border border-red-500/50 animate-pulse font-bold">Low Stock: {p.stock} left</p>
                         ) : (
@@ -226,4 +225,3 @@ const AdminPanel = () => {
 };
 
 export default AdminPanel;
-                
