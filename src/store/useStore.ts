@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware'; // 🔥 NOTUN: Data save rakhar magic
+import { persist } from 'zustand/middleware';
 
 interface CartItem {
   id: string;
@@ -22,6 +22,7 @@ interface StoreState {
   userPhone: string | null;
   setUserAuth: (email: string | null, phone: string | null) => void;
   logout: () => void;
+  clearCart: () => void; // 🔥 NOTUN: Order place hoye gele cart faka korar jonno
 }
 
 export const useStore = create<StoreState>()(
@@ -51,10 +52,11 @@ export const useStore = create<StoreState>()(
       userEmail: null,
       userPhone: null,
       setUserAuth: (email, phone) => set({ userEmail: email, userPhone: phone }),
-      logout: () => set({ userEmail: null, userPhone: null }), // 🔥 FIX: Ekhane theke cart: [] soriye dilam
+      logout: () => set({ userEmail: null, userPhone: null }), 
+      clearCart: () => set({ cart: [] }), // 🔥 NOTUN Command
     }),
     {
-      name: 'perfect-fume-cart', // Browser ei nam-e apnar jhhuri save rakhbe
+      name: 'perfect-fume-cart', 
     }
   )
 );
