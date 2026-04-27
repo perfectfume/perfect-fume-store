@@ -9,7 +9,6 @@ interface CartItem {
 }
 
 interface StoreState {
-  // Cart Logic
   cart: CartItem[];
   isCartOpen: boolean;
   deliveryType: 'standard' | 'express';
@@ -19,9 +18,11 @@ interface StoreState {
   toggleCart: () => void;
   getTotals: () => { total: number };
   
-  // Auth (Login) Logic
+  // 🔥 NOTUN: User Auth States
   userEmail: string | null;
-  setUserEmail: (email: string | null) => void;
+  userPhone: string | null;
+  setUserAuth: (email: string | null, phone: string | null) => void;
+  logout: () => void;
 }
 
 export const useStore = create<StoreState>((set, get) => ({
@@ -30,7 +31,6 @@ export const useStore = create<StoreState>((set, get) => ({
   deliveryType: 'standard',
   paymentMethod: 'online',
   
-  // Jhhuri te jinis add kora (Aage theke thakle shudhu quantity barbe)
   addToCart: (product) => set((state) => {
     const existing = state.cart.find(item => item.id === product.id);
     if (existing) {
@@ -39,19 +39,18 @@ export const useStore = create<StoreState>((set, get) => ({
     return { cart: [...state.cart, { ...product, quantity: 1 }] };
   }),
   
-  // Jhhuri theke delete kora
   removeFromCart: (id) => set((state) => ({ cart: state.cart.filter(item => item.id !== id) })),
-  
-  // Jhhuri Kholo/Bondho koro
   toggleCart: () => set((state) => ({ isCartOpen: !state.isCartOpen })),
   
-  // Total Dam Hisab kora
   getTotals: () => {
     const total = get().cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
     return { total };
   },
 
-  // Customer Login State
+  // 🔥 NOTUN: Login Data Save Kora r Logout Kora
   userEmail: null,
-  setUserEmail: (email) => set({ userEmail: email }),
+  userPhone: null,
+  setUserAuth: (email, phone) => set({ userEmail: email, userPhone: phone }),
+  logout: () => set({ userEmail: null, userPhone: null, cart: [] }), // Logout korle cart faka hoye jabe
 }));
+  
