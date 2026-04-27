@@ -38,13 +38,12 @@ const HomePage = () => {
     if (!email.includes('@')) return alert("Sothik email din!");
     setIsProcessing(true);
     try {
-      // 👉 Ekhane Send OTP hobe
-      const res = await fetch(`${API_URL}/api/verify-email`, {
+      // 🔥 Ekhane Backtick (` `) thik kora hoyeche r send-otp dewa ache
+      const res = await fetch(`${API_URL}/api/send-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           email, 
-          // 🔥 FIX: Vercel Error er jonno '?' dewa hoyeche
           cart: [{ 
             id: selectedProduct?.id, 
             name: selectedProduct?.name, 
@@ -71,7 +70,6 @@ const HomePage = () => {
     if (otp.length < 4) return alert("OTP din!");
     setIsProcessing(true);
     try {
-      // 👉 Ekhane Verify OTP hobe
       const res = await fetch(`${API_URL}/api/verify-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
