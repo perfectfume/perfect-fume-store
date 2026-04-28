@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Download, AlertTriangle, TrendingUp, Package, Users, Calendar, Filter, Inbox, Clock, Truck, CheckCircle, Pencil, X } from 'lucide-react';
+
 const AdminPanel = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -10,25 +11,26 @@ const AdminPanel = () => {
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [activeTab, setActiveTab] = useState('dashboard'); 
   
+  // 🔥 ADD PRODUCT STATES
   const [title, setTitle] = useState('');
   const [price, setPrice] = useState('');
   const [category, setCategory] = useState('Men');
   const [stock, setStock] = useState(''); 
   const [description, setDescription] = useState('');
   const [image, setImage] = useState('');
-  const [extraImages, setExtraImages] = useState<string[]>([]); // 🔥 NOTUN: Gallery images
-  
+  const [extraImages, setExtraImages] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+
   // 🔥 EDIT PRODUCT STATES
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editingProductId, setEditingProductId] = useState(null);
+  const [editingProductId, setEditingProductId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState('');
   const [editPrice, setEditPrice] = useState('');
   const [editCategory, setEditCategory] = useState('Men');
   const [editStock, setEditStock] = useState('');
   const [editDescription, setEditDescription] = useState('');
   const [editImage, setEditImage] = useState('');
-  const [editExtraImages, setEditExtraImages] = useState([]);
+  const [editExtraImages, setEditExtraImages] = useState<string[]>([]);
   const [isUpdating, setIsUpdating] = useState(false);
   
   const [products, setProducts] = useState([]);
@@ -36,7 +38,7 @@ const AdminPanel = () => {
   const [trackingLinks, setTrackingLinks] = useState<any>({}); 
   
   // 🔥 FILTER STATES
-  const [dateFilter, setDateFilter] = useState('all'); // all, 7days, 30days, custom
+  const [dateFilter, setDateFilter] = useState('all'); 
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
 
@@ -77,7 +79,6 @@ const AdminPanel = () => {
     setProducts(data);
   };
 
-    // 🔥 FIX: Filter ghost orders (Login requests without cart items)
   const fetchOrders = async () => {
     try {
       const res = await fetch(`${API_URL}/api/admin/orders`);
@@ -86,39 +87,32 @@ const AdminPanel = () => {
       setOrders(realOrders);
     } catch (err) { console.error("Order load hoyni"); }
   };
-  
-  // --- PRODUCT ACTIONS ---
-    const handleAddProduct = async (e: any) => {
+
+  // --- ADD PRODUCT LOGIC ---
+  const handleAddProduct = async (e: any) => {
     e.preventDefault();
     setIsUploading(true);
-    
-    // Faka URL gulo bad diye shudhu asol link gulo nebo
     const cleanGallery = extraImages.filter(url => url.trim() !== '');
-
     const res = await fetch(`${API_URL}/api/add-product`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        name: title, price: Number(price), description, image, category, stock: Number(stock), 
-        gallery: cleanGallery // 🔥 NOTUN
-      })
+      body: JSON.stringify({ name: title, price: Number(price), description, image, category, stock: Number(stock), gallery: cleanGallery })
     });
     const data = await res.json();
     if (data.success) { 
-      alert("✅ Product & Gallery Uploaded!"); 
-      setTitle(''); setPrice(''); setStock(''); setDescription(''); setImage(''); 
-      setExtraImages([]); // 🔥 NOTUN: Form reset
+      alert("✅ Product Added!"); 
+      setTitle(''); setPrice(''); setStock(''); setDescription(''); setImage(''); setExtraImages([]); 
       fetchProducts(); 
     }
     setIsUploading(false);
   };
-  
 
   const handleDelete = async (id: string) => {
     if (!window.confirm("Sotti Delete korben?")) return;
     const res = await fetch(`${API_URL}/api/delete-product`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
     if (res.ok) fetchProducts();
   };
-    // 🔥 EDIT PRODUCT LOGIC
+
+  // --- EDIT PRODUCT LOGIC ---
   const openEditModal = (product: any) => {
     setEditingProductId(product.id);
     setEditTitle(product.name);
@@ -154,7 +148,8 @@ const AdminPanel = () => {
     } catch (err) { alert("Network Error!"); }
     setIsUpdating(false);
   };
-  
+
+  // --- ORDER STATUS LOGIC ---
   const handleStatusChange = async (orderId: string, newStatus: string) => {
     let trackingUrl = trackingLinks[orderId] || "";
     if (newStatus === 'shipped' && !trackingUrl) {
@@ -175,7 +170,7 @@ const AdminPanel = () => {
     } catch (err) { alert("Network Error!"); }
   };
 
-  // --- 🔥 FILTER LOGIC ---
+  // --- FILTER & ANALYTICS ---
   const getFilteredOrders = () => {
     let filtered = [...orders];
     const now = new Date();
@@ -199,11 +194,8 @@ const AdminPanel = () => {
   };
 
   const currentOrders = getFilteredOrders();
-
-  // --- 🔥 ANALYTICS (Update Logic) ---
   const deliveredOrders = currentOrders.filter((o: any) => o.status === 'delivered');
   
-  // Revenue Ekhon Shudhu Delivered order theke asbe
   const totalRevenue = deliveredOrders.reduce((total, order: any) => {
     let amt = 0;
     if (order.cart_details) {
@@ -215,7 +207,6 @@ const AdminPanel = () => {
     return total + amt;
   }, 0);
 
-  // Status Breakdown Count
   const statusCounts = {
     received: currentOrders.filter((o: any) => o.status === 'verified').length,
     processing: currentOrders.filter((o: any) => o.status === 'processing').length,
@@ -227,11 +218,9 @@ const AdminPanel = () => {
 
   const downloadExcel = () => {
     let csv = "Order ID,Date,Customer Name,Email,Phone,City,Order Amount,Status\n";
-    
     currentOrders.forEach((order: any) => {
       let addr = { name: 'N/A', phone: 'N/A', city: 'N/A' };
       if (order.address_details) { try { addr = JSON.parse(order.address_details); } catch(e){} }
-      
       let amount = 0;
       if (order.cart_details) {
         try {
@@ -239,7 +228,6 @@ const AdminPanel = () => {
           amount = items.reduce((acc: number, item: any) => acc + (item.price * (item.quantity || item.qty)), 0);
         } catch(e){}
       }
-      
       const date = new Date(order.created_at).toLocaleDateString();
       csv += `"#OR-${order.id}","${date}","${addr.name}","${order.email}","${addr.phone}","${addr.city}","Rs. ${amount}","${order.status}"\n`;
     });
@@ -262,8 +250,6 @@ const AdminPanel = () => {
     }
   };
 
-
-  // --- SECURE LOGIN UI ---
   if (!isAuthorized) {
     return (
       <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center px-4 font-sans text-white">
@@ -287,9 +273,8 @@ const AdminPanel = () => {
     );
   }
 
-  // --- DASHBOARD UI ---
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white p-4 md:p-8 font-sans pb-24">
+    <div className="min-h-screen bg-[#0a0a0a] text-white p-4 md:p-8 font-sans pb-24 relative">
       <div className="max-w-6xl mx-auto mt-20 md:mt-24">
         
         {/* Navigation Tabs */}
@@ -299,25 +284,17 @@ const AdminPanel = () => {
           <button onClick={() => { setActiveTab('orders'); fetchOrders(); }} className={`px-6 py-2 rounded-lg font-medium whitespace-nowrap transition-all ${activeTab === 'orders' ? 'bg-purple-600 text-white' : 'text-gray-400 hover:text-white'}`}>Orders</button>
         </div>
 
-        {/* 🔥 DASHBOARD TAB */}
+        {/* DASHBOARD TAB */}
         {activeTab === 'dashboard' && (
           <div className="space-y-6 animate-in fade-in duration-300">
             
             {/* Filter Section */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white/5 p-4 rounded-2xl border border-white/10">
               <h2 className="text-2xl font-bold italic text-white flex items-center gap-2"><Filter className="w-5 h-5 text-purple-400"/> Filter Analytics</h2>
-              
               <div className="flex flex-wrap items-center gap-3">
-                <select 
-                  value={dateFilter} onChange={(e) => setDateFilter(e.target.value)}
-                  className="bg-black border border-white/20 rounded-lg px-4 py-2 text-sm outline-none focus:border-purple-500"
-                >
-                  <option value="all">All Time</option>
-                  <option value="7days">Last 7 Days</option>
-                  <option value="30days">Last 30 Days</option>
-                  <option value="custom">Custom Date</option>
+                <select value={dateFilter} onChange={(e) => setDateFilter(e.target.value)} className="bg-black border border-white/20 rounded-lg px-4 py-2 text-sm outline-none focus:border-purple-500">
+                  <option value="all">All Time</option><option value="7days">Last 7 Days</option><option value="30days">Last 30 Days</option><option value="custom">Custom Date</option>
                 </select>
-
                 {dateFilter === 'custom' && (
                   <div className="flex items-center gap-2">
                     <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="bg-black border border-white/20 rounded-lg px-3 py-1.5 text-sm outline-none [color-scheme:dark]" />
@@ -335,13 +312,11 @@ const AdminPanel = () => {
                 <p className="text-4xl font-bold text-white">₹{totalRevenue}</p>
                 <p className="text-xs text-purple-300 mt-2">Earned from {statusCounts.delivered} completed orders</p>
               </div>
-              
               <div className="bg-gradient-to-br from-blue-900/50 to-black p-6 rounded-2xl border border-blue-500/30 shadow-lg shadow-blue-900/20">
                 <div className="flex justify-between items-center mb-4"><h3 className="text-gray-300 font-bold">Total Orders</h3><Package className="text-blue-400" /></div>
                 <p className="text-4xl font-bold text-white">{currentOrders.length}</p>
                 <p className="text-xs text-blue-300 mt-2">In selected time period</p>
               </div>
-
               <div className="bg-gradient-to-br from-green-900/50 to-black p-6 rounded-2xl border border-green-500/30 shadow-lg shadow-green-900/20 flex flex-col justify-center items-center cursor-pointer hover:scale-105 transition-transform" onClick={downloadExcel}>
                 <Users className="text-green-400 w-8 h-8 mb-2" />
                 <h3 className="text-white font-bold text-center">Export {currentOrders.length} Customers</h3>
@@ -349,25 +324,13 @@ const AdminPanel = () => {
               </div>
             </div>
 
-            {/* 🔥 Status Breakdown Cards */}
+            {/* Status Breakdown Cards */}
             <h3 className="text-lg font-bold italic mt-8 mb-4 text-gray-300">Order Status Breakdown</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-black p-4 rounded-xl border border-yellow-500/30 flex items-center gap-4">
-                <div className="bg-yellow-500/20 p-3 rounded-lg"><Inbox className="text-yellow-500 w-6 h-6"/></div>
-                <div><p className="text-gray-400 text-sm">Received</p><p className="text-2xl font-bold">{statusCounts.received}</p></div>
-              </div>
-              <div className="bg-black p-4 rounded-xl border border-blue-500/30 flex items-center gap-4">
-                <div className="bg-blue-500/20 p-3 rounded-lg"><Clock className="text-blue-500 w-6 h-6"/></div>
-                <div><p className="text-gray-400 text-sm">Processing</p><p className="text-2xl font-bold">{statusCounts.processing}</p></div>
-              </div>
-              <div className="bg-black p-4 rounded-xl border border-purple-500/30 flex items-center gap-4">
-                <div className="bg-purple-500/20 p-3 rounded-lg"><Truck className="text-purple-500 w-6 h-6"/></div>
-                <div><p className="text-gray-400 text-sm">Shipped</p><p className="text-2xl font-bold">{statusCounts.shipped}</p></div>
-              </div>
-              <div className="bg-black p-4 rounded-xl border border-green-500/30 flex items-center gap-4">
-                <div className="bg-green-500/20 p-3 rounded-lg"><CheckCircle className="text-green-500 w-6 h-6"/></div>
-                <div><p className="text-gray-400 text-sm">Delivered</p><p className="text-2xl font-bold">{statusCounts.delivered}</p></div>
-              </div>
+              <div className="bg-black p-4 rounded-xl border border-yellow-500/30 flex items-center gap-4"><div className="bg-yellow-500/20 p-3 rounded-lg"><Inbox className="text-yellow-500 w-6 h-6"/></div><div><p className="text-gray-400 text-sm">Received</p><p className="text-2xl font-bold">{statusCounts.received}</p></div></div>
+              <div className="bg-black p-4 rounded-xl border border-blue-500/30 flex items-center gap-4"><div className="bg-blue-500/20 p-3 rounded-lg"><Clock className="text-blue-500 w-6 h-6"/></div><div><p className="text-gray-400 text-sm">Processing</p><p className="text-2xl font-bold">{statusCounts.processing}</p></div></div>
+              <div className="bg-black p-4 rounded-xl border border-purple-500/30 flex items-center gap-4"><div className="bg-purple-500/20 p-3 rounded-lg"><Truck className="text-purple-500 w-6 h-6"/></div><div><p className="text-gray-400 text-sm">Shipped</p><p className="text-2xl font-bold">{statusCounts.shipped}</p></div></div>
+              <div className="bg-black p-4 rounded-xl border border-green-500/30 flex items-center gap-4"><div className="bg-green-500/20 p-3 rounded-lg"><CheckCircle className="text-green-500 w-6 h-6"/></div><div><p className="text-gray-400 text-sm">Delivered</p><p className="text-2xl font-bold">{statusCounts.delivered}</p></div></div>
             </div>
 
             {/* Low Stock Alert */}
@@ -390,6 +353,7 @@ const AdminPanel = () => {
         {/* PRODUCTS TAB */}
         {activeTab === 'products' && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 animate-in fade-in duration-300">
+            {/* Add Product Form */}
             <div className="bg-white/5 p-6 rounded-2xl border border-white/10 h-fit">
               <h2 className="text-2xl font-bold mb-6 italic text-purple-400">Add Perfume</h2>
               <form onSubmit={handleAddProduct} className="space-y-4 text-sm">
@@ -402,36 +366,22 @@ const AdminPanel = () => {
                   </select>
                 </div>
                 <textarea placeholder="Description" value={description} onChange={(e) => setDescription(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg p-2.5 h-20 outline-none" />
-                                {/* 🔥 NOTUN: Image & Gallery Upload Section */}
+                
                 <div className="space-y-3 bg-black/30 p-3 rounded-lg border border-white/5">
                   <input type="text" required placeholder="Main Image URL *" value={image} onChange={(e) => setImage(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg p-2.5 outline-none focus:border-purple-500" />
-                  
-                  {/* Dynamic Extra Images */}
                   {extraImages.map((imgUrl, index) => (
                     <div key={index} className="flex gap-2 animate-in fade-in zoom-in-95 duration-200">
-                      <input 
-                        type="text" placeholder={`Extra Image URL ${index + 1}`} 
-                        value={imgUrl} 
-                        onChange={(e) => {
-                          const newImgs = [...extraImages];
-                          newImgs[index] = e.target.value;
-                          setExtraImages(newImgs);
-                        }} 
-                        className="w-full bg-white/5 border border-white/10 rounded-lg p-2.5 outline-none text-gray-300" 
-                      />
+                      <input type="text" placeholder={`Extra Image URL ${index + 1}`} value={imgUrl} onChange={(e) => { const newImgs = [...extraImages]; newImgs[index] = e.target.value; setExtraImages(newImgs); }} className="w-full bg-white/5 border border-white/10 rounded-lg p-2.5 outline-none text-gray-300" />
                       <button type="button" onClick={() => setExtraImages(extraImages.filter((_, i) => i !== index))} className="bg-red-500/20 text-red-400 px-3 rounded-lg hover:bg-red-500 hover:text-white transition-all font-bold">✕</button>
                     </div>
                   ))}
-                  
-                  <button type="button" onClick={() => setExtraImages([...extraImages, ''])} className="text-sm text-purple-400 font-bold hover:text-purple-300 transition-all flex items-center gap-1">
-                    + Add More Pictures
-                  </button>
+                  <button type="button" onClick={() => setExtraImages([...extraImages, ''])} className="text-sm text-purple-400 font-bold hover:text-purple-300 transition-all flex items-center gap-1">+ Add More Pictures</button>
                 </div>
-                
                 <button type="submit" disabled={isUploading} className="w-full bg-green-600 hover:bg-green-700 py-3 rounded-lg font-bold transition-all">{isUploading ? 'Uploading...' : 'Upload Product'}</button>
               </form>
             </div>
 
+            {/* Product List */}
             <div className="bg-white/5 p-6 rounded-2xl border border-white/10 h-fit">
               <h2 className="text-2xl font-bold mb-6 italic text-gray-300">Manage Store</h2>
               <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2 no-scrollbar">
@@ -445,14 +395,13 @@ const AdminPanel = () => {
                         {p.stock !== undefined && p.stock < 5 ? (<p className="text-[10px] bg-red-600/20 text-red-400 px-2 py-0.5 rounded-full border border-red-500/50 animate-pulse font-bold">Low Stock: {p.stock} left</p>) : (<p className="text-[10px] text-gray-400">Stock: {p.stock || 10}</p>)}
                       </div>
                     </div>
-                                        {/* EDIT & DELETE BUTTONS */}
+                    {/* EDIT & DELETE BUTTONS */}
                     <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-all">
                       <button onClick={() => openEditModal(p)} className="bg-blue-600/20 text-blue-400 p-2 rounded-lg hover:bg-blue-600 hover:text-white transition-all text-xs font-bold flex items-center gap-1">
                         <Pencil className="w-3 h-3" /> Edit
                       </button>
                       <button onClick={() => handleDelete(p.id)} className="bg-red-600/20 text-red-400 p-2 rounded-lg hover:bg-red-600 hover:text-white transition-all text-xs font-bold">Delete</button>
                     </div>
-                    
                   </div>
                 ))}
               </div>
@@ -464,34 +413,20 @@ const AdminPanel = () => {
         {activeTab === 'orders' && (
           <div className="bg-white/5 p-6 rounded-2xl border border-white/10 animate-in slide-in-from-bottom-4 duration-500">
             <h2 className="text-2xl font-bold mb-6 italic text-purple-400">Customer Orders</h2>
-            
-            {/* Ekhaneo ekta mini alert dekhacchi filter kora thakle */}
-            {dateFilter !== 'all' && (
-              <p className="mb-4 text-sm text-gray-400">Showing filtered results. Go to Dashboard to change date range.</p>
-            )}
-
+            {dateFilter !== 'all' && <p className="mb-4 text-sm text-gray-400">Showing filtered results. Go to Dashboard to change date range.</p>}
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
                 <thead>
                   <tr className="text-gray-400 border-b border-white/10">
-                    <th className="pb-4 font-medium">Order ID</th>
-                    <th className="pb-4 font-medium">Customer Email</th>
-                    <th className="pb-4 font-medium">Date & Time</th>
-                    <th className="pb-4 font-medium">Action / Status</th>
+                    <th className="pb-4 font-medium">Order ID</th><th className="pb-4 font-medium">Customer Email</th><th className="pb-4 font-medium">Date & Time</th><th className="pb-4 font-medium">Action / Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5">
                   {currentOrders.map((order: any) => (
                     <tr key={order.id} className="hover:bg-white/5 transition-colors">
-                      <td className="py-4 text-purple-400 font-mono font-bold">#OR-{order.id}</td>
-                      <td className="py-4">{order.email}</td>
-                      <td className="py-4 text-gray-400">{new Date(order.created_at).toLocaleString()}</td>
+                      <td className="py-4 text-purple-400 font-mono font-bold">#OR-{order.id}</td><td className="py-4">{order.email}</td><td className="py-4 text-gray-400">{new Date(order.created_at).toLocaleString()}</td>
                       <td className="py-4">
-                        <select 
-                          value={order.status} 
-                          onChange={(e) => handleStatusChange(order.id, e.target.value)}
-                          className={`px-3 py-1.5 rounded-lg border outline-none text-xs font-bold uppercase tracking-wider cursor-pointer appearance-none ${getStatusColor(order.status)}`}
-                        >
+                        <select value={order.status} onChange={(e) => handleStatusChange(order.id, e.target.value)} className={`px-3 py-1.5 rounded-lg border outline-none text-xs font-bold uppercase tracking-wider cursor-pointer appearance-none ${getStatusColor(order.status)}`}>
                           <option value="verified" className="bg-gray-900 text-yellow-400">Received</option>
                           <option value="processing" className="bg-gray-900 text-blue-400">Processing</option>
                           <option value="shipped" className="bg-gray-900 text-purple-400">Shipped</option>
@@ -507,9 +442,8 @@ const AdminPanel = () => {
           </div>
         )}
       </div>
-    </div>
-          {/* EDIT PRODUCT POPUP MODAL */}
-            {/* 🔥 EDIT PRODUCT POPUP MODAL */}
+
+      {/* 🔥 EDIT PRODUCT POPUP MODAL */}
       {isEditModalOpen && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex justify-center items-center px-4 overflow-y-auto py-10">
           <div className="bg-[#111] w-full max-w-2xl rounded-2xl border border-white/10 p-6 relative shadow-2xl animate-in zoom-in-95 duration-200 text-white max-h-[85vh] flex flex-col">
@@ -547,8 +481,9 @@ const AdminPanel = () => {
           </div>
         </div>
       )}
+
     </div>
   );
 };
+
 export default AdminPanel;
-      
