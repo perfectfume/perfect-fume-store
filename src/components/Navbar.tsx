@@ -82,19 +82,40 @@ const Navbar = () => {
     setIsProcessing(false);
   };
 
-  const handleVerifyCheckoutOtp = async (e: any) => {
+    const handleVerifyCheckoutOtp = async (e: any) => {
     e.preventDefault();
     setIsProcessing(true);
     try {
       const res = await fetch(`${API_URL}/api/verify-otp`, { method: 'POST', body: JSON.stringify({ email: userEmail, otp: checkoutOtp }) });
       const data = await res.json();
+      
       if (data.success) {
-        alert("🎉 Order Confirmed! Admin kache details chole geche.");
-        setIsCheckoutOpen(false); setCheckoutOtp(''); clearCart(); 
-      } else { alert("Vul OTP!"); }
-    } catch (err) { alert("Network Error!"); }
+        alert("🎉 Order Confirmed! Apnar WhatsApp e order details chole jacche...");
+        
+        // 🔥 WHATSAPP REDIRECT MAGIC 🔥
+        const ADMIN_WHATSAPP = "918777789394"; // <--- EKHANE APNAR ASOL 10 DIGIT WHATSAPP NUMBER DIN (91 er por)
+        
+        // Cart er item gulo ke list banano hocche
+        let itemList = cart.map(item => `▪️ ${item.name} (${item.quantity} pcs) - ₹${item.price}`).join('%0A');
+        
+        // WhatsApp Message er format
+        let waText = `*New Order Received!* 🛍️%0A%0A*Customer Details:*%0A👤 Name: ${addressForm.name}%0A📞 Phone: ${addressForm.phone}%0A📧 Email: ${userEmail}%0A%0A*Delivery Address:*%0A🏠 ${addressForm.flat}, ${addressForm.area}%0A📍 ${addressForm.city} - ${addressForm.pincode}%0A%0A*Order Items:*%0A${itemList}%0A%0A*Total Amount:* 💰 ₹${total}%0A%0APlease confirm my order!`;
+
+        // WhatsApp khule jabe
+        window.open(`https://wa.me/${ADMIN_WHATSAPP}?text=${waText}`, '_blank');
+
+        setIsCheckoutOpen(false); 
+        setCheckoutOtp(''); 
+        clearCart(); 
+      } else { 
+        alert("Vul OTP!"); 
+      }
+    } catch (err) { 
+      alert("Network Error!"); 
+    }
     setIsProcessing(false);
   };
+  
 
   return (
     <>
