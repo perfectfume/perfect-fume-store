@@ -19,16 +19,16 @@ const AdminPanel = () => {
   const [extraImages, setExtraImages] = useState<string[]>([]); // 🔥 NOTUN: Gallery images
   
   const [isUploading, setIsUploading] = useState(false);
-    // 🔥 EDIT PRODUCT STATES
+  // 🔥 EDIT PRODUCT STATES
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editingProductId, setEditingProductId] = useState<string | null>(null);
+  const [editingProductId, setEditingProductId] = useState(null);
   const [editTitle, setEditTitle] = useState('');
   const [editPrice, setEditPrice] = useState('');
   const [editCategory, setEditCategory] = useState('Men');
   const [editStock, setEditStock] = useState('');
   const [editDescription, setEditDescription] = useState('');
   const [editImage, setEditImage] = useState('');
-  const [editExtraImages, setEditExtraImages] = useState<string[]>([]);
+  const [editExtraImages, setEditExtraImages] = useState([]);
   const [isUpdating, setIsUpdating] = useState(false);
   
   const [products, setProducts] = useState([]);
@@ -509,6 +509,7 @@ const AdminPanel = () => {
       </div>
     </div>
           {/* EDIT PRODUCT POPUP MODAL */}
+            {/* 🔥 EDIT PRODUCT POPUP MODAL */}
       {isEditModalOpen && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex justify-center items-center px-4 overflow-y-auto py-10">
           <div className="bg-[#111] w-full max-w-2xl rounded-2xl border border-white/10 p-6 relative shadow-2xl animate-in zoom-in-95 duration-200 text-white max-h-[85vh] flex flex-col">
@@ -546,7 +547,8 @@ const AdminPanel = () => {
           </div>
         </div>
       )}
+    </div>
   );
 };
-
 export default AdminPanel;
+      
