@@ -17,6 +17,8 @@ const AdminPanel = () => {
   const [stock, setStock] = useState(''); 
   const [description, setDescription] = useState('');
   const [image, setImage] = useState('');
+  const [extraImages, setExtraImages] = useState<string[]>([]); // 🔥 NOTUN: Gallery images
+  
   const [isUploading, setIsUploading] = useState(false);
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
@@ -75,17 +77,30 @@ const AdminPanel = () => {
   };
   
   // --- PRODUCT ACTIONS ---
-  const handleAddProduct = async (e: any) => {
+    const handleAddProduct = async (e: any) => {
     e.preventDefault();
     setIsUploading(true);
+    
+    // Faka URL gulo bad diye shudhu asol link gulo nebo
+    const cleanGallery = extraImages.filter(url => url.trim() !== '');
+
     const res = await fetch(`${API_URL}/api/add-product`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: title, price: Number(price), description, image, category, stock: Number(stock) })
+      body: JSON.stringify({ 
+        name: title, price: Number(price), description, image, category, stock: Number(stock), 
+        gallery: cleanGallery // 🔥 NOTUN
+      })
     });
     const data = await res.json();
-    if (data.success) { alert("✅ Uploaded!"); setTitle(''); setPrice(''); setStock(''); setDescription(''); setImage(''); fetchProducts(); }
+    if (data.success) { 
+      alert("✅ Product & Gallery Uploaded!"); 
+      setTitle(''); setPrice(''); setStock(''); setDescription(''); setImage(''); 
+      setExtraImages([]); // 🔥 NOTUN: Form reset
+      fetchProducts(); 
+    }
     setIsUploading(false);
   };
+  
 
   const handleDelete = async (id: string) => {
     if (!window.confirm("Sotti Delete korben?")) return;
@@ -340,7 +355,32 @@ const AdminPanel = () => {
                   </select>
                 </div>
                 <textarea placeholder="Description" value={description} onChange={(e) => setDescription(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg p-2.5 h-20 outline-none" />
-                <input type="text" placeholder="Image URL" value={image} onChange={(e) => setImage(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg p-2.5 outline-none" />
+                                {/* 🔥 NOTUN: Image & Gallery Upload Section */}
+                <div className="space-y-3 bg-black/30 p-3 rounded-lg border border-white/5">
+                  <input type="text" required placeholder="Main Image URL *" value={image} onChange={(e) => setImage(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg p-2.5 outline-none focus:border-purple-500" />
+                  
+                  {/* Dynamic Extra Images */}
+                  {extraImages.map((imgUrl, index) => (
+                    <div key={index} className="flex gap-2 animate-in fade-in zoom-in-95 duration-200">
+                      <input 
+                        type="text" placeholder={`Extra Image URL ${index + 1}`} 
+                        value={imgUrl} 
+                        onChange={(e) => {
+                          const newImgs = [...extraImages];
+                          newImgs[index] = e.target.value;
+                          setExtraImages(newImgs);
+                        }} 
+                        className="w-full bg-white/5 border border-white/10 rounded-lg p-2.5 outline-none text-gray-300" 
+                      />
+                      <button type="button" onClick={() => setExtraImages(extraImages.filter((_, i) => i !== index))} className="bg-red-500/20 text-red-400 px-3 rounded-lg hover:bg-red-500 hover:text-white transition-all font-bold">✕</button>
+                    </div>
+                  ))}
+                  
+                  <button type="button" onClick={() => setExtraImages([...extraImages, ''])} className="text-sm text-purple-400 font-bold hover:text-purple-300 transition-all flex items-center gap-1">
+                    + Add More Pictures
+                  </button>
+                </div>
+                
                 <button type="submit" disabled={isUploading} className="w-full bg-green-600 hover:bg-green-700 py-3 rounded-lg font-bold transition-all">{isUploading ? 'Uploading...' : 'Upload Product'}</button>
               </form>
             </div>
