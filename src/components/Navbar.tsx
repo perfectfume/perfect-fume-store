@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, ShoppingCart, User, Menu, X, Trash2, LogOut, MapPin } from 'lucide-react'; 
+import { Search, ShoppingCart, User, Menu, X, Trash2, LogOut, MapPin, CreditCard, Banknote } from 'lucide-react'; 
 import { useStore } from '../store/useStore';
 
 const Navbar = () => {
@@ -7,7 +7,6 @@ const Navbar = () => {
   const { total } = getTotals();
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
-  // Login States
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [loginStep, setLoginStep] = useState(1); 
   const [nameInput, setNameInput] = useState('');
@@ -15,25 +14,22 @@ const Navbar = () => {
   const [phoneInput, setPhoneInput] = useState('');
   const [otpInput, setOtpInput] = useState('');
   
-  // Checkout States
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
-  const [checkoutStep, setCheckoutStep] = useState(1); // 1: Address, 2: OTP
+  const [checkoutStep, setCheckoutStep] = useState(1); // 1: Address, 2: Payment Options, 3: COD OTP
   const [checkoutOtp, setCheckoutOtp] = useState('');
   
-  // Flipkart Style Address Form State
   const [addressForm, setAddressForm] = useState({
     flat: '', area: '', pincode: '', city: 'Kolkata', name: userName || '', phone: userPhone || '', altPhone: '', type: 'Home'
   });
 
   const [isProcessing, setIsProcessing] = useState(false);
   const API_URL = import.meta.env.VITE_API_URL || "https://perfect-fume-backend.perfectfumeofficial.workers.dev";
+  const ADMIN_WHATSAPP = "918777789394"; // <--- EKHANE APNAR 10 DIGIT NUMBER DIN
 
   // --- LOGIN LOGIC ---
   const handleSendOtp = async (e: any) => {
     e.preventDefault();
-    if (!nameInput || !emailInput.includes('@') || phoneInput.length !== 10) {
-      return alert("⚠️ Name, Email ebong 10-digit Phone Number din!");
-    }
+    if (!nameInput || !emailInput.includes('@') || phoneInput.length !== 10) return alert("⚠️ Name, Email ebong 10-digit Phone Number din!");
     setIsProcessing(true);
     try {
       const res = await fetch(`${API_URL}/api/order`, { method: 'POST', body: JSON.stringify({ email: emailInput }) });
@@ -56,7 +52,7 @@ const Navbar = () => {
     setIsProcessing(false);
   };
 
-  // --- CHECKOUT LOGIC (ADDRESS -> OTP) ---
+  // --- CHECKOUT LOGIC ---
   const handleProceedToAddress = () => {
     if (cart.length === 0) return alert("Jhhuri faka!");
     setAddressForm({ ...addressForm, name: userName || '', phone: userPhone || '' });
@@ -65,57 +61,83 @@ const Navbar = () => {
     toggleCart(); 
   };
 
-  const handleSaveAddressAndSendOtp = async (e: any) => {
+  const handleProceedToPaymentOptions = (e: any) => {
     e.preventDefault();
+    setCheckoutStep(2); // Move to Payment Selection
+  };
+
+  // 💰 COD LOGIC
+  const handleSelectCOD = async () => {
     setIsProcessing(true);
     try {
       const res = await fetch(`${API_URL}/api/order`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: userEmail, cart: cart, address: addressForm }) 
+        method: 'POST', body: JSON.stringify({ email: userEmail, cart: cart, address: addressForm }) 
       });
       if (res.ok) {
-        setCheckoutStep(2); 
-        alert(`✅ Order OTP sent to ${userEmail}`);
+        setCheckoutStep(3); 
+        alert(`✅ COD Order OTP sent to ${userEmail}`);
       }
     } catch (err) { alert("Network Error!"); }
     setIsProcessing(false);
   };
 
-    const handleVerifyCheckoutOtp = async (e: any) => {
+  const handleVerifyCheckoutOtp = async (e: any) => {
     e.preventDefault();
     setIsProcessing(true);
     try {
       const res = await fetch(`${API_URL}/api/verify-otp`, { method: 'POST', body: JSON.stringify({ email: userEmail, otp: checkoutOtp }) });
       const data = await res.json();
-      
       if (data.success) {
         alert("🎉 Order Confirmed! Apnar WhatsApp e order details chole jacche...");
-        
-        // 🔥 WHATSAPP REDIRECT MAGIC 🔥
-        const ADMIN_WHATSAPP = "918777789394"; // <--- EKHANE APNAR ASOL 10 DIGIT WHATSAPP NUMBER DIN (91 er por)
-        
-        // Cart er item gulo ke list banano hocche
         let itemList = cart.map(item => `▪️ ${item.name} (${item.quantity} pcs) - ₹${item.price}`).join('%0A');
-        
-        // WhatsApp Message er format
-        let waText = `*New Order Received!* 🛍️%0A%0A*Customer Details:*%0A👤 Name: ${addressForm.name}%0A📞 Phone: ${addressForm.phone}%0A📧 Email: ${userEmail}%0A%0A*Delivery Address:*%0A🏠 ${addressForm.flat}, ${addressForm.area}%0A📍 ${addressForm.city} - ${addressForm.pincode}%0A%0A*Order Items:*%0A${itemList}%0A%0A*Total Amount:* 💰 ₹${total}%0A%0APlease confirm my order!`;
-
-        // WhatsApp khule jabe
+        let waText = `*New COD Order Received!* 🛍️%0A%0A*Customer Details:*%0A👤 Name: ${addressForm.name}%0A📞 Phone: ${addressForm.phone}%0A%0A*Delivery Address:*%0A🏠 ${addressForm.flat}, ${addressForm.area}%0A📍 ${addressForm.city} - ${addressForm.pincode}%0A%0A*Order Items:*%0A${itemList}%0A%0A*Total Amount:* 💰 ₹${total}%0A%0APlease confirm my order!`;
         window.open(`https://wa.me/${ADMIN_WHATSAPP}?text=${waText}`, '_blank');
-
-        setIsCheckoutOpen(false); 
-        setCheckoutOtp(''); 
-        clearCart(); 
-      } else { 
-        alert("Vul OTP!"); 
-      }
-    } catch (err) { 
-      alert("Network Error!"); 
-    }
+        setIsCheckoutOpen(false); setCheckoutOtp(''); clearCart(); 
+      } else { alert("Vul OTP!"); }
+    } catch (err) { alert("Network Error!"); }
     setIsProcessing(false);
   };
-  
+
+  // 💳 RAZORPAY ONLINE PAYMENT LOGIC
+  const handlePayOnline = async () => {
+    setIsProcessing(true);
+    try {
+      const res = await fetch(`${API_URL}/api/create-razorpay-order`, {
+        method: 'POST', body: JSON.stringify({ amount: total })
+      });
+      const orderData = await res.json();
+      
+      const options = {
+        key: "rzp_test_ShGhsVZ58mGSle",
+        amount: orderData.amount,
+        currency: "INR",
+        name: "Perfect Fume",
+        description: "Premium Perfume Purchase",
+        order_id: orderData.id,
+        handler: async function (response: any) {
+          alert("✅ Payment Successful! Redirecting to WhatsApp...");
+          
+          // Verify payment on backend & send Email
+          await fetch(`${API_URL}/api/confirm-online-order`, {
+            method: 'POST', body: JSON.stringify({ email: userEmail, cart, address: addressForm, paymentId: response.razorpay_payment_id })
+          });
+
+          // WhatsApp for Paid Order
+          let itemList = cart.map(item => `▪️ ${item.name} (${item.quantity} pcs) - ₹${item.price}`).join('%0A');
+          let waText = `*New PAID Order!* 💳✅%0A%0A*Customer Details:*%0A👤 Name: ${addressForm.name}%0A📞 Phone: ${addressForm.phone}%0A%0A*Delivery Address:*%0A🏠 ${addressForm.flat}, ${addressForm.area}%0A📍 ${addressForm.city} - ${addressForm.pincode}%0A%0A*Order Items:*%0A${itemList}%0A%0A*Total Paid:* 💰 ₹${total}%0A*Payment ID:* ${response.razorpay_payment_id}%0A%0APlease process my order!`;
+          window.open(`https://wa.me/${ADMIN_WHATSAPP}?text=${waText}`, '_blank');
+          
+          setIsCheckoutOpen(false); clearCart(); 
+        },
+        prefill: { name: addressForm.name, email: userEmail || '', contact: addressForm.phone },
+        theme: { color: "#6b21a8" }
+      };
+
+      const rzp = new (window as any).Razorpay(options);
+      rzp.open();
+    } catch(err) { alert("Payment initiation failed!"); }
+    setIsProcessing(false);
+  };
 
   return (
     <>
@@ -125,11 +147,7 @@ const Navbar = () => {
             <Menu className="text-white md:hidden cursor-pointer" />
             <h1 className="text-xl font-bold bg-gradient-to-r from-purple-400 to-pink-600 bg-clip-text text-transparent">PERFECT FUME</h1>
           </div>
-          <div className="hidden md:flex flex-1 max-w-2xl relative">
-            <input type="text" placeholder="Search for premium perfumes..." className="w-full bg-white/10 border border-white/20 rounded-md py-2 px-4 pl-10 text-white" />
-            <Search className="absolute left-3 top-2.5 text-gray-400 w-5 h-5" />
-          </div>
-          <div className="flex items-center gap-6 text-white">
+          <div className="flex items-center gap-6 text-white ml-auto">
             {!userEmail ? (
               <div onClick={() => setIsAuthOpen(true)} className="flex flex-col items-center cursor-pointer hover:text-purple-400"><User className="w-6 h-6" /><span className="text-[10px] hidden md:block">Sign In</span></div>
             ) : (
@@ -164,20 +182,22 @@ const Navbar = () => {
         </div>
       )}
 
-      {/* FLIPKART STYLE CHECKOUT MODAL */}
+      {/* CHECKOUT MODAL */}
       {isCheckoutOpen && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex justify-center items-end md:items-center px-4 pb-4 md:pb-0">
           <div className="bg-white w-full max-w-md rounded-2xl relative shadow-2xl animate-in slide-in-from-bottom text-black overflow-hidden flex flex-col max-h-[85vh]">
             <div className="p-4 border-b flex justify-between items-center sticky top-0 bg-white z-10">
-              <h2 className="text-xl font-bold flex items-center gap-2">{checkoutStep === 1 ? <><MapPin className="w-5 h-5 text-blue-600"/> Deliver To</> : 'Confirm Order'}</h2>
+              <h2 className="text-xl font-bold flex items-center gap-2">
+                {checkoutStep === 1 && <><MapPin className="w-5 h-5 text-blue-600"/> Delivery Address</>}
+                {checkoutStep === 2 && <><CreditCard className="w-5 h-5 text-purple-600"/> Payment Method</>}
+                {checkoutStep === 3 && 'Confirm COD Order'}
+              </h2>
               <button onClick={() => setIsCheckoutOpen(false)} className="p-2 bg-gray-100 rounded-full"><X className="w-4 h-4" /></button>
             </div>
             
             <div className="p-4 overflow-y-auto">
-              {checkoutStep === 1 ? (
-                <form onSubmit={handleSaveAddressAndSendOtp} className="space-y-4">
-                  <p className="text-xs text-yellow-700 bg-yellow-50 p-2 rounded-lg border border-yellow-200">ℹ️ Ensure your details are accurate for smooth delivery.</p>
-                  
+              {checkoutStep === 1 && (
+                <form onSubmit={handleProceedToPaymentOptions} className="space-y-4">
                   <input required placeholder="Flat / House / Building name *" value={addressForm.flat} onChange={(e) => setAddressForm({...addressForm, flat: e.target.value})} className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:border-blue-600 focus:outline-none" />
                   <input required placeholder="Area / Sector / Locality *" value={addressForm.area} onChange={(e) => setAddressForm({...addressForm, area: e.target.value})} className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:border-blue-600 focus:outline-none" />
                   <div className="flex gap-2">
@@ -186,23 +206,30 @@ const Navbar = () => {
                   </div>
                   <input required placeholder="Full Name *" value={addressForm.name} onChange={(e) => setAddressForm({...addressForm, name: e.target.value})} className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:border-blue-600 focus:outline-none" />
                   <input required type="number" placeholder="10-digit mobile number *" value={addressForm.phone} onChange={(e) => setAddressForm({...addressForm, phone: e.target.value})} className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:border-blue-600 focus:outline-none" />
-                  <input placeholder="Alternate phone number (Optional)" value={addressForm.altPhone} onChange={(e) => setAddressForm({...addressForm, altPhone: e.target.value})} className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:border-blue-600 focus:outline-none" />
-                  
-                  <div className="flex gap-2 pt-2">
-                    <span onClick={() => setAddressForm({...addressForm, type: 'Home'})} className={`px-4 py-1.5 border rounded-full text-sm cursor-pointer ${addressForm.type === 'Home' ? 'bg-blue-50 border-blue-600 text-blue-600 font-bold' : 'text-gray-500'}`}>🏠 Home</span>
-                    <span onClick={() => setAddressForm({...addressForm, type: 'Work'})} className={`px-4 py-1.5 border rounded-full text-sm cursor-pointer ${addressForm.type === 'Work' ? 'bg-blue-50 border-blue-600 text-blue-600 font-bold' : 'text-gray-500'}`}>🏢 Work</span>
-                  </div>
-                  
-                  <div className="pt-4 sticky bottom-0 bg-white">
-                    <button type="submit" disabled={isProcessing} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-lg shadow-lg">
-                      {isProcessing ? 'Saving...' : 'Save Address & Continue'}
-                    </button>
-                  </div>
+                  <button type="submit" className="w-full bg-blue-600 text-white font-bold py-3.5 rounded-lg shadow-lg">Proceed to Payment</button>
                 </form>
-              ) : (
+              )}
+
+              {checkoutStep === 2 && (
+                <div className="space-y-4 py-4">
+                  <div className="bg-purple-50 p-4 rounded-xl mb-4 border border-purple-100">
+                    <p className="text-sm text-purple-800">Total Amount Payable</p>
+                    <h3 className="text-3xl font-bold text-purple-900">₹{total}</h3>
+                  </div>
+                  <button onClick={handlePayOnline} disabled={isProcessing} className="w-full bg-[#111] hover:bg-black text-white font-bold py-4 rounded-xl flex items-center justify-center gap-3 shadow-lg transition-transform active:scale-95">
+                    <CreditCard className="w-5 h-5 text-purple-400" /> Pay Online (UPI / Card)
+                  </button>
+                  <div className="relative py-2"><div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200"></div></div><div className="relative flex justify-center"><span className="bg-white px-2 text-sm text-gray-500">OR</span></div></div>
+                  <button onClick={handleSelectCOD} disabled={isProcessing} className="w-full bg-white hover:bg-gray-50 text-gray-800 border-2 border-gray-200 font-bold py-4 rounded-xl flex items-center justify-center gap-3 transition-transform active:scale-95">
+                    <Banknote className="w-5 h-5 text-green-600" /> Cash on Delivery (COD)
+                  </button>
+                </div>
+              )}
+
+              {checkoutStep === 3 && (
                 <form onSubmit={handleVerifyCheckoutOtp}>
                   <p className="text-sm text-green-600 mb-4 text-center bg-green-50 p-2 rounded-lg">✅ OTP sent to {userEmail}</p>
-                  <input type="number" required value={checkoutOtp} onChange={(e) => setCheckoutOtp(e.target.value)} placeholder="Enter 4-digit OTP" className="w-full border border-gray-300 rounded-lg p-3 text-center tracking-[1em] font-bold text-xl focus:outline-none focus:border-blue-600 mb-4" />
+                  <input type="number" required value={checkoutOtp} onChange={(e) => setCheckoutOtp(e.target.value)} placeholder="Enter 4-digit OTP" className="w-full border border-gray-300 rounded-lg p-3 text-center tracking-[1em] font-bold text-xl focus:border-blue-600 mb-4" />
                   <button type="submit" disabled={isProcessing} className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3.5 rounded-lg shadow-lg">
                     {isProcessing ? 'Verifying...' : 'Verify & Place Order'}
                   </button>
@@ -240,4 +267,4 @@ const Navbar = () => {
 };
 
 export default Navbar;
-                                                         
+            
