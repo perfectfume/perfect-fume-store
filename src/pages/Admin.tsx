@@ -64,14 +64,16 @@ const AdminPanel = () => {
     setProducts(data);
   };
 
+    // 🔥 FIX: Filter ghost orders (Login requests without cart items)
   const fetchOrders = async () => {
     try {
       const res = await fetch(`${API_URL}/api/admin/orders`);
       const data = await res.json();
-      setOrders(data);
+      const realOrders = data.filter((o: any) => o.cart_details && o.cart_details !== "null" && o.cart_details !== "[]");
+      setOrders(realOrders);
     } catch (err) { console.error("Order load hoyni"); }
   };
-
+  
   // --- PRODUCT ACTIONS ---
   const handleAddProduct = async (e: any) => {
     e.preventDefault();
