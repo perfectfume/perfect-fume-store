@@ -18,11 +18,14 @@ interface StoreState {
   removeFromCart: (id: string) => void;
   toggleCart: () => void;
   getTotals: () => { total: number };
+  
+  // 🔥 NOTUN: userName add kora holo
+  userName: string | null;
   userEmail: string | null;
   userPhone: string | null;
-  setUserAuth: (email: string | null, phone: string | null) => void;
+  setUserAuth: (name: string | null, email: string | null, phone: string | null) => void;
   logout: () => void;
-  clearCart: () => void; // 🔥 NOTUN: Order place hoye gele cart faka korar jonno
+  clearCart: () => void;
 }
 
 export const useStore = create<StoreState>()(
@@ -49,14 +52,13 @@ export const useStore = create<StoreState>()(
         return { total };
       },
 
+      userName: null,
       userEmail: null,
       userPhone: null,
-      setUserAuth: (email, phone) => set({ userEmail: email, userPhone: phone }),
-      logout: () => set({ userEmail: null, userPhone: null }), 
-      clearCart: () => set({ cart: [] }), // 🔥 NOTUN Command
+      setUserAuth: (name, email, phone) => set({ userName: name, userEmail: email, userPhone: phone }),
+      logout: () => set({ userName: null, userEmail: null, userPhone: null }), 
+      clearCart: () => set({ cart: [] }),
     }),
-    {
-      name: 'perfect-fume-cart', 
-    }
+    { name: 'perfect-fume-cart' }
   )
 );
