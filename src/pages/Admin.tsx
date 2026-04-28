@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Download, AlertTriangle, TrendingUp, Package, Users, Calendar, Filter, Inbox, Clock, Truck, CheckCircle } from 'lucide-react';
-
+import { Download, AlertTriangle, TrendingUp, Package, Users, Calendar, Filter, Inbox, Clock, Truck, CheckCircle, Pencil, X } from 'lucide-react';
 const AdminPanel = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -20,6 +19,18 @@ const AdminPanel = () => {
   const [extraImages, setExtraImages] = useState<string[]>([]); // 🔥 NOTUN: Gallery images
   
   const [isUploading, setIsUploading] = useState(false);
+    // 🔥 EDIT PRODUCT STATES
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingProductId, setEditingProductId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [editPrice, setEditPrice] = useState('');
+  const [editCategory, setEditCategory] = useState('Men');
+  const [editStock, setEditStock] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [editImage, setEditImage] = useState('');
+  const [editExtraImages, setEditExtraImages] = useState<string[]>([]);
+  const [isUpdating, setIsUpdating] = useState(false);
+  
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
   const [trackingLinks, setTrackingLinks] = useState<any>({}); 
@@ -107,7 +118,43 @@ const AdminPanel = () => {
     const res = await fetch(`${API_URL}/api/delete-product`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
     if (res.ok) fetchProducts();
   };
+    // 🔥 EDIT PRODUCT LOGIC
+  const openEditModal = (product: any) => {
+    setEditingProductId(product.id);
+    setEditTitle(product.name);
+    setEditPrice(product.price.toString());
+    setEditCategory(product.category || 'Men');
+    setEditStock(product.stock !== undefined ? product.stock.toString() : '0');
+    setEditDescription(product.description || '');
+    setEditImage(product.image);
+    try {
+      const gallery = product.gallery ? JSON.parse(product.gallery) : [];
+      setEditExtraImages(gallery);
+    } catch (e) { setEditExtraImages([]); }
+    setIsEditModalOpen(true);
+  };
 
+  const handleUpdateProduct = async (e: any) => {
+    e.preventDefault();
+    if (!editingProductId) return;
+    setIsUpdating(true);
+    const cleanGallery = editExtraImages.filter(url => url.trim() !== '');
+
+    try {
+      const res = await fetch(`${API_URL}/api/update-product`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: editingProductId, name: editTitle, price: Number(editPrice), description: editDescription, image: editImage, category: editCategory, stock: Number(editStock), gallery: cleanGallery })
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert("✅ Product Updated Successfully!");
+        setIsEditModalOpen(false); 
+        fetchProducts(); 
+      } else { alert(`❌ Update failed: ${data.error}`); }
+    } catch (err) { alert("Network Error!"); }
+    setIsUpdating(false);
+  };
+  
   const handleStatusChange = async (orderId: string, newStatus: string) => {
     let trackingUrl = trackingLinks[orderId] || "";
     if (newStatus === 'shipped' && !trackingUrl) {
@@ -398,7 +445,14 @@ const AdminPanel = () => {
                         {p.stock !== undefined && p.stock < 5 ? (<p className="text-[10px] bg-red-600/20 text-red-400 px-2 py-0.5 rounded-full border border-red-500/50 animate-pulse font-bold">Low Stock: {p.stock} left</p>) : (<p className="text-[10px] text-gray-400">Stock: {p.stock || 10}</p>)}
                       </div>
                     </div>
-                    <button onClick={() => handleDelete(p.id)} className="opacity-0 group-hover:opacity-100 bg-red-600/20 text-red-400 p-2 rounded-lg hover:bg-red-600 hover:text-white transition-all text-xs font-bold">Delete</button>
+                                        {/* EDIT & DELETE BUTTONS */}
+                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                      <button onClick={() => openEditModal(p)} className="bg-blue-600/20 text-blue-400 p-2 rounded-lg hover:bg-blue-600 hover:text-white transition-all text-xs font-bold flex items-center gap-1">
+                        <Pencil className="w-3 h-3" /> Edit
+                      </button>
+                      <button onClick={() => handleDelete(p.id)} className="bg-red-600/20 text-red-400 p-2 rounded-lg hover:bg-red-600 hover:text-white transition-all text-xs font-bold">Delete</button>
+                    </div>
+                    
                   </div>
                 ))}
               </div>
@@ -452,9 +506,46 @@ const AdminPanel = () => {
             </div>
           </div>
         )}
-
       </div>
     </div>
+          {/* EDIT PRODUCT POPUP MODAL */}
+      {isEditModalOpen && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex justify-center items-center px-4 overflow-y-auto py-10">
+          <div className="bg-[#111] w-full max-w-2xl rounded-2xl border border-white/10 p-6 relative shadow-2xl animate-in zoom-in-95 duration-200 text-white max-h-[85vh] flex flex-col">
+            <button onClick={() => setIsEditModalOpen(false)} className="absolute top-4 right-4 text-gray-500 hover:text-white bg-white/5 p-2 rounded-full"><X className="w-4 h-4" /></button>
+            <div className="text-center mb-6"><Pencil className="w-10 h-10 text-blue-500 mx-auto mb-2 bg-blue-500/10 p-2 rounded-full" /><h2 className="text-2xl font-bold italic text-blue-400">Edit Product</h2></div>
+            
+            <form onSubmit={handleUpdateProduct} className="space-y-4 text-sm flex-1 overflow-y-auto pr-3 no-scrollbar">
+              <input type="text" placeholder="Title" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg p-2.5 outline-none focus:border-blue-500" />
+              <div className="grid grid-cols-3 gap-4">
+                <input type="number" placeholder="Price (₹)" value={editPrice} onChange={(e) => setEditPrice(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg p-2.5 outline-none focus:border-blue-500" />
+                <input type="number" placeholder="Stock (Qty)" value={editStock} onChange={(e) => setEditStock(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg p-2.5 outline-none focus:border-blue-500" />
+                <select value={editCategory} onChange={(e) => setEditCategory(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg p-2.5 outline-none text-gray-300 md:bg-gray-900">
+                  <option value="Men">Men</option><option value="Women">Women</option><option value="Unisex">Unisex</option>
+                </select>
+              </div>
+              <textarea placeholder="Description" value={editDescription} onChange={(e) => setEditDescription(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg p-2.5 h-32 outline-none focus:border-blue-500" />
+              
+              <div className="space-y-3 bg-black/30 p-3 rounded-lg border border-white/5">
+                <input type="text" placeholder="Main Image URL *" value={editImage} onChange={(e) => setEditImage(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg p-2.5 outline-none focus:border-blue-500" />
+                <p className="text-xs text-gray-400 mt-2">Gallery Images (Optional)</p>
+                {editExtraImages.map((imgUrl, index) => (
+                  <div key={index} className="flex gap-2">
+                    <input type="text" placeholder={`Extra Image URL ${index + 1}`} value={imgUrl} onChange={(e) => { const newImgs = [...editExtraImages]; newImgs[index] = e.target.value; setEditExtraImages(newImgs); }} className="w-full bg-white/5 border border-white/10 rounded-lg p-2.5 outline-none text-gray-300 focus:border-blue-500" />
+                    <button type="button" onClick={() => setEditExtraImages(editExtraImages.filter((_, i) => i !== index))} className="bg-red-500/20 text-red-400 px-3 rounded-lg hover:bg-red-500 hover:text-white transition-all font-bold">✕</button>
+                  </div>
+                ))}
+                <button type="button" onClick={() => setEditExtraImages([...editExtraImages, ''])} className="text-sm text-blue-400 font-bold hover:text-blue-300 transition-all">+ Add More Pictures</button>
+              </div>
+
+              <div className="flex gap-4 mt-6 pt-4 border-t border-white/10">
+                <button type="button" onClick={() => setIsEditModalOpen(false)} className="w-full bg-white/5 hover:bg-white/10 py-3 rounded-lg font-bold transition-all">Cancel</button>
+                <button type="submit" disabled={isUpdating} className="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-lg font-bold transition-all shadow-lg shadow-blue-900/30">{isUpdating ? 'Saving...' : 'Save Changes'}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
   );
 };
 
