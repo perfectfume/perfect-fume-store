@@ -1,14 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { Download, AlertTriangle, TrendingUp, Package, Users } from 'lucide-react';
 
 const AdminPanel = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [otp, setOtp] = useState('');
-  const [loginStep, setLoginStep] = useState(1); // 1: Email+Pass, 2: OTP
+  const [loginStep, setLoginStep] = useState(1); 
   const [isProcessing, setIsProcessing] = useState(false);
 
   const [isAuthorized, setIsAuthorized] = useState(false);
-  const [activeTab, setActiveTab] = useState('products'); 
+  const [activeTab, setActiveTab] = useState('dashboard'); // 🔥 Default tab ekhon dashboard
   
   const [title, setTitle] = useState('');
   const [price, setPrice] = useState('');
@@ -19,31 +20,20 @@ const AdminPanel = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
+  const [trackingLinks, setTrackingLinks] = useState<any>({}); // 🔥 Tracking link save rakhar jonno
   
   const ADMIN_SECRET = "Himanshu@2026"; 
-  const ADMIN_EMAIL = "perfectfumeofficial@gmail.com"; // 🔥 APNAR ASOL EMAIL
+  const ADMIN_EMAIL = "perfectfumeofficial@gmail.com"; 
   const API_URL = import.meta.env.VITE_API_URL || "https://perfect-fume-backend.perfectfumeofficial.workers.dev";
 
-  // --- 🔥 SECURE LOGIN LOGIC (Email + Pass -> OTP) ---
+  // --- LOGIN LOGIC (Ager motoi) ---
   const handleRequestOtp = async (e: any) => {
     e.preventDefault();
-    if (password !== ADMIN_SECRET || email !== ADMIN_EMAIL) {
-      return alert("⚠️ Vul Email ba Password!");
-    }
-    
+    if (password !== ADMIN_SECRET || email !== ADMIN_EMAIL) return alert("⚠️ Vul Email ba Password!");
     setIsProcessing(true);
     try {
-      // Backend e /api/order call kora hochhe jate OTP apnar mail e jay
-      const res = await fetch(`${API_URL}/api/order`, { 
-        method: 'POST', 
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: ADMIN_EMAIL }) 
-      });
-      const data = await res.json();
-      if (data.success) {
-        setLoginStep(2);
-        alert(`✅ Secure OTP sent to ${ADMIN_EMAIL}`);
-      }
+      const res = await fetch(`${API_URL}/api/order`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: ADMIN_EMAIL }) });
+      if (res.ok) { setLoginStep(2); alert(`✅ Secure OTP sent to ${ADMIN_EMAIL}`); }
     } catch (err) { alert("Network Error!"); }
     setIsProcessing(false);
   };
@@ -52,22 +42,16 @@ const AdminPanel = () => {
     e.preventDefault();
     setIsProcessing(true);
     try {
-      const res = await fetch(`${API_URL}/api/verify-otp`, { 
-        method: 'POST', 
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: ADMIN_EMAIL, otp: otp }) 
-      });
+      const res = await fetch(`${API_URL}/api/verify-otp`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: ADMIN_EMAIL, otp: otp }) });
       const data = await res.json();
       if (data.success) {
         setIsAuthorized(true);
-        fetchProducts();
-        fetchOrders();
+        fetchProducts(); fetchOrders();
       } else { alert("⚠️ Vul OTP!"); }
     } catch (err) { alert("Network Error!"); }
     setIsProcessing(false);
   };
 
-  // --- DATA FETCHING & ACTIONS ---
   const fetchProducts = async () => {
     const res = await fetch(`${API_URL}/api/catalog`);
     const data = await res.json();
@@ -86,40 +70,70 @@ const AdminPanel = () => {
     e.preventDefault();
     setIsUploading(true);
     const res = await fetch(`${API_URL}/api/add-product`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: title, price: Number(price), description, image, category, stock: Number(stock) })
     });
     const data = await res.json();
-    if (data.success) {
-      alert("✅ Uploaded!");
-      setTitle(''); setPrice(''); setStock(''); setDescription(''); setImage('');
-      fetchProducts();
-    }
+    if (data.success) { alert("✅ Uploaded!"); setTitle(''); setPrice(''); setStock(''); setDescription(''); setImage(''); fetchProducts(); }
     setIsUploading(false);
   };
 
   const handleDelete = async (id: string) => {
     if (!window.confirm("Sotti Delete korben?")) return;
-    const res = await fetch(`${API_URL}/api/delete-product`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id })
-    });
+    const res = await fetch(`${API_URL}/api/delete-product`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
     if (res.ok) fetchProducts();
   };
 
+  // 🔥 NOTUN: Tracking Link er sathe Status Update
   const handleStatusChange = async (orderId: string, newStatus: string) => {
+    let trackingUrl = trackingLinks[orderId] || "";
+    if (newStatus === 'shipped' && !trackingUrl) {
+      const askLink = prompt("📦 Shipped korte chaichen! Courier er Tracking Link (URL) thakle din, nahole faka rakhun:");
+      if (askLink) trackingUrl = askLink;
+    }
+
     try {
       const res = await fetch(`${API_URL}/api/admin/update-order`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: orderId, status: newStatus })
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: orderId, status: newStatus, trackingUrl })
       });
       const data = await res.json();
-      if (data.success) { fetchOrders(); } 
-      else { alert("Status update fail koreche!"); }
+      if (data.success) { 
+        fetchOrders(); 
+        if (newStatus === 'shipped' && trackingUrl) alert("✅ Customer-ke tracking link e-mail e pathano hoyeche!");
+      } 
     } catch (err) { alert("Network Error!"); }
+  };
+
+  // 🔥 NOTUN: Export to Excel (CSV)
+  const downloadExcel = () => {
+    let csv = "Order ID,Date,Customer Name,Email,Phone,City,Order Amount,Status\n";
+    
+    orders.forEach((order: any) => {
+      let addr = { name: 'N/A', phone: 'N/A', city: 'N/A' };
+      if (order.address_details) {
+        try { addr = JSON.parse(order.address_details); } catch(e){}
+      }
+      
+      let amount = 0;
+      if (order.cart_details) {
+        try {
+          const items = JSON.parse(order.cart_details);
+          amount = items.reduce((acc: number, item: any) => acc + (item.price * (item.quantity || item.qty)), 0);
+        } catch(e){}
+      }
+      
+      const date = new Date(order.created_at).toLocaleDateString();
+      // Excel a bhangon thekanor jonno quote ("") e rakha hochhe
+      csv += `"#OR-${order.id}","${date}","${addr.name}","${order.email}","${addr.phone}","${addr.city}","Rs. ${amount}","${order.status}"\n`;
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.setAttribute('href', url);
+    a.setAttribute('download', `PerfectFume_Customers_${new Date().toLocaleDateString()}.csv`);
+    a.click();
   };
 
   const getStatusColor = (status: string) => {
@@ -132,43 +146,36 @@ const AdminPanel = () => {
     }
   };
 
-  // --- 🔥 SECURE LOGIN UI ---
+  // Analytics Hisab
+  const totalRevenue = orders.reduce((total, order: any) => {
+    let amt = 0;
+    if (order.cart_details) {
+      try {
+        const items = JSON.parse(order.cart_details);
+        amt = items.reduce((acc: number, item: any) => acc + (item.price * (item.quantity || item.qty)), 0);
+      } catch(e){}
+    }
+    return total + amt;
+  }, 0);
+
+  const lowStockProducts = products.filter((p: any) => p.stock !== undefined && p.stock < 5);
+
   if (!isAuthorized) {
     return (
       <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center px-4 font-sans text-white">
         <div className="bg-[#111] p-8 rounded-2xl border border-white/10 shadow-2xl w-full max-w-md animate-in zoom-in-95">
-          <div className="text-center mb-6">
-            <h2 className="text-2xl font-bold italic text-purple-400">CEO Control Panel</h2>
-            <p className="text-xs text-gray-500 mt-1">Level 4 Security Clearance Required</p>
-          </div>
-
+          <div className="text-center mb-6"><h2 className="text-2xl font-bold italic text-purple-400">CEO Control Panel</h2><p className="text-xs text-gray-500 mt-1">Level 4 Security Clearance Required</p></div>
           {loginStep === 1 ? (
             <form onSubmit={handleRequestOtp} className="space-y-4">
-              <input 
-                type="email" required placeholder="Admin Email" 
-                className="w-full bg-black border border-white/10 rounded-lg py-3 px-4 outline-none focus:border-purple-500" 
-                value={email} onChange={(e) => setEmail(e.target.value)} 
-              />
-              <input 
-                type="password" required placeholder="Secret Master Key" 
-                className="w-full bg-black border border-white/10 rounded-lg py-3 px-4 outline-none focus:border-purple-500" 
-                value={password} onChange={(e) => setPassword(e.target.value)} 
-              />
-              <button type="submit" disabled={isProcessing} className="w-full bg-purple-600 hover:bg-purple-700 py-3 rounded-lg font-bold shadow-lg transition-all">
-                {isProcessing ? 'Verifying Credentials...' : 'Request Access'}
-              </button>
+              <input type="email" required placeholder="Admin Email" className="w-full bg-black border border-white/10 rounded-lg py-3 px-4 outline-none focus:border-purple-500" value={email} onChange={(e) => setEmail(e.target.value)} />
+              <input type="password" required placeholder="Secret Master Key" className="w-full bg-black border border-white/10 rounded-lg py-3 px-4 outline-none focus:border-purple-500" value={password} onChange={(e) => setPassword(e.target.value)} />
+              <button type="submit" disabled={isProcessing} className="w-full bg-purple-600 hover:bg-purple-700 py-3 rounded-lg font-bold shadow-lg transition-all">{isProcessing ? 'Verifying...' : 'Request Access'}</button>
             </form>
           ) : (
             <form onSubmit={handleVerifyOtp} className="space-y-4">
               <p className="text-xs text-green-400 mb-4 bg-green-900/20 p-2 rounded-lg border border-green-500/20 text-center">✅ OTP Sent to Admin Mail</p>
-              <input 
-                type="number" required placeholder="Enter 4-Digit OTP" 
-                className="w-full bg-black border border-white/10 rounded-lg py-3 px-4 outline-none text-center tracking-[1em] font-bold text-xl focus:border-green-500" 
-                value={otp} onChange={(e) => setOtp(e.target.value)} 
-              />
-              <button type="submit" disabled={isProcessing} className="w-full bg-green-600 hover:bg-green-700 py-3 rounded-lg font-bold shadow-lg transition-all">
-                {isProcessing ? 'Unlocking...' : 'Verify & Enter'}
-              </button>
+              <input type="number" required placeholder="Enter 4-Digit OTP" className="w-full bg-black border border-white/10 rounded-lg py-3 px-4 outline-none text-center tracking-[1em] font-bold text-xl focus:border-green-500" value={otp} onChange={(e) => setOtp(e.target.value)} />
+              <button type="submit" disabled={isProcessing} className="w-full bg-green-600 hover:bg-green-700 py-3 rounded-lg font-bold shadow-lg transition-all">{isProcessing ? 'Unlocking...' : 'Verify & Enter'}</button>
             </form>
           )}
         </div>
@@ -176,34 +183,70 @@ const AdminPanel = () => {
     );
   }
 
-  // --- ASOL DASHBOARD (Ager motoi ache) ---
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white p-4 md:p-8 font-sans">
-      <div className="max-w-6xl mx-auto mt-24">
+    <div className="min-h-screen bg-[#0a0a0a] text-white p-4 md:p-8 font-sans pb-24">
+      <div className="max-w-6xl mx-auto mt-20 md:mt-24">
         
-        <div className="flex gap-4 mb-8 bg-white/5 p-1 rounded-xl border border-white/10 w-fit">
-          <button onClick={() => setActiveTab('products')} className={`px-6 py-2 rounded-lg font-medium transition-all ${activeTab === 'products' ? 'bg-purple-600 text-white' : 'text-gray-400 hover:text-white'}`}>Products</button>
-          <button onClick={() => { setActiveTab('orders'); fetchOrders(); }} className={`px-6 py-2 rounded-lg font-medium transition-all ${activeTab === 'orders' ? 'bg-purple-600 text-white' : 'text-gray-400 hover:text-white'}`}>Orders</button>
+        <div className="flex gap-4 mb-8 bg-white/5 p-1 rounded-xl border border-white/10 w-fit overflow-x-auto">
+          <button onClick={() => setActiveTab('dashboard')} className={`px-6 py-2 rounded-lg font-medium whitespace-nowrap transition-all ${activeTab === 'dashboard' ? 'bg-purple-600 text-white' : 'text-gray-400 hover:text-white'}`}>Dashboard</button>
+          <button onClick={() => setActiveTab('products')} className={`px-6 py-2 rounded-lg font-medium whitespace-nowrap transition-all ${activeTab === 'products' ? 'bg-purple-600 text-white' : 'text-gray-400 hover:text-white'}`}>Products</button>
+          <button onClick={() => { setActiveTab('orders'); fetchOrders(); }} className={`px-6 py-2 rounded-lg font-medium whitespace-nowrap transition-all ${activeTab === 'orders' ? 'bg-purple-600 text-white' : 'text-gray-400 hover:text-white'}`}>Orders</button>
         </div>
 
-        {activeTab === 'products' ? (
+        {/* 🔥 DASHBOARD TAB */}
+        {activeTab === 'dashboard' && (
+          <div className="space-y-6 animate-in fade-in duration-300">
+            <h2 className="text-3xl font-bold italic text-white mb-6">Business Overview</h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="bg-gradient-to-br from-purple-900/50 to-black p-6 rounded-2xl border border-purple-500/30 shadow-lg shadow-purple-900/20">
+                <div className="flex justify-between items-center mb-4"><h3 className="text-gray-300 font-bold">Total Revenue</h3><TrendingUp className="text-purple-400" /></div>
+                <p className="text-4xl font-bold text-white">₹{totalRevenue}</p>
+              </div>
+              
+              <div className="bg-gradient-to-br from-blue-900/50 to-black p-6 rounded-2xl border border-blue-500/30 shadow-lg shadow-blue-900/20">
+                <div className="flex justify-between items-center mb-4"><h3 className="text-gray-300 font-bold">Total Orders</h3><Package className="text-blue-400" /></div>
+                <p className="text-4xl font-bold text-white">{orders.length}</p>
+              </div>
+
+              <div className="bg-gradient-to-br from-green-900/50 to-black p-6 rounded-2xl border border-green-500/30 shadow-lg shadow-green-900/20 flex flex-col justify-center items-center cursor-pointer hover:scale-105 transition-transform" onClick={downloadExcel}>
+                <Users className="text-green-400 w-8 h-8 mb-2" />
+                <h3 className="text-white font-bold">Export Customer Data</h3>
+                <p className="text-xs text-green-400 mt-1">Download CSV format</p>
+              </div>
+            </div>
+
+            {lowStockProducts.length > 0 && (
+              <div className="mt-8 bg-red-900/20 border border-red-500/30 p-6 rounded-2xl">
+                <h3 className="text-xl font-bold text-red-400 flex items-center gap-2 mb-4"><AlertTriangle /> Low Stock Alerts</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {lowStockProducts.map((p: any) => (
+                    <div key={p.id} className="flex justify-between items-center bg-black/50 p-4 rounded-lg border border-red-500/20">
+                      <div className="flex items-center gap-3"><img src={p.image} className="w-10 h-10 rounded object-cover" /> <p className="font-bold">{p.name}</p></div>
+                      <span className="bg-red-600 text-white px-3 py-1 rounded-full text-xs font-bold animate-pulse">Only {p.stock} left</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* PRODUCTS TAB */}
+        {activeTab === 'products' && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 animate-in fade-in duration-300">
             {/* Add Product Form */}
             <div className="bg-white/5 p-6 rounded-2xl border border-white/10 h-fit">
               <h2 className="text-2xl font-bold mb-6 italic text-purple-400">Add Perfume</h2>
               <form onSubmit={handleAddProduct} className="space-y-4 text-sm">
                 <input type="text" placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg p-2.5 outline-none" />
-                
                 <div className="grid grid-cols-3 gap-4">
                   <input type="number" placeholder="Price (₹)" value={price} onChange={(e) => setPrice(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg p-2.5 outline-none" />
-                  
                   <input type="number" placeholder="Stock (Qty)" value={stock} onChange={(e) => setStock(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg p-2.5 outline-none" />
-                  
                   <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg p-2.5 outline-none text-gray-300 md:bg-gray-900">
                     <option value="Men">Men</option><option value="Women">Women</option><option value="Unisex">Unisex</option>
                   </select>
                 </div>
-
                 <textarea placeholder="Description" value={description} onChange={(e) => setDescription(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg p-2.5 h-20 outline-none" />
                 <input type="text" placeholder="Image URL" value={image} onChange={(e) => setImage(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg p-2.5 outline-none" />
                 <button type="submit" disabled={isUploading} className="w-full bg-green-600 hover:bg-green-700 py-3 rounded-lg font-bold transition-all">{isUploading ? 'Uploading...' : 'Upload Product'}</button>
@@ -222,12 +265,9 @@ const AdminPanel = () => {
                       <div className="flex gap-2 items-center mt-1">
                         <p className="text-xs text-purple-400">₹{p.price}</p>
                         <span className="text-gray-600 text-xs">•</span>
-                        
                         {p.stock !== undefined && p.stock < 5 ? (
                           <p className="text-[10px] bg-red-600/20 text-red-400 px-2 py-0.5 rounded-full border border-red-500/50 animate-pulse font-bold">Low Stock: {p.stock} left</p>
-                        ) : (
-                          <p className="text-[10px] text-gray-400">Stock: {p.stock || 10}</p>
-                        )}
+                        ) : (<p className="text-[10px] text-gray-400">Stock: {p.stock || 10}</p>)}
                       </div>
                     </div>
                     <button onClick={() => handleDelete(p.id)} className="opacity-0 group-hover:opacity-100 bg-red-600/20 text-red-400 p-2 rounded-lg hover:bg-red-600 hover:text-white transition-all text-xs font-bold">Delete</button>
@@ -236,7 +276,10 @@ const AdminPanel = () => {
               </div>
             </div>
           </div>
-        ) : (
+        )}
+
+        {/* ORDERS TAB */}
+        {activeTab === 'orders' && (
           <div className="bg-white/5 p-6 rounded-2xl border border-white/10 animate-in slide-in-from-bottom-4 duration-500">
             <h2 className="text-2xl font-bold mb-6 italic text-purple-400">Customer Orders</h2>
             <div className="overflow-x-auto">
@@ -255,7 +298,7 @@ const AdminPanel = () => {
                       <td className="py-4 text-purple-400 font-mono font-bold">#OR-{order.id}</td>
                       <td className="py-4">{order.email}</td>
                       <td className="py-4 text-gray-400">{new Date(order.created_at).toLocaleString()}</td>
-                      <td className="py-4">
+                      <td className="py-4 flex flex-col md:flex-row gap-2 items-start md:items-center">
                         <select 
                           value={order.status} 
                           onChange={(e) => handleStatusChange(order.id, e.target.value)}
@@ -282,4 +325,4 @@ const AdminPanel = () => {
 };
 
 export default AdminPanel;
-                          
+        
