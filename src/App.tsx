@@ -13,7 +13,7 @@ const App = () => {
       {/* Routes: Kon link-e kon page dekhabe */}
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/admin" element={<AdminPanel />} />
+        <Route path="/himazumder5566" element={<AdminPanel />} />
       </Routes>
     </Router>
   );
