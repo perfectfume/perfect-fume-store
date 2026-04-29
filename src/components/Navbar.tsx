@@ -139,11 +139,11 @@ const Navbar = () => {
 
   return (
     <>
-      {/* 🔥 TOP NAVBAR UPDATE */}
+      {/* 🔥 TOP NAVBAR (Menu Removed, Logo Clickable, Desktop Links Added) */}
       <nav className="fixed top-0 w-full z-40 bg-black/80 backdrop-blur-lg border-b border-white/10 px-4 py-3">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4 relative">
           
-          {/* Logo Section (Clickable to Home & Removed 3 dots) */}
+          {/* Left: Logo (Clickable to Home) */}
           <div 
             className="flex items-center gap-2 cursor-pointer group" 
             onClick={() => window.location.href = "/"}
@@ -153,15 +153,15 @@ const Navbar = () => {
             </h1>
           </div>
 
-          {/* Desktop Menu (Hidden on Mobile) */}
+          {/* Center: Desktop Menu (Hidden on mobile) */}
           <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 gap-8 items-center">
             <button onClick={() => window.location.href = "/"} className="text-sm font-bold text-gray-300 hover:text-purple-400 transition-colors">Home</button>
+            <button onClick={() => window.location.href = "/shop"} className="text-sm font-bold text-gray-300 hover:text-purple-400 transition-colors">Shop</button>
             <button onClick={() => window.location.href = "/"} className="text-sm font-bold text-gray-300 hover:text-purple-400 transition-colors">Categories</button>
-            <button onClick={() => window.location.href = "/"} className="text-sm font-bold text-gray-300 hover:text-purple-400 transition-colors">Shop</button>
             <button onClick={() => window.location.href = "/"} className="text-sm font-bold text-gray-300 hover:text-purple-400 transition-colors">Wishlist</button>
           </div>
 
-          {/* Right Side Icons (User & Cart) */}
+          {/* Right: User & Cart Icons */}
           <div className="flex items-center gap-6 text-white ml-auto">
             {!userEmail ? (
               <div onClick={() => setIsAuthOpen(true)} className="flex flex-col items-center cursor-pointer hover:text-purple-400"><User className="w-6 h-6" /><span className="text-[10px] hidden md:block">Sign In</span></div>
@@ -172,7 +172,6 @@ const Navbar = () => {
               {cartCount > 0 && <span className="absolute -top-1 -right-2 bg-pink-600 text-[10px] rounded-full w-4 h-4 flex items-center justify-center animate-pulse">{cartCount}</span>}
             </div>
           </div>
-
         </div>
       </nav>
 
@@ -283,4 +282,3 @@ const Navbar = () => {
 };
 
 export default Navbar;
-                    
