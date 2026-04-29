@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useStore } from '../store/useStore';
-import { Heart, Star, Filter } from 'lucide-react';
+import { Heart, Star, Filter, Home as HomeIcon, LayoutGrid, ShoppingBag } from 'lucide-react';
 
 const Shop = () => {
   const [products, setProducts] = useState([]);
@@ -12,7 +12,6 @@ const Shop = () => {
   const categories = ['All', 'Men', 'Women', 'Unisex', 'Luxury', 'Travel Size'];
 
   useEffect(() => {
-    // Scroll to top when page loads
     window.scrollTo(0, 0);
     const fetchProducts = async () => {
       try {
@@ -45,7 +44,7 @@ const Shop = () => {
     : products.filter((p: any) => p.category?.toLowerCase() === selectedCategory.toLowerCase());
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white pt-24 pb-20 font-sans">
+    <div className="min-h-screen bg-[#050505] text-white pt-24 pb-24 font-sans">
       <div className="max-w-6xl mx-auto px-4">
         
         {/* Page Header */}
@@ -109,12 +108,32 @@ const Shop = () => {
               )}
             </div>
           </div>
-
         </div>
       </div>
+
+      {/* 🔥 BOTTOM NAV BAR FOR SHOP PAGE (Mobile) */}
+      <nav className={`fixed bottom-0 left-0 w-full z-40 bg-[#000000] border-t border-[#222] px-2 py-1.5 pb-safe md:hidden ${isCartOpen ? 'hidden' : 'block'}`}>
+        <div className="flex justify-around items-center">
+          <button onClick={() => window.location.href = "/"} className="flex flex-col items-center gap-1 p-2 w-16 transition-all text-gray-400 hover:text-white">
+            <HomeIcon className="w-5 h-5" />
+            <span className="text-[10px] font-medium">Home</span>
+          </button>
+          <button onClick={() => window.location.href = "/"} className="flex flex-col items-center gap-1 p-2 w-16 transition-all text-gray-400 hover:text-white">
+            <LayoutGrid className="w-5 h-5" />
+            <span className="text-[10px] font-medium">Categories</span>
+          </button>
+          <button onClick={() => window.location.href = "/shop"} className="flex flex-col items-center gap-1 p-2 w-16 transition-all text-purple-500">
+            <ShoppingBag className="w-5 h-5" />
+            <span className="text-[10px] font-medium">Shop</span>
+          </button>
+          <button onClick={() => window.location.href = "/"} className="flex flex-col items-center gap-1 p-2 w-16 transition-all text-gray-400 hover:text-white">
+            <Heart className="w-5 h-5" />
+            <span className="text-[10px] font-medium">Wishlist</span>
+          </button>
+        </div>
+      </nav>
     </div>
   );
 };
 
 export default Shop;
-                        
