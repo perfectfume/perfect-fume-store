@@ -1,18 +1,18 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Navbar from './components/Navbar'; // File path thik na thakle ektu adjust kore niben
-import HomePage from './pages/Home';      // Ekhane apnar Home page
-import AdminPanel from './pages/Admin';   // Ekhane apnar Admin page
+import Navbar from './components/Navbar'; 
+import HomePage from './pages/Home';      
+import AdminPanel from './pages/Admin';   
+import Shop from './pages/Shop'; // 🔥 NOTUN: Shop page import korlam
 
 const App = () => {
   return (
     <Router>
-      {/* Navbar sob page-ei thakbe */}
       <Navbar />
       
-      {/* Routes: Kon link-e kon page dekhabe */}
       <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route path="/shop" element={<Shop />} /> {/* 🔥 NOTUN: Shop page er link */}
         <Route path="/himazumder5566" element={<AdminPanel />} />
       </Routes>
     </Router>
