@@ -8,15 +8,17 @@ const HomePage = () => {
   const [loading, setLoading] = useState(true);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [activeTab, setActiveTab] = useState('home');
+  
+  // 🔥 NOTUN: Category select korar state
+  const [selectedCategory, setSelectedCategory] = useState('All');
 
   const { userEmail, addToCart, isCartOpen, toggleCart } = useStore();
   const API_URL = import.meta.env.VITE_API_URL || "https://perfect-fume-backend.perfectfumeofficial.workers.dev";
 
-  // 🔥 Graphic Banners (Pore apni apnar nijer design kora banner-er link ekhane bosaben)
   const banners = [
-    "https://images.unsplash.com/photo-1594035910387-fea47794261f?q=80&w=1200&auto=format&fit=crop", // Banner 1
-    "https://images.unsplash.com/photo-1523293182086-7651a899d37f?q=80&w=1200&auto=format&fit=crop", // Banner 2
-    "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?q=80&w=1200&auto=format&fit=crop"  // Banner 3
+    "https://images.unsplash.com/photo-1594035910387-fea47794261f?q=80&w=1200&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1523293182086-7651a899d37f?q=80&w=1200&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?q=80&w=1200&auto=format&fit=crop"
   ];
 
   useEffect(() => {
@@ -34,7 +36,6 @@ const HomePage = () => {
     fetchProducts();
   }, []);
 
-  // Auto Slider Logic
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev === banners.length - 1 ? 0 : prev + 1));
@@ -57,38 +58,39 @@ const HomePage = () => {
       return;
     }
     addToCart(product);
-    if (!isCartOpen) {
-      toggleCart(); 
-    }
+    if (!isCartOpen) toggleCart(); 
   };
+
+  // 🔥 NOTUN: Category onujayi product filter kora
+  const filteredProducts = selectedCategory === 'All' 
+    ? products 
+    : products.filter((p: any) => p.category?.toLowerCase() === selectedCategory.toLowerCase());
 
   return (
     <div className="min-h-screen bg-[#050505] text-white pt-20 pb-20 font-sans">
-      
       <main className="max-w-6xl mx-auto">
         
-        {/* 🔥 CATEGORIES BAR (Flipkart style scrollable pills) */}
+        {/* 🔥 CATEGORIES BAR (Clickable) */}
         <div className="flex gap-2 overflow-x-auto no-scrollbar px-4 pt-2 pb-4">
           {categories.map((cat, i) => (
-            <button key={i} className={`whitespace-nowrap px-5 py-1.5 rounded-full text-xs font-bold border transition-all ${i === 0 ? 'bg-purple-600 border-purple-500 text-white' : 'bg-[#111] border-white/10 text-gray-300'}`}>
+            <button 
+              key={i} 
+              onClick={() => setSelectedCategory(cat)} // 🔥 NOTUN: Click korle state change hobe
+              className={`whitespace-nowrap px-5 py-1.5 rounded-full text-xs font-bold border transition-all ${selectedCategory === cat ? 'bg-purple-600 border-purple-500 text-white' : 'bg-[#111] border-white/10 text-gray-300 hover:bg-white/10'}`}
+            >
               {cat}
             </button>
           ))}
         </div>
 
-        {/* 🔥 HERO BANNER SLIDER (Graphic Banners) */}
+        {/* HERO BANNER SLIDER */}
         <div className="relative w-full h-[180px] md:h-[400px] overflow-hidden mt-1 group">
           {banners.map((imgUrl, index) => (
-            <div 
-              key={index} 
-              className={`absolute inset-0 transition-opacity duration-1000 ${index === currentSlide ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}
-            >
+            <div key={index} className={`absolute inset-0 transition-opacity duration-1000 ${index === currentSlide ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}>
               <img src={imgUrl} alt={`Banner ${index + 1}`} className="w-full h-full object-cover" />
-              {/* Dark overlay just to make sure it blends with the dark theme */}
               <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent opacity-80"></div>
             </div>
           ))}
-          {/* Slider Dots */}
           <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-20">
             {banners.map((_, i) => (
               <div key={i} className={`h-1.5 rounded-full transition-all duration-300 ${i === currentSlide ? 'w-6 bg-purple-500' : 'w-2 bg-white/50'}`} />
@@ -96,7 +98,7 @@ const HomePage = () => {
           </div>
         </div>
 
-        {/* 🔥 TRENDING NOW (Horizontal Scroll - Top 4-5 Best Sellers) */}
+        {/* TRENDING NOW (Shudhu Top 4) */}
         <div className="mt-8 px-4">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-bold">Trending Products</h3>
@@ -107,7 +109,6 @@ const HomePage = () => {
             {loading ? (
               [1, 2, 3].map((item) => <div key={item} className="min-w-[160px] h-60 rounded-xl bg-[#111] animate-pulse"></div>)
             ) : products.length > 0 ? (
-              // Shudhu prothom 4-te product ekhane dekhabe
               products.slice(0, 4).map((product: any) => (
                 <div key={product.id} className="snap-start min-w-[160px] md:min-w-[200px] bg-[#111] border border-white/5 rounded-xl p-2 flex flex-col relative">
                   <button className="absolute top-2 right-2 z-10 p-1.5 bg-black/50 rounded-full text-gray-400 hover:text-red-500"><Heart className="w-3.5 h-3.5" /></button>
@@ -126,20 +127,19 @@ const HomePage = () => {
           </div>
         </div>
 
-        {/* 🔥 ALL PRODUCTS (Grid Layout - Just like Flipkart) */}
+        {/* 🔥 ALL PRODUCTS (Filtered) */}
         <div className="mt-8 px-4 pb-6">
-          <h3 className="text-lg font-bold mb-4">All Products</h3>
+          <h3 className="text-lg font-bold mb-4">{selectedCategory === 'All' ? 'All Products' : `${selectedCategory} Collection`}</h3>
           
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {loading ? (
               [1, 2, 3, 4].map((item) => <div key={item} className="h-72 rounded-xl bg-[#111] animate-pulse"></div>)
-            ) : products.length > 0 ? (
-              products.map((product: any) => (
+            ) : filteredProducts.length > 0 ? (
+              filteredProducts.map((product: any) => (
                 <div key={`all-${product.id}`} className="bg-[#111] border border-white/5 rounded-xl p-2.5 flex flex-col relative group hover:border-purple-500/50 transition-all">
                   <button className="absolute top-3 right-3 z-10 p-1.5 bg-black/50 rounded-full text-gray-400 hover:text-red-500"><Heart className="w-4 h-4" /></button>
                   <div className="w-full h-36 md:h-48 bg-black rounded-lg mb-3 overflow-hidden relative">
                     <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                    {/* Low Stock Badge */}
                     {product.stock !== undefined && product.stock < 5 && (
                       <span className="absolute bottom-2 left-2 bg-red-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-sm">Only {product.stock} left</span>
                     )}
@@ -155,30 +155,28 @@ const HomePage = () => {
                   </div>
                 </div>
               ))
-            ) : null}
+            ) : (
+              <p className="text-gray-500 col-span-2 md:col-span-4 text-center py-8">Ei category te kono product nei.</p>
+            )}
           </div>
         </div>
-
       </main>
 
-      {/* 🔥 FLIPKART STYLE SOLID BOTTOM NAVIGATION BAR */}
-      <nav className="fixed bottom-0 left-0 w-full z-50 bg-[#000000] border-t border-[#222] px-2 py-1.5 pb-safe md:hidden">
+      {/* 🔥 BOTTOM NAV BAR (Cart open thakle hide hobe: ${isCartOpen ? 'hidden' : 'flex'}) */}
+      <nav className={`fixed bottom-0 left-0 w-full z-40 bg-[#000000] border-t border-[#222] px-2 py-1.5 pb-safe md:hidden ${isCartOpen ? 'hidden' : 'block'}`}>
         <div className="flex justify-around items-center">
           <button onClick={() => setActiveTab('home')} className={`flex flex-col items-center gap-1 p-2 w-16 transition-all ${activeTab === 'home' ? 'text-purple-500' : 'text-gray-400 hover:text-white'}`}>
             <HomeIcon className="w-5 h-5" />
             <span className="text-[10px] font-medium">Home</span>
           </button>
-          
           <button onClick={() => setActiveTab('categories')} className={`flex flex-col items-center gap-1 p-2 w-16 transition-all ${activeTab === 'categories' ? 'text-purple-500' : 'text-gray-400 hover:text-white'}`}>
             <LayoutGrid className="w-5 h-5" />
             <span className="text-[10px] font-medium">Categories</span>
           </button>
-          
           <button onClick={() => setActiveTab('shop')} className={`flex flex-col items-center gap-1 p-2 w-16 transition-all ${activeTab === 'shop' ? 'text-purple-500' : 'text-gray-400 hover:text-white'}`}>
             <ShoppingBag className="w-5 h-5" />
             <span className="text-[10px] font-medium">Shop</span>
           </button>
-          
           <button onClick={() => setActiveTab('wishlist')} className={`flex flex-col items-center gap-1 p-2 w-16 transition-all ${activeTab === 'wishlist' ? 'text-purple-500' : 'text-gray-400 hover:text-white'}`}>
             <Heart className="w-5 h-5" />
             <span className="text-[10px] font-medium">Wishlist</span>
@@ -191,3 +189,4 @@ const HomePage = () => {
 };
 
 export default HomePage;
+                       
