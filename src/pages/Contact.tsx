@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Phone, Mail, MessageCircle, MapPin, Clock, Send, Instagram, Facebook, HelpCircle, PackageSearch } from 'lucide-react';
+import { Phone, Mail, MessageSquare, MapPin, Clock, Send, Instagram, Facebook, HelpCircle, Package } from 'lucide-react';
 
 const Contact = () => {
   const [formData, setFormData] = useState({ name: '', email: '', phone: '', message: '' });
@@ -11,7 +11,6 @@ const Contact = () => {
 
   const handleSendMessage = (e: any) => {
     e.preventDefault();
-    // Eita ekhonkar jonno alert korche, apni chaile pore email API jure dite paren
     alert(`Thank you, ${formData.name}! Apnar message pathano hoyeche. Amra khub taratari apnar sathe jogajog korbo.`);
     setFormData({ name: '', email: '', phone: '', message: '' });
   };
@@ -42,7 +41,7 @@ const Contact = () => {
               <h3 className="text-2xl font-bold mb-6 italic text-purple-400">Talk to Us Directly</h3>
               <div className="space-y-4">
                 <a href={`https://wa.me/${ADMIN_WHATSAPP}`} target="_blank" rel="noreferrer" className="flex items-center gap-4 bg-[#111] p-4 rounded-2xl border border-white/5 hover:border-green-500/50 transition-all group cursor-pointer">
-                  <div className="p-3 bg-green-900/20 rounded-xl text-green-500 group-hover:scale-110 transition-transform"><MessageCircle className="w-6 h-6"/></div>
+                  <div className="p-3 bg-green-900/20 rounded-xl text-green-500 group-hover:scale-110 transition-transform"><MessageSquare className="w-6 h-6"/></div>
                   <div>
                     <p className="font-bold text-lg text-white">WhatsApp</p>
                     <p className="text-sm text-gray-400">Chat with us instantly</p>
@@ -73,7 +72,7 @@ const Contact = () => {
               <h3 className="text-2xl font-bold mb-6 italic text-purple-400">Business Information</h3>
               <div className="bg-[#111] p-6 rounded-2xl border border-white/5 space-y-4">
                 <div className="flex items-start gap-3">
-                  <Sparkles className="w-5 h-5 text-purple-400 mt-0.5" />
+                  <Package className="w-5 h-5 text-purple-400 mt-0.5" />
                   <div><p className="font-bold">Brand Name:</p><p className="text-gray-400">Perfect Fume</p></div>
                 </div>
                 <div className="flex items-start gap-3">
@@ -126,7 +125,7 @@ const Contact = () => {
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
           {/* Quick Help */}
           <div className="bg-gradient-to-br from-green-900/20 to-black p-6 rounded-2xl border border-green-500/20 text-center">
-            <MessageCircle className="w-8 h-8 text-green-500 mx-auto mb-4" />
+            <MessageSquare className="w-8 h-8 text-green-500 mx-auto mb-4" />
             <h4 className="text-lg font-bold mb-2">Need Help Faster?</h4>
             <p className="text-sm text-gray-400 mb-4">For quick assistance, we recommend reaching out via WhatsApp. Ready to help with orders & queries.</p>
             <a href={`https://wa.me/${ADMIN_WHATSAPP}`} target="_blank" rel="noreferrer" className="text-green-400 font-bold hover:underline text-sm">Chat Now on WhatsApp →</a>
@@ -134,11 +133,10 @@ const Contact = () => {
 
           {/* Track Order */}
           <div className="bg-gradient-to-br from-blue-900/20 to-black p-6 rounded-2xl border border-blue-500/20 text-center">
-            <PackageSearch className="w-8 h-8 text-blue-500 mx-auto mb-4" />
+            <Package className="w-8 h-8 text-blue-500 mx-auto mb-4" />
             <h4 className="text-lg font-bold mb-2">Track Your Order</h4>
             <p className="text-sm text-gray-400 mb-4">Already placed an order? You can easily track your delivery status here.</p>
-            {/* Eikhane pore track-order page er link bosabo */}
-            <a href="#" className="text-blue-400 font-bold hover:underline text-sm">Track Order →</a>
+            <a href="/track-order" className="text-blue-400 font-bold hover:underline text-sm">Track Order →</a>
           </div>
 
           {/* FAQ */}
@@ -146,7 +144,7 @@ const Contact = () => {
             <HelpCircle className="w-8 h-8 text-purple-500 mx-auto mb-4" />
             <h4 className="text-lg font-bold mb-2">Frequently Asked Questions</h4>
             <p className="text-sm text-gray-400 mb-4">Have common questions about delivery, returns, or product details?</p>
-            <a href="#" className="text-purple-400 font-bold hover:underline text-sm">Visit FAQ Page →</a>
+            <a href="/faq" className="text-purple-400 font-bold hover:underline text-sm">Visit FAQ Page →</a>
           </div>
         </div>
 
@@ -172,4 +170,3 @@ const Contact = () => {
 };
 
 export default Contact;
-              
