@@ -157,8 +157,8 @@ const Navbar = () => {
           <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 gap-8 items-center">
             <button onClick={() => window.location.href = "/"} className="text-sm font-bold text-gray-300 hover:text-purple-400 transition-colors">Home</button>
             <button onClick={() => window.location.href = "/shop"} className="text-sm font-bold text-gray-300 hover:text-purple-400 transition-colors">Shop</button>
-            <button onClick={() => window.location.href = "/"} className="text-sm font-bold text-gray-300 hover:text-purple-400 transition-colors">Categories</button>
-            <button onClick={() => window.location.href = "/"} className="text-sm font-bold text-gray-300 hover:text-purple-400 transition-colors">Wishlist</button>
+            <button onClick={() => window.location.href = "/about"} className="text-sm font-bold text-gray-300 hover:text-purple-400 transition-colors">About Us</button>
+            <button onClick={() => window.location.href = "/contact"} className="text-sm font-bold text-gray-300 hover:text-purple-400 transition-colors">Contact</button>
           </div>
 
           {/* Right: User & Cart Icons */}
@@ -282,3 +282,4 @@ const Navbar = () => {
 };
 
 export default Navbar;
+    
