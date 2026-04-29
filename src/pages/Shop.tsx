@@ -47,7 +47,6 @@ const Shop = () => {
     <div className="min-h-screen bg-[#050505] text-white pt-24 pb-24 font-sans">
       <div className="max-w-6xl mx-auto px-4">
         
-        {/* Page Header */}
         <div className="mb-8 bg-gradient-to-r from-purple-900/40 to-transparent p-6 rounded-2xl border border-white/10">
           <h1 className="text-3xl font-bold italic text-white mb-2">Our Collection</h1>
           <p className="text-gray-400 text-sm">Discover your perfect signature scent from our premium range.</p>
@@ -55,7 +54,6 @@ const Shop = () => {
 
         <div className="flex flex-col md:flex-row gap-8">
           
-          {/* Filters Sidebar (Desktop) / Top Bar (Mobile) */}
           <div className="md:w-1/4">
             <div className="bg-[#111] border border-white/5 rounded-xl p-4 sticky top-28">
               <h3 className="font-bold flex items-center gap-2 mb-4 text-purple-400"><Filter className="w-4 h-4"/> Categories</h3>
@@ -73,7 +71,6 @@ const Shop = () => {
             </div>
           </div>
 
-          {/* Product Grid */}
           <div className="md:w-3/4">
             <div className="flex justify-between items-center mb-4">
               <p className="text-sm text-gray-400">Showing <span className="text-white font-bold">{filteredProducts.length}</span> products</p>
@@ -85,19 +82,25 @@ const Shop = () => {
               ) : filteredProducts.length > 0 ? (
                 filteredProducts.map((product: any) => (
                   <div key={product.id} className="bg-[#111] border border-white/5 rounded-xl p-2.5 flex flex-col relative group hover:border-purple-500/50 transition-all">
-                    <button className="absolute top-3 right-3 z-10 p-1.5 bg-black/50 rounded-full text-gray-400 hover:text-red-500"><Heart className="w-4 h-4" /></button>
-                    <div className="w-full h-36 md:h-48 bg-black rounded-lg mb-3 overflow-hidden relative">
-                      <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                      {product.stock !== undefined && product.stock < 5 && (
-                        <span className="absolute bottom-2 left-2 bg-red-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-sm">Only {product.stock} left</span>
-                      )}
-                    </div>
-                    <p className="text-[9px] text-purple-400 font-bold uppercase tracking-wider mb-1">{product.category || 'Luxury'}</p>
-                    <h4 className="font-bold text-sm truncate">{product.name}</h4>
-                    <div className="flex items-center gap-1 mt-1 mb-2"><Star className="w-3 h-3 text-yellow-500 fill-yellow-500" /><span className="text-[10px] text-gray-400">4.8</span></div>
-                    <p className="font-bold text-lg mb-3">₹{product.price}</p>
+                    {/* Heart Icon (Not Clickable for page change) */}
+                    <button className="absolute top-3 right-3 z-20 p-1.5 bg-black/50 rounded-full text-gray-400 hover:text-red-500"><Heart className="w-4 h-4" /></button>
                     
-                    <div className="flex gap-1.5 mt-auto">
+                    {/* 🔥 EIKHANE CLICKABLE KORA HOYECHE */}
+                    <div onClick={() => window.location.href = '/product/' + product.id} className="cursor-pointer flex flex-col flex-1">
+                      <div className="w-full h-36 md:h-48 bg-black rounded-lg mb-3 overflow-hidden relative">
+                        <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                        {product.stock !== undefined && product.stock < 5 && (
+                          <span className="absolute bottom-2 left-2 bg-red-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-sm">Only {product.stock} left</span>
+                        )}
+                      </div>
+                      <p className="text-[9px] text-purple-400 font-bold uppercase tracking-wider mb-1">{product.category || 'Luxury'}</p>
+                      <h4 className="font-bold text-sm truncate group-hover:text-purple-400 transition-colors">{product.name}</h4>
+                      <div className="flex items-center gap-1 mt-1 mb-2"><Star className="w-3 h-3 text-yellow-500 fill-yellow-500" /><span className="text-[10px] text-gray-400">4.8</span></div>
+                      <p className="font-bold text-lg mb-3">₹{product.price}</p>
+                    </div>
+                    
+                    {/* Buttons (Not Clickable for page change) */}
+                    <div className="flex gap-1.5 mt-auto relative z-20">
                       <button onClick={() => handleAddToCart(product)} className="w-full bg-white/10 hover:bg-white/20 text-white text-[10px] font-bold py-2 rounded-lg transition-all">Cart</button>
                       <button onClick={() => handleBuyNow(product)} className="w-full bg-purple-600 hover:bg-purple-700 text-white text-[10px] font-bold py-2 rounded-lg transition-all shadow-lg shadow-purple-900/20">Buy Now</button>
                     </div>
@@ -111,7 +114,6 @@ const Shop = () => {
         </div>
       </div>
 
-      {/* 🔥 BOTTOM NAV BAR FOR SHOP PAGE (Mobile) */}
       <nav className={`fixed bottom-0 left-0 w-full z-40 bg-[#000000] border-t border-[#222] px-2 py-1.5 pb-safe md:hidden ${isCartOpen ? 'hidden' : 'block'}`}>
         <div className="flex justify-around items-center">
           <button onClick={() => window.location.href = "/"} className="flex flex-col items-center gap-1 p-2 w-16 transition-all text-gray-400 hover:text-white">
