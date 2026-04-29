@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useStore } from '../store/useStore'; 
-import { Sparkles, ChevronRight, Heart, Star, Clock, Truck, Home as HomeIcon, LayoutGrid, ShoppingBag } from 'lucide-react';
+import { Heart, Star, ChevronRight, Home as HomeIcon, LayoutGrid, ShoppingBag } from 'lucide-react';
 
 const HomePage = () => {
   const categories = ['All', 'Men', 'Women', 'Unisex', 'Luxury', 'Travel Size'];
@@ -9,19 +9,16 @@ const HomePage = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [activeTab, setActiveTab] = useState('home');
 
-  // Store theke magic function gulo nilam
   const { userEmail, addToCart, isCartOpen, toggleCart } = useStore();
-
   const API_URL = import.meta.env.VITE_API_URL || "https://perfect-fume-backend.perfectfumeofficial.workers.dev";
 
-  // 🔥 Premium Banners for Slider
+  // 🔥 Graphic Banners (Pore apni apnar nijer design kora banner-er link ekhane bosaben)
   const banners = [
-    { id: 1, title: "Royal Oud Series", subtitle: "Experience the essence of luxury. Pure, long-lasting, and elegant.", color: "from-purple-900/80 to-black" },
-    { id: 2, title: "Midnight Musk", subtitle: "Unleash your dark side with our new signature collection.", color: "from-blue-900/80 to-black" },
-    { id: 3, title: "Summer Citrus", subtitle: "Stay fresh all day with 20% OFF on fresh notes.", color: "from-emerald-900/80 to-black" }
+    "https://images.unsplash.com/photo-1594035910387-fea47794261f?q=80&w=1200&auto=format&fit=crop", // Banner 1
+    "https://images.unsplash.com/photo-1523293182086-7651a899d37f?q=80&w=1200&auto=format&fit=crop", // Banner 2
+    "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?q=80&w=1200&auto=format&fit=crop"  // Banner 3
   ];
 
-  // Fetch Products
   useEffect(() => {
     const fetchProducts = async () => {
       try {
@@ -45,7 +42,6 @@ const HomePage = () => {
     return () => clearInterval(timer);
   }, [banners.length]);
 
-  // Shudhu jhhuri-te add korbe
   const handleAddToCart = (product: any) => {
     if (!userEmail) {
       alert("⚠️ Sobaiprothome upore 'Sign In'-e click kore Login korun!");
@@ -55,142 +51,137 @@ const HomePage = () => {
     alert(`✅ ${product.name} apnar Jhhuri-te (Cart) add hoyeche!`);
   };
 
-  // Add to cart korbe r sathe sathe dan dik theke jhhuri khule debe
   const handleBuyNow = (product: any) => {
     if (!userEmail) {
       alert("⚠️ Sobaiprothome upore 'Sign In'-e click kore Login korun!");
       return;
     }
     addToCart(product);
-    
     if (!isCartOpen) {
       toggleCart(); 
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white pt-20 pb-24 font-sans selection:bg-purple-500/30">
+    <div className="min-h-screen bg-[#050505] text-white pt-20 pb-20 font-sans">
       
-      <main className="max-w-6xl mx-auto px-4">
+      <main className="max-w-6xl mx-auto">
         
-        {/* 🔥 HERO BANNER SLIDER */}
-        <div className="relative w-full h-[250px] md:h-[400px] rounded-3xl overflow-hidden mt-4 border border-white/10 shadow-2xl shadow-purple-900/20 group">
-          {banners.map((banner, index) => (
-            <div 
-              key={banner.id} 
-              className={`absolute inset-0 bg-gradient-to-r ${banner.color} transition-opacity duration-1000 p-8 md:p-12 flex flex-col justify-center ${index === currentSlide ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}
-            >
-              <Sparkles className="text-purple-400 w-6 h-6 mb-3 animate-pulse" />
-              <h2 className="text-3xl md:text-5xl font-bold italic tracking-wide mb-2">{banner.title}</h2>
-              <p className="text-gray-300 text-sm md:text-lg max-w-md mb-6">{banner.subtitle}</p>
-              <button className="bg-white text-black px-6 py-2 rounded-full font-bold text-sm w-fit hover:scale-105 transition-transform shadow-lg">
-                Explore Now
-              </button>
-            </div>
-          ))}
-          {/* Slider Dots */}
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-20">
-            {banners.map((_, i) => (
-              <div key={i} className={`h-1.5 rounded-full transition-all duration-300 ${i === currentSlide ? 'w-6 bg-purple-500' : 'w-2 bg-white/30'}`} />
-            ))}
-          </div>
-        </div>
-
-        {/* 🔥 CATEGORIES (Pills) */}
-        <div className="flex gap-3 overflow-x-auto no-scrollbar mt-8 pb-2">
+        {/* 🔥 CATEGORIES BAR (Flipkart style scrollable pills) */}
+        <div className="flex gap-2 overflow-x-auto no-scrollbar px-4 pt-2 pb-4">
           {categories.map((cat, i) => (
-            <button key={i} className={`whitespace-nowrap px-5 py-2 rounded-full text-xs font-bold border transition-all ${i === 0 ? 'bg-purple-600 border-purple-500 text-white shadow-lg shadow-purple-900/40' : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:text-white'}`}>
+            <button key={i} className={`whitespace-nowrap px-5 py-1.5 rounded-full text-xs font-bold border transition-all ${i === 0 ? 'bg-purple-600 border-purple-500 text-white' : 'bg-[#111] border-white/10 text-gray-300'}`}>
               {cat}
             </button>
           ))}
         </div>
 
-        {/* 🔥 TRENDING NOW (Horizontal Scroll & Premium Cards) */}
-        <div className="mt-10">
-          <div className="flex justify-between items-end mb-4">
-            <h3 className="text-xl font-bold flex items-center gap-2">Trending Now <div className="w-2 h-2 rounded-full bg-purple-500 animate-pulse"/></h3>
-            <button className="text-xs text-purple-400 font-bold flex items-center hover:text-purple-300">View All <ChevronRight className="w-4 h-4"/></button>
+        {/* 🔥 HERO BANNER SLIDER (Graphic Banners) */}
+        <div className="relative w-full h-[180px] md:h-[400px] overflow-hidden mt-1 group">
+          {banners.map((imgUrl, index) => (
+            <div 
+              key={index} 
+              className={`absolute inset-0 transition-opacity duration-1000 ${index === currentSlide ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}
+            >
+              <img src={imgUrl} alt={`Banner ${index + 1}`} className="w-full h-full object-cover" />
+              {/* Dark overlay just to make sure it blends with the dark theme */}
+              <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent opacity-80"></div>
+            </div>
+          ))}
+          {/* Slider Dots */}
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-20">
+            {banners.map((_, i) => (
+              <div key={i} className={`h-1.5 rounded-full transition-all duration-300 ${i === currentSlide ? 'w-6 bg-purple-500' : 'w-2 bg-white/50'}`} />
+            ))}
+          </div>
+        </div>
+
+        {/* 🔥 TRENDING NOW (Horizontal Scroll - Top 4-5 Best Sellers) */}
+        <div className="mt-8 px-4">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-bold">Trending Products</h3>
+            <button className="text-xs bg-purple-600/20 text-purple-400 px-3 py-1 rounded-full font-bold">View All</button>
           </div>
           
-          <div className="flex gap-4 overflow-x-auto no-scrollbar pb-4 -mx-4 px-4 md:mx-0 md:px-0 snap-x">
+          <div className="flex gap-3 overflow-x-auto no-scrollbar pb-4 -mx-4 px-4 md:mx-0 md:px-0 snap-x">
             {loading ? (
-              [1, 2, 3, 4].map((item) => (
-                <div key={item} className="min-w-[220px] h-72 rounded-2xl bg-white/5 border border-white/10 animate-pulse"></div>
-              ))
+              [1, 2, 3].map((item) => <div key={item} className="min-w-[160px] h-60 rounded-xl bg-[#111] animate-pulse"></div>)
             ) : products.length > 0 ? (
-              products.map((product: any) => (
-                <div key={product.id} className="snap-start min-w-[200px] md:min-w-[240px] bg-white/5 border border-white/10 rounded-2xl p-3 flex flex-col group relative overflow-hidden backdrop-blur-sm hover:border-purple-500/50 transition-all">
-                  <button className="absolute top-4 right-4 z-10 p-1.5 bg-black/40 rounded-full backdrop-blur-md border border-white/10 text-gray-400 hover:text-red-500 hover:scale-110 transition-all">
-                    <Heart className="w-4 h-4" />
-                  </button>
-                  <div className="w-full h-36 md:h-44 bg-black rounded-xl mb-3 overflow-hidden">
-                    <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+              // Shudhu prothom 4-te product ekhane dekhabe
+              products.slice(0, 4).map((product: any) => (
+                <div key={product.id} className="snap-start min-w-[160px] md:min-w-[200px] bg-[#111] border border-white/5 rounded-xl p-2 flex flex-col relative">
+                  <button className="absolute top-2 right-2 z-10 p-1.5 bg-black/50 rounded-full text-gray-400 hover:text-red-500"><Heart className="w-3.5 h-3.5" /></button>
+                  <div className="w-full h-32 md:h-40 bg-black rounded-lg mb-2 overflow-hidden">
+                    <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
                   </div>
-                  <p className="text-[10px] text-purple-400 font-bold uppercase tracking-wider mb-1">{product.category || 'Luxury'}</p>
-                  <h4 className="font-bold text-sm md:text-base truncate">{product.name}</h4>
-                  <div className="flex items-center gap-1 mt-1 mb-2">
-                    <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" /><span className="text-xs text-gray-400">4.8</span>
-                  </div>
-                  <p className="font-bold text-lg mb-3">₹{product.price}</p>
-                  
-                  {/* Action Buttons */}
-                  <div className="flex gap-2 mt-auto">
-                    <button 
-                      onClick={() => handleAddToCart(product)}
-                      className="w-full bg-white/10 hover:bg-purple-600 text-white text-[10px] md:text-xs font-bold py-2 rounded-lg transition-all"
-                    >
-                      Add to Cart
-                    </button>
-                    <button 
-                      onClick={() => handleBuyNow(product)}
-                      className="w-full bg-purple-600 hover:bg-purple-700 text-white text-[10px] md:text-xs font-bold py-2 rounded-lg transition-all shadow-lg shadow-purple-900/20"
-                    >
-                      Buy Now
-                    </button>
-                  </div>
+                  <h4 className="font-bold text-sm truncate">{product.name}</h4>
+                  <div className="flex items-center gap-1 mt-0.5 mb-1"><Star className="w-3 h-3 text-yellow-500 fill-yellow-500" /><span className="text-[10px] text-gray-400">4.8</span></div>
+                  <p className="font-bold text-base mt-auto mb-2">₹{product.price}</p>
+                  <button onClick={() => handleAddToCart(product)} className="w-full bg-white/10 hover:bg-purple-600 text-white text-[10px] font-bold py-2 rounded-lg transition-all">Add to Cart</button>
                 </div>
               ))
             ) : (
-              <p className="text-gray-400 w-full text-center py-10">Kono product pawa jayni.</p>
+              <p className="text-gray-500 text-sm">No products found.</p>
             )}
           </div>
         </div>
 
-        {/* 🔥 WHY CHOOSE US (Trust Badges) */}
-        <div className="mt-10 grid grid-cols-3 gap-4 border-y border-white/10 py-8 mb-8">
-          <div className="flex flex-col items-center text-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-purple-900/30 flex items-center justify-center border border-purple-500/30"><Sparkles className="w-6 h-6 text-purple-400"/></div>
-            <p className="text-[10px] md:text-xs font-bold text-gray-300 uppercase tracking-wider">Premium<br/>Quality</p>
-          </div>
-          <div className="flex flex-col items-center text-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-blue-900/30 flex items-center justify-center border border-blue-500/30"><Clock className="w-6 h-6 text-blue-400"/></div>
-            <p className="text-[10px] md:text-xs font-bold text-gray-300 uppercase tracking-wider">Long<br/>Lasting</p>
-          </div>
-          <div className="flex flex-col items-center text-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-green-900/30 flex items-center justify-center border border-green-500/30"><Truck className="w-6 h-6 text-green-400"/></div>
-            <p className="text-[10px] md:text-xs font-bold text-gray-300 uppercase tracking-wider">Fast<br/>Delivery</p>
+        {/* 🔥 ALL PRODUCTS (Grid Layout - Just like Flipkart) */}
+        <div className="mt-8 px-4 pb-6">
+          <h3 className="text-lg font-bold mb-4">All Products</h3>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {loading ? (
+              [1, 2, 3, 4].map((item) => <div key={item} className="h-72 rounded-xl bg-[#111] animate-pulse"></div>)
+            ) : products.length > 0 ? (
+              products.map((product: any) => (
+                <div key={`all-${product.id}`} className="bg-[#111] border border-white/5 rounded-xl p-2.5 flex flex-col relative group hover:border-purple-500/50 transition-all">
+                  <button className="absolute top-3 right-3 z-10 p-1.5 bg-black/50 rounded-full text-gray-400 hover:text-red-500"><Heart className="w-4 h-4" /></button>
+                  <div className="w-full h-36 md:h-48 bg-black rounded-lg mb-3 overflow-hidden relative">
+                    <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    {/* Low Stock Badge */}
+                    {product.stock !== undefined && product.stock < 5 && (
+                      <span className="absolute bottom-2 left-2 bg-red-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-sm">Only {product.stock} left</span>
+                    )}
+                  </div>
+                  <p className="text-[9px] text-purple-400 font-bold uppercase tracking-wider mb-1">{product.category || 'Luxury'}</p>
+                  <h4 className="font-bold text-sm truncate">{product.name}</h4>
+                  <div className="flex items-center gap-1 mt-1 mb-2"><Star className="w-3 h-3 text-yellow-500 fill-yellow-500" /><span className="text-[10px] text-gray-400">4.8</span></div>
+                  <p className="font-bold text-lg mb-3">₹{product.price}</p>
+                  
+                  <div className="flex gap-1.5 mt-auto">
+                    <button onClick={() => handleAddToCart(product)} className="w-full bg-white/10 hover:bg-white/20 text-white text-[10px] font-bold py-2 rounded-lg transition-all">Cart</button>
+                    <button onClick={() => handleBuyNow(product)} className="w-full bg-purple-600 hover:bg-purple-700 text-white text-[10px] font-bold py-2 rounded-lg transition-all shadow-lg shadow-purple-900/20">Buy Now</button>
+                  </div>
+                </div>
+              ))
+            ) : null}
           </div>
         </div>
+
       </main>
 
-      {/* 🔥 BOTTOM NAVIGATION BAR (Mobile Style) */}
-      <nav className="fixed bottom-0 left-0 w-full z-50 bg-[#0a0a0a]/90 backdrop-blur-xl border-t border-white/10 px-6 py-3 pb-safe md:hidden">
-        <div className="max-w-md mx-auto flex justify-between items-center">
-          <button onClick={() => setActiveTab('home')} className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'home' ? 'text-purple-400 scale-110' : 'text-gray-500 hover:text-gray-300'}`}>
-            <HomeIcon className="w-6 h-6" />
-            <span className="text-[9px] font-bold">Home</span>
+      {/* 🔥 FLIPKART STYLE SOLID BOTTOM NAVIGATION BAR */}
+      <nav className="fixed bottom-0 left-0 w-full z-50 bg-[#000000] border-t border-[#222] px-2 py-1.5 pb-safe md:hidden">
+        <div className="flex justify-around items-center">
+          <button onClick={() => setActiveTab('home')} className={`flex flex-col items-center gap-1 p-2 w-16 transition-all ${activeTab === 'home' ? 'text-purple-500' : 'text-gray-400 hover:text-white'}`}>
+            <HomeIcon className="w-5 h-5" />
+            <span className="text-[10px] font-medium">Home</span>
           </button>
-          <button onClick={() => setActiveTab('categories')} className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'categories' ? 'text-purple-400 scale-110' : 'text-gray-500 hover:text-gray-300'}`}>
-            <LayoutGrid className="w-6 h-6" />
-            <span className="text-[9px] font-bold">Categories</span>
+          
+          <button onClick={() => setActiveTab('categories')} className={`flex flex-col items-center gap-1 p-2 w-16 transition-all ${activeTab === 'categories' ? 'text-purple-500' : 'text-gray-400 hover:text-white'}`}>
+            <LayoutGrid className="w-5 h-5" />
+            <span className="text-[10px] font-medium">Categories</span>
           </button>
-          <button onClick={() => setActiveTab('shop')} className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'shop' ? 'text-purple-400 scale-110' : 'text-gray-500 hover:text-gray-300'}`}>
-            <ShoppingBag className="w-6 h-6" />
-            <span className="text-[9px] font-bold">Shop</span>
+          
+          <button onClick={() => setActiveTab('shop')} className={`flex flex-col items-center gap-1 p-2 w-16 transition-all ${activeTab === 'shop' ? 'text-purple-500' : 'text-gray-400 hover:text-white'}`}>
+            <ShoppingBag className="w-5 h-5" />
+            <span className="text-[10px] font-medium">Shop</span>
           </button>
-          <button onClick={() => setActiveTab('wishlist')} className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'wishlist' ? 'text-pink-500 scale-110' : 'text-gray-500 hover:text-gray-300'}`}>
-            <Heart className="w-6 h-6" />
-            <span className="text-[9px] font-bold">Wishlist</span>
+          
+          <button onClick={() => setActiveTab('wishlist')} className={`flex flex-col items-center gap-1 p-2 w-16 transition-all ${activeTab === 'wishlist' ? 'text-purple-500' : 'text-gray-400 hover:text-white'}`}>
+            <Heart className="w-5 h-5" />
+            <span className="text-[10px] font-medium">Wishlist</span>
           </button>
         </div>
       </nav>
@@ -200,4 +191,3 @@ const HomePage = () => {
 };
 
 export default HomePage;
-              
