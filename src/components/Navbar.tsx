@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, ShoppingCart, User, Menu, X, Trash2, LogOut, MapPin, CreditCard, Banknote } from 'lucide-react'; 
+import { Search, ShoppingCart, User, X, Trash2, LogOut, MapPin, CreditCard, Banknote } from 'lucide-react'; 
 import { useStore } from '../store/useStore';
 
 const Navbar = () => {
@@ -15,7 +15,7 @@ const Navbar = () => {
   const [otpInput, setOtpInput] = useState('');
   
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
-  const [checkoutStep, setCheckoutStep] = useState(1); // 1: Address, 2: Payment Options, 3: COD OTP
+  const [checkoutStep, setCheckoutStep] = useState(1); 
   const [checkoutOtp, setCheckoutOtp] = useState('');
   
   const [addressForm, setAddressForm] = useState({
@@ -24,7 +24,7 @@ const Navbar = () => {
 
   const [isProcessing, setIsProcessing] = useState(false);
   const API_URL = import.meta.env.VITE_API_URL || "https://perfect-fume-backend.perfectfumeofficial.workers.dev";
-  const ADMIN_WHATSAPP = "918777789394"; // <--- EKHANE APNAR 10 DIGIT NUMBER DIN
+  const ADMIN_WHATSAPP = "918777789394"; 
 
   // --- LOGIN LOGIC ---
   const handleSendOtp = async (e: any) => {
@@ -63,7 +63,7 @@ const Navbar = () => {
 
   const handleProceedToPaymentOptions = (e: any) => {
     e.preventDefault();
-    setCheckoutStep(2); // Move to Payment Selection
+    setCheckoutStep(2); 
   };
 
   // 💰 COD LOGIC
@@ -117,12 +117,10 @@ const Navbar = () => {
         handler: async function (response: any) {
           alert("✅ Payment Successful! Redirecting to WhatsApp...");
           
-          // Verify payment on backend & send Email
           await fetch(`${API_URL}/api/confirm-online-order`, {
             method: 'POST', body: JSON.stringify({ email: userEmail, cart, address: addressForm, paymentId: response.razorpay_payment_id })
           });
 
-          // WhatsApp for Paid Order
           let itemList = cart.map(item => `▪️ ${item.name} (${item.quantity} pcs) - ₹${item.price}`).join('%0A');
           let waText = `*New PAID Order!* 💳✅%0A%0A*Customer Details:*%0A👤 Name: ${addressForm.name}%0A📞 Phone: ${addressForm.phone}%0A%0A*Delivery Address:*%0A🏠 ${addressForm.flat}, ${addressForm.area}%0A📍 ${addressForm.city} - ${addressForm.pincode}%0A%0A*Order Items:*%0A${itemList}%0A%0A*Total Paid:* 💰 ₹${total}%0A*Payment ID:* ${response.razorpay_payment_id}%0A%0APlease process my order!`;
           window.open(`https://wa.me/${ADMIN_WHATSAPP}?text=${waText}`, '_blank');
@@ -141,12 +139,29 @@ const Navbar = () => {
 
   return (
     <>
+      {/* 🔥 TOP NAVBAR UPDATE */}
       <nav className="fixed top-0 w-full z-40 bg-black/80 backdrop-blur-lg border-b border-white/10 px-4 py-3">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <Menu className="text-white md:hidden cursor-pointer" />
-            <h1 className="text-xl font-bold bg-gradient-to-r from-purple-400 to-pink-600 bg-clip-text text-transparent">PERFECT FUME</h1>
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4 relative">
+          
+          {/* Logo Section (Clickable to Home & Removed 3 dots) */}
+          <div 
+            className="flex items-center gap-2 cursor-pointer group" 
+            onClick={() => window.location.href = "/"}
+          >
+            <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-600 bg-clip-text text-transparent italic tracking-wider group-hover:scale-105 transition-transform">
+              PERFECT FUME
+            </h1>
           </div>
+
+          {/* Desktop Menu (Hidden on Mobile) */}
+          <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 gap-8 items-center">
+            <button onClick={() => window.location.href = "/"} className="text-sm font-bold text-gray-300 hover:text-purple-400 transition-colors">Home</button>
+            <button onClick={() => window.location.href = "/"} className="text-sm font-bold text-gray-300 hover:text-purple-400 transition-colors">Categories</button>
+            <button onClick={() => window.location.href = "/"} className="text-sm font-bold text-gray-300 hover:text-purple-400 transition-colors">Shop</button>
+            <button onClick={() => window.location.href = "/"} className="text-sm font-bold text-gray-300 hover:text-purple-400 transition-colors">Wishlist</button>
+          </div>
+
+          {/* Right Side Icons (User & Cart) */}
           <div className="flex items-center gap-6 text-white ml-auto">
             {!userEmail ? (
               <div onClick={() => setIsAuthOpen(true)} className="flex flex-col items-center cursor-pointer hover:text-purple-400"><User className="w-6 h-6" /><span className="text-[10px] hidden md:block">Sign In</span></div>
@@ -157,6 +172,7 @@ const Navbar = () => {
               {cartCount > 0 && <span className="absolute -top-1 -right-2 bg-pink-600 text-[10px] rounded-full w-4 h-4 flex items-center justify-center animate-pulse">{cartCount}</span>}
             </div>
           </div>
+
         </div>
       </nav>
 
@@ -267,4 +283,4 @@ const Navbar = () => {
 };
 
 export default Navbar;
-            
+                    
