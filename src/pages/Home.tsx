@@ -9,7 +9,7 @@ const HomePage = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [activeTab, setActiveTab] = useState('home');
   
-  // 🔥 NOTUN: Category select korar state
+  // 🔥 Category select korar state
   const [selectedCategory, setSelectedCategory] = useState('All');
 
   const { userEmail, addToCart, isCartOpen, toggleCart } = useStore();
@@ -61,7 +61,7 @@ const HomePage = () => {
     if (!isCartOpen) toggleCart(); 
   };
 
-  // 🔥 NOTUN: Category onujayi product filter kora
+  // 🔥 Category onujayi product filter kora
   const filteredProducts = selectedCategory === 'All' 
     ? products 
     : products.filter((p: any) => p.category?.toLowerCase() === selectedCategory.toLowerCase());
@@ -75,7 +75,7 @@ const HomePage = () => {
           {categories.map((cat, i) => (
             <button 
               key={i} 
-              onClick={() => setSelectedCategory(cat)} // 🔥 NOTUN: Click korle state change hobe
+              onClick={() => setSelectedCategory(cat)}
               className={`whitespace-nowrap px-5 py-1.5 rounded-full text-xs font-bold border transition-all ${selectedCategory === cat ? 'bg-purple-600 border-purple-500 text-white' : 'bg-[#111] border-white/10 text-gray-300 hover:bg-white/10'}`}
             >
               {cat}
@@ -161,7 +161,8 @@ const HomePage = () => {
           </div>
         </div>
       </main>
-   {/* 🔥 BOTTOM NAV BAR (Mobile Fix - Link added) */}
+
+      {/* 🔥 BOTTOM NAV BAR (Mobile Fix) */}
       <nav className={`fixed bottom-0 left-0 w-full z-40 bg-[#000000] border-t border-[#222] px-2 py-1.5 pb-safe md:hidden ${isCartOpen ? 'hidden' : 'block'}`}>
         <div className="flex justify-around items-center">
           <button onClick={() => window.location.href = "/"} className="flex flex-col items-center gap-1 p-2 w-16 transition-all text-purple-500">
@@ -182,11 +183,9 @@ const HomePage = () => {
           </button>
         </div>
       </nav>
-      
 
     </div>
   );
 };
 
 export default HomePage;
-                       
