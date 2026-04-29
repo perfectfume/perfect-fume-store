@@ -161,28 +161,28 @@ const HomePage = () => {
           </div>
         </div>
       </main>
-
-      {/* 🔥 BOTTOM NAV BAR (Cart open thakle hide hobe: ${isCartOpen ? 'hidden' : 'flex'}) */}
+   {/* 🔥 BOTTOM NAV BAR (Mobile Fix - Link added) */}
       <nav className={`fixed bottom-0 left-0 w-full z-40 bg-[#000000] border-t border-[#222] px-2 py-1.5 pb-safe md:hidden ${isCartOpen ? 'hidden' : 'block'}`}>
         <div className="flex justify-around items-center">
-          <button onClick={() => setActiveTab('home')} className={`flex flex-col items-center gap-1 p-2 w-16 transition-all ${activeTab === 'home' ? 'text-purple-500' : 'text-gray-400 hover:text-white'}`}>
+          <button onClick={() => window.location.href = "/"} className="flex flex-col items-center gap-1 p-2 w-16 transition-all text-purple-500">
             <HomeIcon className="w-5 h-5" />
             <span className="text-[10px] font-medium">Home</span>
           </button>
-          <button onClick={() => setActiveTab('categories')} className={`flex flex-col items-center gap-1 p-2 w-16 transition-all ${activeTab === 'categories' ? 'text-purple-500' : 'text-gray-400 hover:text-white'}`}>
+          <button onClick={() => window.location.href = "/"} className="flex flex-col items-center gap-1 p-2 w-16 transition-all text-gray-400 hover:text-white">
             <LayoutGrid className="w-5 h-5" />
             <span className="text-[10px] font-medium">Categories</span>
           </button>
-          <button onClick={() => setActiveTab('shop')} className={`flex flex-col items-center gap-1 p-2 w-16 transition-all ${activeTab === 'shop' ? 'text-purple-500' : 'text-gray-400 hover:text-white'}`}>
+          <button onClick={() => window.location.href = "/shop"} className="flex flex-col items-center gap-1 p-2 w-16 transition-all text-gray-400 hover:text-white">
             <ShoppingBag className="w-5 h-5" />
             <span className="text-[10px] font-medium">Shop</span>
           </button>
-          <button onClick={() => setActiveTab('wishlist')} className={`flex flex-col items-center gap-1 p-2 w-16 transition-all ${activeTab === 'wishlist' ? 'text-purple-500' : 'text-gray-400 hover:text-white'}`}>
+          <button onClick={() => window.location.href = "/"} className="flex flex-col items-center gap-1 p-2 w-16 transition-all text-gray-400 hover:text-white">
             <Heart className="w-5 h-5" />
             <span className="text-[10px] font-medium">Wishlist</span>
           </button>
         </div>
       </nav>
+      
 
     </div>
   );
