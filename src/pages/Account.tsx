@@ -12,7 +12,7 @@ const Account = () => {
   
   // 🔥 Unique Referral Link Generator (User-er email base kore)
   const referralCode = userEmail ? btoa(userEmail).substring(0, 8).toUpperCase() : "PFUSER";
-  const referralLink = `https://perfectfume.in/signup?ref=${referralCode}`;
+  const referralLink = `https://${window.location.host}/signup?ref=${referralCode}`;
 
   useEffect(() => {
     window.scrollTo(0, 0);
