@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar'; 
-import Footer from './components/Footer'; // 🔥 Notun Footer Import Korlam
+import Footer from './components/Footer'; 
 import HomePage from './pages/Home';      
 import AdminPanel from './pages/Admin';   
 import Shop from './pages/Shop'; 
@@ -13,16 +13,20 @@ import FAQ from './pages/FAQ';
 import PrivacyPolicy from './pages/Privacy';
 import ShippingPolicy from './pages/Shipping';
 import RefundPolicy from './pages/Refund';
+import Categories from './pages/Categories';
+import Wishlist from './pages/Wishlist';
 
 const App = () => {
   return (
     <Router>
-      <Navbar /> {/* Top menu */}
+      <Navbar /> 
       
       <div className="min-h-screen">
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/shop" element={<Shop />} /> 
+          <Route path="/categories" element={<Categories />} />
+          <Route path="/wishlist" element={<Wishlist />} />
           <Route path="/product/:id" element={<ProductDetails />} /> 
           <Route path="/about" element={<About />} /> 
           <Route path="/contact" element={<Contact />} /> 
@@ -35,7 +39,7 @@ const App = () => {
         </Routes>
       </div>
 
-      <Footer /> {/* 🔥 Ekdom niche Footer add kora holo jeta sob page-e dekhabe */}
+      <Footer /> 
     </Router>
   );
 };
