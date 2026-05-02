@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, ShoppingCart, User, X, Trash2, LogOut, MapPin, CreditCard, Banknote } from 'lucide-react'; 
+import { Search, ShoppingCart, User, X, Trash2, LogOut, MapPin, CreditCard, Banknote, Heart } from 'lucide-react'; // 🔥 NOTUN: Heart icon add kora hoyeche
 import { useStore } from '../store/useStore';
 
 const Navbar = () => {
@@ -277,9 +277,24 @@ const Navbar = () => {
           </div>
         </div>
       )}
+
+      {/* 🔥 BOTTOM NAVBAR (Mobile View) */}
+      <div className="md:hidden fixed bottom-0 w-full bg-[#050505] border-t border-white/10 flex justify-around py-3 z-40 pb-safe">
+        <button onClick={() => window.location.href = "/"} className={`flex flex-col items-center hover:text-purple-400 ${window.location.pathname === '/' ? 'text-purple-400' : 'text-gray-400'}`}>
+          <Search className="w-5 h-5" /><span className="text-[10px] mt-1 font-bold">Home</span>
+        </button>
+        <button onClick={() => window.location.href = "/shop"} className={`flex flex-col items-center hover:text-purple-400 ${window.location.pathname === '/shop' ? 'text-purple-400' : 'text-gray-400'}`}>
+          <ShoppingCart className="w-5 h-5" /><span className="text-[10px] mt-1 font-bold">Shop</span>
+        </button>
+        <button onClick={() => window.location.href = "/wishlist"} className={`flex flex-col items-center hover:text-purple-400 ${window.location.pathname === '/wishlist' ? 'text-pink-400' : 'text-gray-400'}`}>
+          <Heart className="w-5 h-5" /><span className="text-[10px] mt-1 font-bold">Wishlist</span>
+        </button>
+        <button onClick={() => window.location.href = "/account"} className={`flex flex-col items-center hover:text-purple-400 ${window.location.pathname === '/account' ? 'text-purple-400' : 'text-gray-400'}`}>
+          <User className="w-5 h-5" /><span className="text-[10px] mt-1 font-bold">Account</span>
+        </button>
+      </div>
     </>
   );
 };
 
 export default Navbar;
-    
