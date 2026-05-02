@@ -13,7 +13,7 @@ import FAQ from './pages/FAQ';
 import PrivacyPolicy from './pages/Privacy';
 import ShippingPolicy from './pages/Shipping';
 import RefundPolicy from './pages/Refund';
-import Account from './pages/Account'; // 🔥 NOTUN: Categories er bodole Account
+import Account from './pages/Account'; 
 import Wishlist from './pages/Wishlist'; 
 
 const App = () => {
@@ -25,7 +25,7 @@ const App = () => {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/shop" element={<Shop />} /> 
-          <Route path="/account" element={<Account />} /> {/* 🔥 NOTUN */}
+          <Route path="/account" element={<Account />} /> 
           <Route path="/wishlist" element={<Wishlist />} /> 
           <Route path="/product/:id" element={<ProductDetails />} /> 
           <Route path="/about" element={<About />} /> 
