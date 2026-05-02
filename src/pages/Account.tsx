@@ -9,7 +9,6 @@ const Account = () => {
     window.scrollTo(0, 0);
   }, []);
 
-  // Login na thakle eta dekhabe
   if (!userEmail) {
     return (
       <div className="min-h-screen bg-[#050505] text-white pt-32 pb-24 flex flex-col items-center text-center px-4 font-sans">
@@ -18,12 +17,17 @@ const Account = () => {
         </div>
         <h2 className="text-3xl font-bold mb-4 italic">Please Sign In</h2>
         <p className="text-gray-400 mb-8 max-w-sm">Access your account, track orders, and view your wishlist.</p>
-        <p className="text-purple-400 font-bold border border-purple-500/30 px-6 py-3 rounded-full bg-purple-900/10">👆 Click 'Sign In' at the top right corner</p>
+        {/* 🔥 SMART BUTTON: Eta Navbar er lukiye thaka login button ke trigger korbe */}
+        <button 
+          onClick={() => document.getElementById('nav-login-btn')?.click()} 
+          className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3.5 px-10 rounded-full transition-all shadow-lg shadow-purple-900/50"
+        >
+          Sign In Now
+        </button>
       </div>
     );
   }
 
-  // Login thakle eta dekhabe
   return (
     <div className="min-h-screen bg-[#050505] text-white pt-24 pb-24 font-sans">
       <main className="max-w-4xl mx-auto px-4">
