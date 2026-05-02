@@ -38,7 +38,7 @@ const TrackOrder = () => {
           date: orderData.createdAt ? new Date(orderData.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Recently Placed',
           amount: `₹${orderData.totalAmount || '0'}`,
           eta: 'Standard Delivery (3-7 Days)',
-          address: orderData.address ? `${orderData.address.city || ''}, India` : 'Kolkata, India',
+          address: (orderData.address && orderData.address.city) ? `${orderData.address.city}, India` : 'India',
           steps: [
             { label: 'Order Placed', completed: true },
             { label: 'Order Confirmed', completed: orderData.status !== 'pending' },
