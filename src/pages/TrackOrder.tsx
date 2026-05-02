@@ -7,13 +7,14 @@ const TrackOrder = () => {
   const [trackingData, setTrackingData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
+  const API_URL = import.meta.env.VITE_API_URL || "https://perfect-fume-backend.perfectfumeofficial.workers.dev";
   const ADMIN_WHATSAPP = "918777789394";
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
-  const handleTrack = (e: React.FormEvent) => {
+  const handleTrack = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!orderId || !contactInfo) {
       return alert("⚠️ Doyakore Order ID r Phone/Email dutoi din!");
@@ -21,35 +22,48 @@ const TrackOrder = () => {
     
     setLoading(true);
     
-    // Smart Tracker Simulation
-    setTimeout(() => {
-      const cleanOrderId = orderId.replace('#', '').trim();
-      const today = new Date();
-      const formattedDate = today.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+    try {
+      // Order ID theke '#' ba space soriye shudhu ID ta neoa hocche (e.g., OR-43 er bodole 43)
+      const cleanOrderId = orderId.replace('#', '').replace(/or-/i, '').trim();
 
-      setTrackingData({
-        id: `#${cleanOrderId}`,
-        date: formattedDate,
-        amount: '₹ ---', // Database na thakay amount hide rakha bhalo
-        eta: '3 - 7 Business Days',
-        address: 'Shipping Address',
-        steps: [
-          { label: 'Order Placed', completed: true },
-          { label: 'Processing', completed: true, current: true },
-          { label: 'Shipped', completed: false },
-          { label: 'Out for Delivery', completed: false },
-          { label: 'Delivered', completed: false },
-        ]
-      });
+      // Asol API theke data tanbe
+      const response = await fetch(`${API_URL}/api/order/${cleanOrderId}`);
+      
+      if (response.ok) {
+        const orderData = await response.json();
+        
+        setTrackingData({
+          id: `#OR-${cleanOrderId.toUpperCase()}`,
+          // Date formatting
+          date: orderData.createdAt ? new Date(orderData.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Recently Placed',
+          amount: `₹${orderData.totalAmount || '0'}`,
+          eta: 'Standard Delivery (3-7 Days)',
+          address: orderData.address ? `${orderData.address.city || ''}, India` : 'Kolkata, India',
+          steps: [
+            { label: 'Order Placed', completed: true },
+            { label: 'Order Confirmed', completed: orderData.status !== 'pending' },
+            { label: 'Shipped', completed: orderData.status === 'shipped' || orderData.status === 'delivered', current: orderData.status === 'shipped' },
+            { label: 'Out for Delivery', completed: orderData.status === 'out_for_delivery', current: orderData.status === 'out_for_delivery' },
+            { label: 'Delivered', completed: orderData.status === 'delivered', current: orderData.status === 'delivered' },
+          ]
+        });
+      } else {
+        alert("❌ Kono order khunje pawa jayni! Doyakore sothik Order ID din.");
+        setTrackingData(null);
+      }
+    } catch (error) {
+      console.error("Tracking Error:", error);
+      alert("⚠️ Server-er sathe connect korte somossa hocche. Ektu pore abar try korun.");
+    } finally {
       setLoading(false);
-    }, 1500);
+    }
   };
 
   return (
     <div className="min-h-screen bg-[#050505] text-white pt-24 pb-24 font-sans">
       <main className="max-w-4xl mx-auto px-4">
         
-        {/* 🔥 HEADER */}
+        {/* HEADER */}
         <div className="text-center mb-12">
           <h1 className="text-3xl md:text-5xl font-bold italic mb-4 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
             Track Your Order
@@ -61,7 +75,7 @@ const TrackOrder = () => {
           </p>
         </div>
 
-        {/* 🔥 TRACKING FORM */}
+        {/* TRACKING FORM */}
         <div className="bg-[#111] p-6 md:p-8 rounded-3xl border border-white/10 mb-12 shadow-2xl relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-pink-500"></div>
           
@@ -75,7 +89,7 @@ const TrackOrder = () => {
                   placeholder="Order ID (e.g. #OR-43)" 
                   value={orderId}
                   onChange={(e) => setOrderId(e.target.value)}
-                  className="w-full bg-black border border-white/10 rounded-xl py-4 pl-12 pr-4 outline-none focus:border-purple-500 transition-all font-mono text-white"
+                  className="w-full bg-black border border-white/10 rounded-xl py-4 pl-12 pr-4 outline-none focus:border-purple-500 transition-all font-mono text-white uppercase"
                 />
               </div>
               <div className="flex-1 relative">
@@ -96,7 +110,7 @@ const TrackOrder = () => {
           </form>
         </div>
 
-        {/* 🔥 TRACKING RESULTS */}
+        {/* TRACKING RESULTS */}
         {trackingData && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8">
             
@@ -141,17 +155,24 @@ const TrackOrder = () => {
               </div>
             </div>
 
-            {/* Help Section */}
-            <div className="bg-gradient-to-br from-[#111] to-black p-6 rounded-2xl border border-white/5">
-              <h3 className="text-xl font-bold mb-2 text-white">Need Help with this Order?</h3>
-              <p className="text-sm text-gray-400 mb-6">Didn’t receive your order or facing any issue? We’re here to assist you.</p>
-              <div className="space-y-3 md:space-y-0 md:flex gap-4">
-                <button onClick={() => window.location.href='/contact'} className="flex-1 w-full bg-white/10 hover:bg-white/20 text-white font-bold py-3 rounded-xl transition-all text-sm">
-                  Contact Support
-                </button>
-                <a href={`https://wa.me/${ADMIN_WHATSAPP}?text=Hi, I need help with my order ${trackingData.id}`} target="_blank" rel="noreferrer" className="flex-1 w-full bg-green-600/20 hover:bg-green-600/40 text-green-500 border border-green-500/20 font-bold py-3 rounded-xl transition-all text-sm flex justify-center items-center gap-2">
-                  <MessageCircle className="w-4 h-4"/> Chat on WhatsApp
-                </a>
+            {/* Delivery Information */}
+            <div className="bg-[#111] p-6 rounded-2xl border border-white/5">
+              <h3 className="text-xl font-bold mb-4 text-purple-400 border-b border-white/10 pb-2">Delivery Information</h3>
+              <div className="space-y-4">
+                <div className="flex items-start gap-3">
+                  <Truck className="w-5 h-5 text-gray-400 mt-1 shrink-0" />
+                  <div>
+                    <p className="font-bold text-gray-300">Estimated Delivery:</p>
+                    <p className="text-white font-bold">{trackingData.eta}</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <MapPin className="w-5 h-5 text-gray-400 mt-1 shrink-0" />
+                  <div>
+                    <p className="font-bold text-gray-300">Delivery Address:</p>
+                    <p className="text-white">{trackingData.address}</p>
+                  </div>
+                </div>
               </div>
             </div>
 
