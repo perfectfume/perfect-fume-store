@@ -14,7 +14,6 @@ const Wishlist = () => {
     if (!isCartOpen) toggleCart();
   };
 
-  // 🔥 LOGIN NA KORA THAKLE ETA DEKHABE
   if (!userEmail) {
     return (
       <div className="min-h-screen bg-[#050505] text-white pt-32 pb-24 flex flex-col items-center justify-center text-center px-4 font-sans">
@@ -23,12 +22,17 @@ const Wishlist = () => {
         </div>
         <h2 className="text-3xl font-bold mb-4 italic">Please Sign In</h2>
         <p className="text-gray-400 mb-8 max-w-sm">You need to be logged in to view and save items to your wishlist.</p>
-        <p className="text-pink-400 font-bold border border-pink-500/30 px-6 py-3 rounded-full bg-pink-900/10">👆 Click 'Sign In' at the top right corner</p>
+        {/* 🔥 SMART BUTTON: Navbar er login ke call korbe */}
+        <button 
+          onClick={() => document.getElementById('nav-login-btn')?.click()} 
+          className="bg-pink-600 hover:bg-pink-700 text-white font-bold py-3.5 px-10 rounded-full transition-all shadow-lg shadow-pink-900/50"
+        >
+          Sign In Now
+        </button>
       </div>
     );
   }
 
-  // 🔥 LOGIN KORA THAKLE ETA DEKHABE
   return (
     <div className="min-h-screen bg-[#050505] text-white pt-24 pb-24 font-sans">
       <main className="max-w-6xl mx-auto px-4">
@@ -54,7 +58,7 @@ const Wishlist = () => {
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-            {wishlist.map((product) => (
+            {wishlist.map((product: any) => (
               <div key={product.id} className="bg-[#111] border border-white/5 rounded-2xl p-3 md:p-4 flex flex-col relative group hover:border-pink-500/30 transition-all">
                 <button 
                   onClick={() => toggleWishlist(product)} 
