@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Package, Phone, Mail, CheckCircle, Truck, MessageCircle, HelpCircle, AlertCircle, MapPin, Calendar, CreditCard } from 'lucide-react';
+import { Search, Package, Mail, CheckCircle, Truck, MessageCircle, HelpCircle, AlertCircle, MapPin, Calendar, CreditCard } from 'lucide-react';
 
 const TrackOrder = () => {
   const [orderId, setOrderId] = useState('');
@@ -7,13 +7,14 @@ const TrackOrder = () => {
   const [trackingData, setTrackingData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
+  const API_URL = import.meta.env.VITE_API_URL || "https://perfect-fume-backend.perfectfumeofficial.workers.dev";
   const ADMIN_WHATSAPP = "918777789394";
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
-  const handleTrack = (e: React.FormEvent) => {
+  const handleTrack = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!orderId || !contactInfo) {
       return alert("⚠️ Doyakore Order ID r Phone/Email dutoi din!");
@@ -21,24 +22,43 @@ const TrackOrder = () => {
     
     setLoading(true);
     
-    // Ekhane pore asol API asbe. Ekhon ekta fake loading r data dekhacchi.
-    setTimeout(() => {
-      setTrackingData({
-        id: orderId.startsWith('#') ? orderId : `#${orderId}`,
-        date: '25 April 2026',
-        amount: '₹999',
-        eta: '28 April – 30 April',
-        address: 'Kolkata, India',
-        steps: [
-          { label: 'Order Placed', completed: true },
-          { label: 'Order Confirmed', completed: true },
-          { label: 'Shipped', completed: true, current: true },
-          { label: 'Out for Delivery', completed: false },
-          { label: 'Delivered', completed: false },
-        ]
-      });
+    try {
+      // Order ID theke '#' ba space soriye shudhu ID ta neoa hocche (e.g., OR-43)
+      const cleanOrderId = orderId.replace('#', '').trim();
+
+      // 🔥 Eibar Asol API theke data tanbe
+      // Dhorchi apnar backend e ei route ta ache: /api/order/OR-43
+      const response = await fetch(`${API_URL}/api/order/${cleanOrderId}`);
+      
+      if (response.ok) {
+        const orderData = await response.json();
+        
+        // Backend theke asa asol data diye form fill kora
+        setTrackingData({
+          id: `#${cleanOrderId}`,
+          // Date ke sundor format e dekhano
+          date: orderData.createdAt ? new Date(orderData.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Recently Placed',
+          amount: `₹${orderData.total || orderData.totalAmount || orderData.amount || 'N/A'}`,
+          eta: 'Standard Delivery (3-7 Days)',
+          address: orderData.address ? `${orderData.address.city || ''}, India` : 'Kolkata, India',
+          steps: [
+            { label: 'Order Placed', completed: true },
+            { label: 'Order Confirmed', completed: orderData.status !== 'pending' },
+            { label: 'Shipped', completed: orderData.status === 'shipped' || orderData.status === 'delivered', current: orderData.status === 'shipped' },
+            { label: 'Out for Delivery', completed: orderData.status === 'out_for_delivery' },
+            { label: 'Delivered', completed: orderData.status === 'delivered' },
+          ]
+        });
+      } else {
+        alert("❌ Kono order khunje pawa jayni! Doyakore sothik Order ID din.");
+        setTrackingData(null);
+      }
+    } catch (error) {
+      console.error("Tracking Error:", error);
+      alert("⚠️ Server-er sathe connect korte somossa hocche. Ektu pore abar try korun.");
+    } finally {
       setLoading(false);
-    }, 1500);
+    }
   };
 
   return (
@@ -119,7 +139,6 @@ const TrackOrder = () => {
             <div className="bg-[#111] p-6 md:p-8 rounded-2xl border border-white/5">
               <h3 className="text-xl font-bold mb-8 text-purple-400 border-b border-white/10 pb-2">Order Status</h3>
               <div className="relative pl-4 md:pl-0">
-                {/* Vertical Line for mobile, Horizontal for desktop can be complex, keeping vertical for consistency */}
                 <div className="absolute left-[27px] top-2 bottom-2 w-0.5 bg-white/10"></div>
                 
                 <div className="space-y-6">
@@ -164,7 +183,6 @@ const TrackOrder = () => {
 
             {/* 4. Help & Important Notes Grid */}
             <div className="grid md:grid-cols-2 gap-6">
-              {/* Need Help? */}
               <div className="bg-gradient-to-br from-[#111] to-black p-6 rounded-2xl border border-white/5">
                 <h3 className="text-xl font-bold mb-2 text-white">Need Help?</h3>
                 <p className="text-sm text-gray-400 mb-6">Didn’t receive your order or facing any issue? We’re here to assist you at every step.</p>
@@ -178,7 +196,6 @@ const TrackOrder = () => {
                 </div>
               </div>
 
-              {/* Important Notes */}
               <div className="bg-[#111] p-6 rounded-2xl border border-white/5">
                 <h3 className="text-xl font-bold mb-4 flex items-center gap-2 text-yellow-500"><AlertCircle className="w-5 h-5"/> Important Notes</h3>
                 <ul className="space-y-3 text-sm text-gray-400 list-disc pl-4">
@@ -231,4 +248,3 @@ const TrackOrder = () => {
 };
 
 export default TrackOrder;
-              
