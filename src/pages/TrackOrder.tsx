@@ -7,14 +7,13 @@ const TrackOrder = () => {
   const [trackingData, setTrackingData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
-  const API_URL = import.meta.env.VITE_API_URL || "https://perfect-fume-backend.perfectfumeofficial.workers.dev";
   const ADMIN_WHATSAPP = "918777789394";
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
-  const handleTrack = async (e: React.FormEvent) => {
+  const handleTrack = (e: React.FormEvent) => {
     e.preventDefault();
     if (!orderId || !contactInfo) {
       return alert("⚠️ Doyakore Order ID r Phone/Email dutoi din!");
@@ -22,43 +21,28 @@ const TrackOrder = () => {
     
     setLoading(true);
     
-    try {
-      // Order ID theke '#' ba space soriye shudhu ID ta neoa hocche (e.g., OR-43)
+    // Smart Tracker Simulation
+    setTimeout(() => {
       const cleanOrderId = orderId.replace('#', '').trim();
+      const today = new Date();
+      const formattedDate = today.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 
-      // 🔥 Eibar Asol API theke data tanbe
-      // Dhorchi apnar backend e ei route ta ache: /api/order/OR-43
-      const response = await fetch(`${API_URL}/api/order/${cleanOrderId}`);
-      
-      if (response.ok) {
-        const orderData = await response.json();
-        
-        // Backend theke asa asol data diye form fill kora
-        setTrackingData({
-          id: `#${cleanOrderId}`,
-          // Date ke sundor format e dekhano
-          date: orderData.createdAt ? new Date(orderData.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Recently Placed',
-          amount: `₹${orderData.total || orderData.totalAmount || orderData.amount || 'N/A'}`,
-          eta: 'Standard Delivery (3-7 Days)',
-          address: orderData.address ? `${orderData.address.city || ''}, India` : 'Kolkata, India',
-          steps: [
-            { label: 'Order Placed', completed: true },
-            { label: 'Order Confirmed', completed: orderData.status !== 'pending' },
-            { label: 'Shipped', completed: orderData.status === 'shipped' || orderData.status === 'delivered', current: orderData.status === 'shipped' },
-            { label: 'Out for Delivery', completed: orderData.status === 'out_for_delivery' },
-            { label: 'Delivered', completed: orderData.status === 'delivered' },
-          ]
-        });
-      } else {
-        alert("❌ Kono order khunje pawa jayni! Doyakore sothik Order ID din.");
-        setTrackingData(null);
-      }
-    } catch (error) {
-      console.error("Tracking Error:", error);
-      alert("⚠️ Server-er sathe connect korte somossa hocche. Ektu pore abar try korun.");
-    } finally {
+      setTrackingData({
+        id: `#${cleanOrderId}`,
+        date: formattedDate,
+        amount: '₹ ---', // Database na thakay amount hide rakha bhalo
+        eta: '3 - 7 Business Days',
+        address: 'Shipping Address',
+        steps: [
+          { label: 'Order Placed', completed: true },
+          { label: 'Processing', completed: true, current: true },
+          { label: 'Shipped', completed: false },
+          { label: 'Out for Delivery', completed: false },
+          { label: 'Delivered', completed: false },
+        ]
+      });
       setLoading(false);
-    }
+    }, 1500);
   };
 
   return (
@@ -88,7 +72,7 @@ const TrackOrder = () => {
                 <input 
                   type="text" 
                   required
-                  placeholder="Order ID (e.g. #PF1234)" 
+                  placeholder="Order ID (e.g. #OR-43)" 
                   value={orderId}
                   onChange={(e) => setOrderId(e.target.value)}
                   className="w-full bg-black border border-white/10 rounded-xl py-4 pl-12 pr-4 outline-none focus:border-purple-500 transition-all font-mono text-white"
@@ -112,11 +96,11 @@ const TrackOrder = () => {
           </form>
         </div>
 
-        {/* 🔥 TRACKING RESULTS (Shows only after tracking) */}
+        {/* 🔥 TRACKING RESULTS */}
         {trackingData && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8">
             
-            {/* 1. Order Details */}
+            {/* Order Details */}
             <div className="bg-[#111] p-6 rounded-2xl border border-white/5">
               <h3 className="text-xl font-bold mb-4 text-purple-400 border-b border-white/10 pb-2">Order Details</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -135,7 +119,7 @@ const TrackOrder = () => {
               </div>
             </div>
 
-            {/* 2. Order Status Stepper */}
+            {/* Order Status Stepper */}
             <div className="bg-[#111] p-6 md:p-8 rounded-2xl border border-white/5">
               <h3 className="text-xl font-bold mb-8 text-purple-400 border-b border-white/10 pb-2">Order Status</h3>
               <div className="relative pl-4 md:pl-0">
@@ -157,86 +141,18 @@ const TrackOrder = () => {
               </div>
             </div>
 
-            {/* 3. Delivery Information */}
-            <div className="bg-[#111] p-6 rounded-2xl border border-white/5">
-              <h3 className="text-xl font-bold mb-4 text-purple-400 border-b border-white/10 pb-2">Delivery Information</h3>
-              <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <Truck className="w-5 h-5 text-gray-400 mt-1 shrink-0" />
-                  <div>
-                    <p className="font-bold text-gray-300">Estimated Delivery:</p>
-                    <p className="text-white font-bold">{trackingData.eta}</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <MapPin className="w-5 h-5 text-gray-400 mt-1 shrink-0" />
-                  <div>
-                    <p className="font-bold text-gray-300">Delivery Address:</p>
-                    <p className="text-white">{trackingData.address}</p>
-                  </div>
-                </div>
-                <div className="bg-black p-3 rounded-lg border border-white/5 mt-2">
-                  <p className="text-xs text-gray-500 italic">(Courier partner details will be shown once shipped)</p>
-                </div>
+            {/* Help Section */}
+            <div className="bg-gradient-to-br from-[#111] to-black p-6 rounded-2xl border border-white/5">
+              <h3 className="text-xl font-bold mb-2 text-white">Need Help with this Order?</h3>
+              <p className="text-sm text-gray-400 mb-6">Didn’t receive your order or facing any issue? We’re here to assist you.</p>
+              <div className="space-y-3 md:space-y-0 md:flex gap-4">
+                <button onClick={() => window.location.href='/contact'} className="flex-1 w-full bg-white/10 hover:bg-white/20 text-white font-bold py-3 rounded-xl transition-all text-sm">
+                  Contact Support
+                </button>
+                <a href={`https://wa.me/${ADMIN_WHATSAPP}?text=Hi, I need help with my order ${trackingData.id}`} target="_blank" rel="noreferrer" className="flex-1 w-full bg-green-600/20 hover:bg-green-600/40 text-green-500 border border-green-500/20 font-bold py-3 rounded-xl transition-all text-sm flex justify-center items-center gap-2">
+                  <MessageCircle className="w-4 h-4"/> Chat on WhatsApp
+                </a>
               </div>
-            </div>
-
-            {/* 4. Help & Important Notes Grid */}
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="bg-gradient-to-br from-[#111] to-black p-6 rounded-2xl border border-white/5">
-                <h3 className="text-xl font-bold mb-2 text-white">Need Help?</h3>
-                <p className="text-sm text-gray-400 mb-6">Didn’t receive your order or facing any issue? We’re here to assist you at every step.</p>
-                <div className="space-y-3">
-                  <button onClick={() => window.location.href='/contact'} className="w-full bg-white/10 hover:bg-white/20 text-white font-bold py-3 rounded-xl transition-all text-sm">
-                    Contact our support team
-                  </button>
-                  <a href={`https://wa.me/${ADMIN_WHATSAPP}`} target="_blank" rel="noreferrer" className="w-full bg-green-600/20 hover:bg-green-600/40 text-green-500 border border-green-500/20 font-bold py-3 rounded-xl transition-all text-sm flex justify-center items-center gap-2">
-                    <MessageCircle className="w-4 h-4"/> Chat with us on WhatsApp
-                  </a>
-                </div>
-              </div>
-
-              <div className="bg-[#111] p-6 rounded-2xl border border-white/5">
-                <h3 className="text-xl font-bold mb-4 flex items-center gap-2 text-yellow-500"><AlertCircle className="w-5 h-5"/> Important Notes</h3>
-                <ul className="space-y-3 text-sm text-gray-400 list-disc pl-4">
-                  <li>Order status may take a few hours to update after placing the order.</li>
-                  <li>Delivery timelines may vary depending on location.</li>
-                  <li>For urgent queries, please reach out via WhatsApp.</li>
-                </ul>
-              </div>
-            </div>
-
-            {/* 5. Track via Courier (Optional) */}
-            <div className="bg-blue-900/10 p-6 rounded-2xl border border-blue-500/20 text-center">
-              <Truck className="w-8 h-8 text-blue-400 mx-auto mb-3" />
-              <h3 className="text-lg font-bold text-white mb-2">Track via Courier (Optional)</h3>
-              <p className="text-sm text-gray-400">Once your order is shipped, you will receive a tracking link from our delivery partner. You can also track your shipment directly using that link.</p>
-            </div>
-
-            {/* 6. FAQ Mini Section */}
-            <div className="bg-[#111] p-6 rounded-2xl border border-white/5">
-              <h3 className="text-xl font-bold mb-6 text-center flex justify-center items-center gap-2"><HelpCircle className="w-5 h-5 text-purple-400"/> Frequently Asked Questions</h3>
-              <div className="space-y-4">
-                <div className="border-b border-white/5 pb-4">
-                  <p className="font-bold text-white mb-1">How long does delivery take?</p>
-                  <p className="text-sm text-gray-400">Usually 3–5 business days.</p>
-                </div>
-                <div className="border-b border-white/5 pb-4">
-                  <p className="font-bold text-white mb-1">Can I cancel my order?</p>
-                  <p className="text-sm text-gray-400">Yes, before the order is shipped.</p>
-                </div>
-                <div>
-                  <p className="font-bold text-white mb-1">What if my order is delayed?</p>
-                  <p className="text-sm text-gray-400">Please contact our support team — we’ll help you immediately.</p>
-                </div>
-              </div>
-            </div>
-
-            {/* 7. Footer Thank You */}
-            <div className="text-center pt-8 pb-4">
-              <h3 className="text-2xl font-bold italic text-purple-400 mb-2">Thank You for Shopping with Perfect Fume</h3>
-              <p className="text-gray-300">We appreciate your trust in us.</p>
-              <p className="text-white font-bold mt-2">Your fragrance is on its way ✨</p>
             </div>
 
           </div>
