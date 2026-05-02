@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useStore } from '../store/useStore';
-import { Heart, Star, Filter, Home as HomeIcon, LayoutGrid, ShoppingBag } from 'lucide-react';
+import { Heart, Star, Filter } from 'lucide-react';
 
 const Shop = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('All');
   
-  const { userEmail, addToCart, isCartOpen, toggleCart } = useStore();
+  // 🔥 NOTUN: wishlist ar toggleWishlist add kora holo
+  const { userEmail, addToCart, isCartOpen, toggleCart, wishlist, toggleWishlist } = useStore();
   const API_URL = import.meta.env.VITE_API_URL || "https://perfect-fume-backend.perfectfumeofficial.workers.dev";
   const categories = ['All', 'Men', 'Women', 'Unisex', 'Luxury', 'Travel Size'];
 
@@ -82,10 +83,15 @@ const Shop = () => {
               ) : filteredProducts.length > 0 ? (
                 filteredProducts.map((product: any) => (
                   <div key={product.id} className="bg-[#111] border border-white/5 rounded-xl p-2.5 flex flex-col relative group hover:border-purple-500/50 transition-all">
-                    {/* Heart Icon (Not Clickable for page change) */}
-                    <button className="absolute top-3 right-3 z-20 p-1.5 bg-black/50 rounded-full text-gray-400 hover:text-red-500"><Heart className="w-4 h-4" /></button>
                     
-                    {/* 🔥 EIKHANE CLICKABLE KORA HOYECHE */}
+                    {/* 🔥 SMART HEART BUTTON (Wishlist Toggle) */}
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); toggleWishlist(product); }}
+                      className="absolute top-3 right-3 z-20 p-1.5 bg-black/50 backdrop-blur-md rounded-full text-white hover:text-pink-500 transition-colors"
+                    >
+                      <Heart className={`w-4 h-4 ${wishlist?.find((w: any) => w.id === product.id) ? 'fill-pink-500 text-pink-500' : ''}`} />
+                    </button>
+                    
                     <div onClick={() => window.location.href = '/product/' + product.id} className="cursor-pointer flex flex-col flex-1">
                       <div className="w-full h-36 md:h-48 bg-black rounded-lg mb-3 overflow-hidden relative">
                         <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
@@ -99,7 +105,6 @@ const Shop = () => {
                       <p className="font-bold text-lg mb-3">₹{product.price}</p>
                     </div>
                     
-                    {/* Buttons (Not Clickable for page change) */}
                     <div className="flex gap-1.5 mt-auto relative z-20">
                       <button onClick={() => handleAddToCart(product)} className="w-full bg-white/10 hover:bg-white/20 text-white text-[10px] font-bold py-2 rounded-lg transition-all">Cart</button>
                       <button onClick={() => handleBuyNow(product)} className="w-full bg-purple-600 hover:bg-purple-700 text-white text-[10px] font-bold py-2 rounded-lg transition-all shadow-lg shadow-purple-900/20">Buy Now</button>
@@ -113,27 +118,6 @@ const Shop = () => {
           </div>
         </div>
       </div>
-
-      <nav className={`fixed bottom-0 left-0 w-full z-40 bg-[#000000] border-t border-[#222] px-2 py-1.5 pb-safe md:hidden ${isCartOpen ? 'hidden' : 'block'}`}>
-        <div className="flex justify-around items-center">
-          <button onClick={() => window.location.href = "/"} className="flex flex-col items-center gap-1 p-2 w-16 transition-all text-gray-400 hover:text-white">
-            <HomeIcon className="w-5 h-5" />
-            <span className="text-[10px] font-medium">Home</span>
-          </button>
-          <button onClick={() => window.location.href = "/"} className="flex flex-col items-center gap-1 p-2 w-16 transition-all text-gray-400 hover:text-white">
-            <LayoutGrid className="w-5 h-5" />
-            <span className="text-[10px] font-medium">Categories</span>
-          </button>
-          <button onClick={() => window.location.href = "/shop"} className="flex flex-col items-center gap-1 p-2 w-16 transition-all text-purple-500">
-            <ShoppingBag className="w-5 h-5" />
-            <span className="text-[10px] font-medium">Shop</span>
-          </button>
-          <button onClick={() => window.location.href = "/"} className="flex flex-col items-center gap-1 p-2 w-16 transition-all text-gray-400 hover:text-white">
-            <Heart className="w-5 h-5" />
-            <span className="text-[10px] font-medium">Wishlist</span>
-          </button>
-        </div>
-      </nav>
     </div>
   );
 };
