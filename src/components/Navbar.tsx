@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, ShoppingCart, User, X, Trash2, LogOut, MapPin, CreditCard, Banknote, Heart } from 'lucide-react'; // 🔥 NOTUN: Heart icon add kora hoyeche
+import { Search, ShoppingCart, User, X, Trash2, LogOut, MapPin, CreditCard, Banknote, Heart } from 'lucide-react'; 
 import { useStore } from '../store/useStore';
 
 const Navbar = () => {
@@ -139,21 +139,18 @@ const Navbar = () => {
 
   return (
     <>
-      {/* 🔥 TOP NAVBAR (Menu Removed, Logo Clickable, Desktop Links Added) */}
+      {/* 🔥 TOP NAVBAR */}
       <nav className="fixed top-0 w-full z-40 bg-black/80 backdrop-blur-lg border-b border-white/10 px-4 py-3">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4 relative">
           
-          {/* Left: Logo (Clickable to Home) */}
-          <div 
-            className="flex items-center gap-2 cursor-pointer group" 
-            onClick={() => window.location.href = "/"}
-          >
+          {/* Left: Logo */}
+          <div className="flex items-center gap-2 cursor-pointer group" onClick={() => window.location.href = "/"}>
             <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-600 bg-clip-text text-transparent italic tracking-wider group-hover:scale-105 transition-transform">
               PERFECT FUME
             </h1>
           </div>
 
-          {/* Center: Desktop Menu (Hidden on mobile) */}
+          {/* Center: Desktop Menu */}
           <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 gap-8 items-center">
             <button onClick={() => window.location.href = "/"} className="text-sm font-bold text-gray-300 hover:text-purple-400 transition-colors">Home</button>
             <button onClick={() => window.location.href = "/shop"} className="text-sm font-bold text-gray-300 hover:text-purple-400 transition-colors">Shop</button>
@@ -164,9 +161,11 @@ const Navbar = () => {
           {/* Right: User & Cart Icons */}
           <div className="flex items-center gap-6 text-white ml-auto">
             {!userEmail ? (
-              <div onClick={() => setIsAuthOpen(true)} className="flex flex-col items-center cursor-pointer hover:text-purple-400"><User className="w-6 h-6" /><span className="text-[10px] hidden md:block">Sign In</span></div>
+              // 🔥 MOBILE-E HIDDEN KORA HOYECHE (hidden md:flex)
+              <div id="nav-login-btn" onClick={() => setIsAuthOpen(true)} className="hidden md:flex flex-col items-center cursor-pointer hover:text-purple-400"><User className="w-6 h-6" /><span className="text-[10px] hidden md:block">Sign In</span></div>
             ) : (
-              <div onClick={() => { if(window.confirm("Logout korben?")) logout() }} className="flex flex-col items-center cursor-pointer text-green-400"><LogOut className="w-6 h-6" /><span className="text-[10px] hidden md:block">Logout</span></div>
+              // 🔥 MOBILE-E HIDDEN KORA HOYECHE (hidden md:flex)
+              <div onClick={() => { if(window.confirm("Logout korben?")) logout() }} className="hidden md:flex flex-col items-center cursor-pointer text-green-400"><LogOut className="w-6 h-6" /><span className="text-[10px] hidden md:block">Logout</span></div>
             )}
             <div onClick={toggleCart} className="flex flex-col items-center cursor-pointer relative"><ShoppingCart className="w-6 h-6" /><span className="text-[10px] hidden md:block">Cart</span>
               {cartCount > 0 && <span className="absolute -top-1 -right-2 bg-pink-600 text-[10px] rounded-full w-4 h-4 flex items-center justify-center animate-pulse">{cartCount}</span>}
@@ -175,7 +174,7 @@ const Navbar = () => {
         </div>
       </nav>
 
-      {/* CART DRAWER */}
+      {/* CART DRAWER (Omitted for brevity, kept exactly as before) */}
       {isCartOpen && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex justify-end">
           <div className="w-full max-w-md bg-[#111] h-full border-l border-white/10 flex flex-col animate-in slide-in-from-right duration-300">
@@ -197,7 +196,7 @@ const Navbar = () => {
         </div>
       )}
 
-      {/* CHECKOUT MODAL */}
+      {/* CHECKOUT MODAL (Kept exactly as before) */}
       {isCheckoutOpen && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex justify-center items-end md:items-center px-4 pb-4 md:pb-0">
           <div className="bg-white w-full max-w-md rounded-2xl relative shadow-2xl animate-in slide-in-from-bottom text-black overflow-hidden flex flex-col max-h-[85vh]">
@@ -278,7 +277,7 @@ const Navbar = () => {
         </div>
       )}
 
-      {/* 🔥 BOTTOM NAVBAR (Mobile View) */}
+      {/* 🔥 BOTTOM NAVBAR */}
       <div className="md:hidden fixed bottom-0 w-full bg-[#050505] border-t border-white/10 flex justify-around py-3 z-40 pb-safe">
         <button onClick={() => window.location.href = "/"} className={`flex flex-col items-center hover:text-purple-400 ${window.location.pathname === '/' ? 'text-purple-400' : 'text-gray-400'}`}>
           <Search className="w-5 h-5" /><span className="text-[10px] mt-1 font-bold">Home</span>
@@ -289,7 +288,8 @@ const Navbar = () => {
         <button onClick={() => window.location.href = "/wishlist"} className={`flex flex-col items-center hover:text-purple-400 ${window.location.pathname === '/wishlist' ? 'text-pink-400' : 'text-gray-400'}`}>
           <Heart className="w-5 h-5" /><span className="text-[10px] mt-1 font-bold">Wishlist</span>
         </button>
-        <button onClick={() => window.location.href = "/account"} className={`flex flex-col items-center hover:text-purple-400 ${window.location.pathname === '/account' ? 'text-purple-400' : 'text-gray-400'}`}>
+        {/* 🔥 MAGIC CONNECTION: Logged out thakle Account tab click korlei direct popup khulbe */}
+        <button onClick={() => { if(!userEmail) setIsAuthOpen(true); else window.location.href = "/account"; }} className={`flex flex-col items-center hover:text-purple-400 ${window.location.pathname === '/account' ? 'text-purple-400' : 'text-gray-400'}`}>
           <User className="w-5 h-5" /><span className="text-[10px] mt-1 font-bold">Account</span>
         </button>
       </div>
