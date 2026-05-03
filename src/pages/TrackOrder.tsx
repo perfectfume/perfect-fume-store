@@ -8,25 +8,44 @@ const TrackOrder = () => {
   const [loading, setLoading] = useState(false);
 
   const API_URL = import.meta.env.VITE_API_URL || "https://perfect-fume-backend.perfectfumeofficial.workers.dev";
-  const ADMIN_WHATSAPP = "918777789394";
+  const userEmail = localStorage.getItem('userEmail'); // 🔥 Auto email fill korar jonno
 
+  // --- 🔥 AUTO TRACK LOGIC (Account page theke asle) ---
   useEffect(() => {
     window.scrollTo(0, 0);
+    
+    // Check korun kono ID auto-track er jonno pathano hoyeche kina
+    const autoTrackId = sessionStorage.getItem('autoTrackId');
+    if (autoTrackId) {
+      setOrderId(`#OR-${autoTrackId}`); // Input field e ID bosalo
+      if (userEmail) setContactInfo(userEmail); // Email auto bosiye dilo
+      
+      sessionStorage.removeItem('autoTrackId'); // Memory faka kore dilo
+      
+      // Choto ekta delay jate state set hobar somoy pay, tarpor auto track trigger hobe
+      setTimeout(() => {
+        const fakeEvent = { preventDefault: () => {} } as React.FormEvent;
+        handleTrack(fakeEvent, autoTrackId, userEmail || '');
+      }, 500);
+    }
   }, []);
 
-  const handleTrack = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!orderId || !contactInfo) {
+  const handleTrack = async (e: React.FormEvent, overrideId?: string, overrideContact?: string) => {
+    if (e) e.preventDefault();
+    
+    const finalId = overrideId || orderId;
+    const finalContact = overrideContact || contactInfo;
+
+    if (!finalId || !finalContact) {
       return alert("⚠️ Doyakore Order ID r Phone/Email dutoi din!");
     }
     
     setLoading(true);
     
     try {
-      // Order ID theke '#' ba space soriye shudhu ID ta neoa hocche (e.g., OR-43 er bodole 43)
-      const cleanOrderId = orderId.replace('#', '').replace(/or-/i, '').trim();
+      // Order ID theke '#' ba 'OR-' soriye shudhu number-ta neoa hocche
+      const cleanOrderId = finalId.replace('#', '').replace(/or-/i, '').trim();
 
-      // Asol API theke data tanbe
       const response = await fetch(`${API_URL}/api/order/${cleanOrderId}`);
       
       if (response.ok) {
@@ -34,7 +53,6 @@ const TrackOrder = () => {
         
         setTrackingData({
           id: `#OR-${cleanOrderId.toUpperCase()}`,
-          // Date formatting
           date: orderData.createdAt ? new Date(orderData.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Recently Placed',
           amount: `₹${orderData.totalAmount || '0'}`,
           eta: 'Standard Delivery (3-7 Days)',
@@ -53,7 +71,7 @@ const TrackOrder = () => {
       }
     } catch (error) {
       console.error("Tracking Error:", error);
-      alert("⚠️ Server-er sathe connect korte somossa hocche. Ektu pore abar try korun.");
+      alert("⚠️ Server-er sathe connect korte somossa hocche.");
     } finally {
       setLoading(false);
     }
@@ -69,17 +87,14 @@ const TrackOrder = () => {
             Track Your Order
           </h1>
           <h2 className="text-xl font-bold mb-2 text-white">Stay Updated with Your Delivery</h2>
-          <p className="text-gray-400 text-sm md:text-base">
-            Already placed an order? <br className="hidden md:block"/>
-            Enter your details below to check the real-time status of your order.
-          </p>
+          <p className="text-gray-400 text-sm">Enter your details to check the real-time status.</p>
         </div>
 
         {/* TRACKING FORM */}
         <div className="bg-[#111] p-6 md:p-8 rounded-3xl border border-white/10 mb-12 shadow-2xl relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-pink-500"></div>
           
-          <form onSubmit={handleTrack} className="space-y-4">
+          <form onSubmit={(e) => handleTrack(e)} className="space-y-4">
             <div className="flex flex-col md:flex-row gap-4">
               <div className="flex-1 relative">
                 <Package className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 w-5 h-5" />
@@ -113,32 +128,29 @@ const TrackOrder = () => {
         {/* TRACKING RESULTS */}
         {trackingData && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8">
-            
-            {/* Order Details */}
             <div className="bg-[#111] p-6 rounded-2xl border border-white/5">
               <h3 className="text-xl font-bold mb-4 text-purple-400 border-b border-white/10 pb-2">Order Details</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-purple-900/20 rounded-lg"><Package className="w-5 h-5 text-purple-400"/></div>
+                  <Package className="w-5 h-5 text-purple-400"/>
                   <div><p className="text-xs text-gray-500 uppercase font-bold">Order ID</p><p className="font-mono font-bold text-white">{trackingData.id}</p></div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-900/20 rounded-lg"><Calendar className="w-5 h-5 text-blue-400"/></div>
+                  <Calendar className="w-5 h-5 text-blue-400"/>
                   <div><p className="text-xs text-gray-500 uppercase font-bold">Order Date</p><p className="font-bold text-white">{trackingData.date}</p></div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-green-900/20 rounded-lg"><CreditCard className="w-5 h-5 text-green-400"/></div>
+                  <CreditCard className="w-5 h-5 text-green-400"/>
                   <div><p className="text-xs text-gray-500 uppercase font-bold">Total Amount</p><p className="font-bold text-white">{trackingData.amount}</p></div>
                 </div>
               </div>
             </div>
 
-            {/* Order Status Stepper */}
+            {/* STATUS STEPS */}
             <div className="bg-[#111] p-6 md:p-8 rounded-2xl border border-white/5">
               <h3 className="text-xl font-bold mb-8 text-purple-400 border-b border-white/10 pb-2">Order Status</h3>
-              <div className="relative pl-4 md:pl-0">
+              <div className="relative pl-4">
                 <div className="absolute left-[27px] top-2 bottom-2 w-0.5 bg-white/10"></div>
-                
                 <div className="space-y-6">
                   {trackingData.steps.map((step: any, i: number) => (
                     <div key={i} className="flex items-start gap-4 relative z-10">
@@ -147,7 +159,6 @@ const TrackOrder = () => {
                       </div>
                       <div className="pt-1">
                         <h4 className={`font-bold ${step.current ? 'text-purple-400 text-lg' : step.completed ? 'text-white' : 'text-gray-500'}`}>{step.label}</h4>
-                        {step.current && <p className="text-xs text-purple-300 mt-1">(Current Status)</p>}
                       </div>
                     </div>
                   ))}
@@ -155,7 +166,7 @@ const TrackOrder = () => {
               </div>
             </div>
 
-            {/* Delivery Information */}
+            {/* DELIVERY INFO */}
             <div className="bg-[#111] p-6 rounded-2xl border border-white/5">
               <h3 className="text-xl font-bold mb-4 text-purple-400 border-b border-white/10 pb-2">Delivery Information</h3>
               <div className="space-y-4">
@@ -175,7 +186,6 @@ const TrackOrder = () => {
                 </div>
               </div>
             </div>
-
           </div>
         )}
 
