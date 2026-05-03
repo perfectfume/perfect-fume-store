@@ -23,7 +23,7 @@ const Navbar = () => {
   });
 
   const [isProcessing, setIsProcessing] = useState(false);
-  const API_URL = import.meta.env.VITE_API_URL || "https://perfect-fume-backend.perfectfumeofficial.workers.dev";
+  const API_URL = "https://perfect-fume-backend.perfectfumeofficial.workers.dev";
   const ADMIN_WHATSAPP = "918777789394"; 
 
   // --- LOGIN LOGIC ---
