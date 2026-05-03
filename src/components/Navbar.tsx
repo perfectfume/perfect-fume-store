@@ -27,17 +27,37 @@ const Navbar = () => {
   const ADMIN_WHATSAPP = "918777789394"; 
 
   // --- LOGIN LOGIC ---
-  const handleSendOtp = async (e: any) => {
+    const handleSendOtp = async (e: any) => {
     e.preventDefault();
-    if (!nameInput || !emailInput.includes('@') || phoneInput.length !== 10) return alert("⚠️ Name, Email ebong 10-digit Phone Number din!");
+    if (!nameInput || !emailInput.includes('@') || phoneInput.length !== 10) {
+      return alert("⚠️ Sothik Name, Email ebong 10-digit Phone Number din!");
+    }
+    
     setIsProcessing(true);
-    try {
-      const res = await fetch(`${API_URL}/api/order`, { method: 'POST', body: JSON.stringify({ email: emailInput }) });
-      if (res.ok) setLoginStep(2);
-    } catch (err) { alert("Network Error!"); }
-    setIsProcessing(false);
-  };
+    console.log("Attempting to send OTP to:", emailInput); // Debugging er jonno
 
+    try {
+      const res = await fetch(`${API_URL}/api/order`, { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: emailInput }) 
+      });
+
+      if (res.ok) {
+        console.log("OTP Sent successfully");
+        setLoginStep(2); // Eta trigger holei OTP input box asbe
+      } else {
+        const errorData = await res.json();
+        alert(`❌ OTP pathate somossya hoyeche: ${errorData.message || 'Server Error'}`);
+      }
+    } catch (err) {
+      console.error("Fetch Error:", err);
+      alert("⚠️ Backend server-er sathe connect kora jachhe na. Ektu pore try korun!");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+  
   const handleVerifyOtp = async (e: any) => {
     e.preventDefault();
     setIsProcessing(true);
