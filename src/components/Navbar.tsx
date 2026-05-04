@@ -289,7 +289,7 @@ const Navbar = () => {
               </form>
             ) : (
               <form onSubmit={handleVerifyOtp}>
-                <input type="number" required placeholder="Enter 4-digit OTP" value={otpInput} onChange={(e) => setOtpInput(e.target.value)} className="w-full bg-black border border-white/10 rounded-lg p-3 text-white text-center tracking-[1em] font-bold text-xl focus:border-green-500 mb-4" />
+                <input type="number" required placeholder="Enter 6-digit OTP" value={otpInput} onChange={(e) => setOtpInput(e.target.value)} className="w-full bg-black border border-white/10 rounded-lg p-3 text-white text-center tracking-[1em] font-bold text-xl focus:border-green-500 mb-4" />
                 <button type="submit" disabled={isProcessing} className="w-full bg-green-600 text-white font-bold py-3 rounded-lg">Verify & Login</button>
               </form>
             )}
