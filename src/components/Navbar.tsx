@@ -25,6 +25,8 @@ const Navbar = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const API_URL = "https://perfect-fume-backend.perfectfumeofficial.workers.dev";
   const ADMIN_WHATSAPP = "918777789394"; 
+  const isPartnerRoute = window.location.pathname.includes('/partner');
+  
 
   // --- LOGIN LOGIC ---
   const handleSendOtp = async (e: any) => {
