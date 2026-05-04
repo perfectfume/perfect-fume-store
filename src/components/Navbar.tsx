@@ -58,11 +58,20 @@ const Navbar = () => {
     }
   };
   
+  // 🔥 UPDATED FUNCTION: Name and Phone added to backend payload
   const handleVerifyOtp = async (e: any) => {
     e.preventDefault();
     setIsProcessing(true);
     try {
-      const res = await fetch(`${API_URL}/api/verify-otp`, { method: 'POST', body: JSON.stringify({ email: emailInput, otp: otpInput }) });
+      const res = await fetch(`${API_URL}/api/verify-otp`, { 
+        method: 'POST', 
+        body: JSON.stringify({ 
+          email: emailInput, 
+          otp: otpInput,
+          name: nameInput,   // NEW
+          phone: phoneInput  // NEW
+        }) 
+      });
       const data = await res.json();
       if (data.success) {
         setUserAuth(nameInput, emailInput, phoneInput); 
@@ -95,7 +104,6 @@ const Navbar = () => {
       });
       if (res.ok) {
         setCheckoutStep(3); 
-        // alert() removed to avoid double popups
       }
     } catch (err) { alert("Network Error!"); }
     setIsProcessing(false);
@@ -267,7 +275,6 @@ const Navbar = () => {
               {checkoutStep === 3 && (
                 <form onSubmit={handleVerifyCheckoutOtp}>
                   <p className="text-sm text-green-600 mb-4 text-center bg-green-50 p-2 rounded-lg">✅ OTP sent to {userEmail}</p>
-                  {/* 🔥 UPDATED PLACEHOLDER TO 6-DIGIT */}
                   <input type="number" required value={checkoutOtp} onChange={(e) => setCheckoutOtp(e.target.value)} placeholder="Enter 6-digit OTP" className="w-full border border-gray-300 rounded-lg p-3 text-center tracking-[1em] font-bold text-xl focus:border-blue-600 mb-4" />
                   <button type="submit" disabled={isProcessing} className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3.5 rounded-lg shadow-lg">
                     {isProcessing ? 'Verifying...' : 'Verify & Place Order'}
@@ -294,7 +301,6 @@ const Navbar = () => {
               </form>
             ) : (
               <form onSubmit={handleVerifyOtp}>
-                {/* 🔥 PLACEHOLDER WAS ALREADY 6-DIGIT HERE */}
                 <input type="number" required placeholder="Enter 6-digit OTP" value={otpInput} onChange={(e) => setOtpInput(e.target.value)} className="w-full bg-black border border-white/10 rounded-lg p-3 text-white text-center tracking-[1em] font-bold text-xl focus:border-green-500 mb-4" />
                 <button type="submit" disabled={isProcessing} className="w-full bg-green-600 text-white font-bold py-3 rounded-lg">Verify & Login</button>
               </form>
