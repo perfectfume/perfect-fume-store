@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Package, Mail, CheckCircle, Truck, MessageCircle, HelpCircle, AlertCircle, MapPin, Calendar, CreditCard } from 'lucide-react';
+import { Search, Package, Mail, CheckCircle, Truck, MapPin, Calendar, CreditCard } from 'lucide-react';
 
 const TrackOrder = () => {
   const [orderId, setOrderId] = useState('');
@@ -8,21 +8,15 @@ const TrackOrder = () => {
   const [loading, setLoading] = useState(false);
 
   const API_URL = import.meta.env.VITE_API_URL || "https://perfect-fume-backend.perfectfumeofficial.workers.dev";
-  const userEmail = localStorage.getItem('userEmail'); // 🔥 Auto email fill korar jonno
+  const userEmail = localStorage.getItem('userEmail');
 
-  // --- 🔥 AUTO TRACK LOGIC (Account page theke asle) ---
   useEffect(() => {
     window.scrollTo(0, 0);
-    
-    // Check korun kono ID auto-track er jonno pathano hoyeche kina
     const autoTrackId = sessionStorage.getItem('autoTrackId');
     if (autoTrackId) {
-      setOrderId(`#OR-${autoTrackId}`); // Input field e ID bosalo
-      if (userEmail) setContactInfo(userEmail); // Email auto bosiye dilo
-      
-      sessionStorage.removeItem('autoTrackId'); // Memory faka kore dilo
-      
-      // Choto ekta delay jate state set hobar somoy pay, tarpor auto track trigger hobe
+      setOrderId(`#OR-${autoTrackId}`); 
+      if (userEmail) setContactInfo(userEmail); 
+      sessionStorage.removeItem('autoTrackId'); 
       setTimeout(() => {
         const fakeEvent = { preventDefault: () => {} } as React.FormEvent;
         handleTrack(fakeEvent, autoTrackId, userEmail || '');
@@ -43,20 +37,27 @@ const TrackOrder = () => {
     setLoading(true);
     
     try {
-      // Order ID theke '#' ba 'OR-' soriye shudhu number-ta neoa hocche
       const cleanOrderId = finalId.replace('#', '').replace(/or-/i, '').trim();
-
       const response = await fetch(`${API_URL}/api/order/${cleanOrderId}`);
       
       if (response.ok) {
         const orderData = await response.json();
         
+        // 🔥 FULL ADDRESS LOGIC (Updated here)
+        const addr = orderData.address || {};
+        let fullAddressText = "Address not provided";
+        if (addr.city) {
+          fullAddressText = addr.flat 
+            ? `${addr.flat}, ${addr.area}, ${addr.city} - ${addr.pincode}` 
+            : `${addr.city}, India`;
+        }
+
         setTrackingData({
           id: `#OR-${cleanOrderId.toUpperCase()}`,
           date: orderData.createdAt ? new Date(orderData.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Recently Placed',
           amount: `₹${orderData.totalAmount || '0'}`,
           eta: 'Standard Delivery (3-7 Days)',
-          address: (orderData.address && orderData.address.city) ? `${orderData.address.city}, India` : 'India',
+          address: fullAddressText, // Full Address Bosano Holo
           steps: [
             { label: 'Order Placed', completed: true },
             { label: 'Order Confirmed', completed: orderData.status !== 'pending' },
@@ -70,7 +71,6 @@ const TrackOrder = () => {
         setTrackingData(null);
       }
     } catch (error) {
-      console.error("Tracking Error:", error);
       alert("⚠️ Server-er sathe connect korte somossa hocche.");
     } finally {
       setLoading(false);
@@ -81,7 +81,6 @@ const TrackOrder = () => {
     <div className="min-h-screen bg-[#050505] text-white pt-24 pb-24 font-sans">
       <main className="max-w-4xl mx-auto px-4">
         
-        {/* HEADER */}
         <div className="text-center mb-12">
           <h1 className="text-3xl md:text-5xl font-bold italic mb-4 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
             Track Your Order
@@ -90,7 +89,6 @@ const TrackOrder = () => {
           <p className="text-gray-400 text-sm">Enter your details to check the real-time status.</p>
         </div>
 
-        {/* TRACKING FORM */}
         <div className="bg-[#111] p-6 md:p-8 rounded-3xl border border-white/10 mb-12 shadow-2xl relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-pink-500"></div>
           
@@ -98,25 +96,11 @@ const TrackOrder = () => {
             <div className="flex flex-col md:flex-row gap-4">
               <div className="flex-1 relative">
                 <Package className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 w-5 h-5" />
-                <input 
-                  type="text" 
-                  required
-                  placeholder="Order ID (e.g. #OR-43)" 
-                  value={orderId}
-                  onChange={(e) => setOrderId(e.target.value)}
-                  className="w-full bg-black border border-white/10 rounded-xl py-4 pl-12 pr-4 outline-none focus:border-purple-500 transition-all font-mono text-white uppercase"
-                />
+                <input type="text" required placeholder="Order ID (e.g. #OR-43)" value={orderId} onChange={(e) => setOrderId(e.target.value)} className="w-full bg-black border border-white/10 rounded-xl py-4 pl-12 pr-4 outline-none focus:border-purple-500 transition-all font-mono text-white uppercase"/>
               </div>
               <div className="flex-1 relative">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 w-5 h-5" />
-                <input 
-                  type="text" 
-                  required
-                  placeholder="Phone Number / Email" 
-                  value={contactInfo}
-                  onChange={(e) => setContactInfo(e.target.value)}
-                  className="w-full bg-black border border-white/10 rounded-xl py-4 pl-12 pr-4 outline-none focus:border-purple-500 transition-all text-white"
-                />
+                <input type="text" required placeholder="Phone Number / Email" value={contactInfo} onChange={(e) => setContactInfo(e.target.value)} className="w-full bg-black border border-white/10 rounded-xl py-4 pl-12 pr-4 outline-none focus:border-purple-500 transition-all text-white"/>
               </div>
             </div>
             <button type="submit" disabled={loading} className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-4 rounded-xl transition-all flex justify-center items-center gap-2 shadow-lg shadow-purple-900/30">
@@ -125,7 +109,6 @@ const TrackOrder = () => {
           </form>
         </div>
 
-        {/* TRACKING RESULTS */}
         {trackingData && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8">
             <div className="bg-[#111] p-6 rounded-2xl border border-white/5">
@@ -146,7 +129,6 @@ const TrackOrder = () => {
               </div>
             </div>
 
-            {/* STATUS STEPS */}
             <div className="bg-[#111] p-6 md:p-8 rounded-2xl border border-white/5">
               <h3 className="text-xl font-bold mb-8 text-purple-400 border-b border-white/10 pb-2">Order Status</h3>
               <div className="relative pl-4">
@@ -166,7 +148,6 @@ const TrackOrder = () => {
               </div>
             </div>
 
-            {/* DELIVERY INFO */}
             <div className="bg-[#111] p-6 rounded-2xl border border-white/5">
               <h3 className="text-xl font-bold mb-4 text-purple-400 border-b border-white/10 pb-2">Delivery Information</h3>
               <div className="space-y-4">
@@ -181,14 +162,14 @@ const TrackOrder = () => {
                   <MapPin className="w-5 h-5 text-gray-400 mt-1 shrink-0" />
                   <div>
                     <p className="font-bold text-gray-300">Delivery Address:</p>
-                    <p className="text-white">{trackingData.address}</p>
+                    {/* 🔥 SHOWING FULL ADDRESS HERE */}
+                    <p className="text-white leading-relaxed">{trackingData.address}</p>
                   </div>
                 </div>
               </div>
             </div>
           </div>
         )}
-
       </main>
     </div>
   );
