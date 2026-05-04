@@ -16,6 +16,7 @@ import RefundPolicy from './pages/Refund';
 import Account from './pages/Account'; 
 import Wishlist from './pages/Wishlist'; 
 import PartnerAdmin from './pages/PartnerAdmin';
+import PartnerDashboard from './pages/PartnerDashboard';
 
 const App = () => {
   return (
@@ -38,6 +39,7 @@ const App = () => {
           <Route path="/refund-policy" element={<RefundPolicy />} /> 
           <Route path="/himazumder5566" element={<AdminPanel />} />
           <Route path="/partnerhost5566" element={<PartnerAdmin />} />
+          <Route path="/partner" element={<PartnerDashboard />} />
         </Routes>
       </div>
 
