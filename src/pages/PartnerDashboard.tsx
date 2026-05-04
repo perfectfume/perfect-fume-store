@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Target, TrendingUp, ShoppingBag, Flame, Trophy, Copy, CheckCircle, Bell, User, Clock, Check, Users } from 'lucide-react';
+import { Target, TrendingUp, ShoppingBag, Flame, Trophy, Copy, CheckCircle, Bell, User, Clock, Check, Users, X } from 'lucide-react';
 
 const PartnerDashboard = () => {
   // --- AUTH STATES ---
@@ -7,15 +7,18 @@ const PartnerDashboard = () => {
   const [otp, setOtp] = useState('');
   const [loginStep, setLoginStep] = useState(1);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [agent, setAgent] = useState<any>(null); // Logged in agent info
+  const [agent, setAgent] = useState<any>(null); 
 
   // --- APP STATES ---
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isSaleModalOpen, setIsSaleModalOpen] = useState(false);
+  const [isCustomersModalOpen, setIsCustomersModalOpen] = useState(false); // 🔥 NEW STATE
   
-  // --- DATA STATES ---
+  // --- DATA STATES (Updated for Dynamic features) ---
   const [products, setProducts] = useState<any[]>([]);
-  const [stats, setStats] = useState({ totalSales: 0, target: 50, earnings: 0, recentSales: [] });
+  const [stats, setStats] = useState({ 
+    totalSales: 0, target: 50, earnings: 0, rank: 0, streak: 0, customers: [], recentSales: [] 
+  });
   
   // --- LOG SALE STATES ---
   const [saleProduct, setSaleProduct] = useState('');
@@ -60,7 +63,7 @@ const PartnerDashboard = () => {
       const res = await fetch(`${API_URL}/api/catalog`);
       const data = await res.json();
       setProducts(data);
-      if(data.length > 0) setSaleProduct(data[0].id); // Default select first product
+      if(data.length > 0) setSaleProduct(data[0].id);
     } catch (e) {}
   };
 
@@ -97,11 +100,11 @@ const PartnerDashboard = () => {
       const data = await res.json();
       if(data.success) {
         setSaleSuccessMessage("Sale Logged Successfully 🔥");
-        fetchStats(agent.email); // Refresh stats
+        fetchStats(agent.email); // Refresh stats dynamically
         setTimeout(() => {
           setSaleSuccessMessage('');
           setIsSaleModalOpen(false);
-          setSalePhone(''); setSaleQty('1'); // Reset form
+          setSalePhone(''); setSaleQty('1');
         }, 2000);
       }
     } catch(err) { alert("Failed to log sale."); }
@@ -113,7 +116,6 @@ const PartnerDashboard = () => {
     alert("Pitch copied to clipboard! 📋");
   };
 
-  // --- DERIVED UI DATA ---
   const targetProgress = Math.min((stats.totalSales / stats.target) * 100, 100);
   const remainingTarget = stats.target - stats.totalSales;
 
@@ -158,8 +160,9 @@ const PartnerDashboard = () => {
           <p className="text-xs text-gray-400">Welcome, {agent.name.split(' ')[0]} 👋</p>
         </div>
         <div className="flex gap-3">
-          <div className="bg-orange-500/20 text-orange-400 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 border border-orange-500/30">
-            <Flame className="w-3 h-3" /> 3 Day Streak
+          {/* 🔥 DYNAMIC STREAK */}
+          <div className={`${stats.streak > 0 ? 'bg-orange-500/20 text-orange-400 border-orange-500/30' : 'bg-gray-800 text-gray-400 border-gray-700'} px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 border`}>
+            <Flame className={`w-3 h-3 ${stats.streak > 0 ? 'animate-pulse' : ''}`} /> {stats.streak} Day Streak
           </div>
         </div>
       </div>
@@ -193,7 +196,8 @@ const PartnerDashboard = () => {
               <div className="bg-[#111] border border-white/5 p-4 rounded-2xl relative overflow-hidden">
                 <div className="absolute -right-4 -bottom-4 opacity-5"><Trophy className="w-24 h-24" /></div>
                 <p className="text-gray-400 text-xs font-bold uppercase">My Rank</p>
-                <p className="text-2xl font-black mt-1 text-yellow-400">#3 <span className="text-sm text-gray-500 font-normal">in area</span></p>
+                {/* 🔥 DYNAMIC RANK */}
+                <p className="text-2xl font-black mt-1 text-yellow-400">#{stats.rank || '-'} <span className="text-sm text-gray-500 font-normal">in area</span></p>
               </div>
             </div>
 
@@ -218,18 +222,21 @@ const PartnerDashboard = () => {
               </div>
             </div>
 
-            {/* Repeat Customers Highlight */}
+            {/* 🔥 DYNAMIC SAVED CUSTOMERS HIGHLIGHT */}
             <div className="bg-[#111] p-4 rounded-2xl border border-white/5 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="bg-pink-500/20 p-2 rounded-lg"><Users className="text-pink-400 w-5 h-5"/></div>
-                <div><h4 className="font-bold text-sm">Saved Customers</h4><p className="text-xs text-gray-400">Build repeat sales</p></div>
+                <div>
+                  <h4 className="font-bold text-sm">Saved Customers ({stats.customers?.length || 0})</h4>
+                  <p className="text-xs text-gray-400">Build repeat sales</p>
+                </div>
               </div>
-              <button className="text-xs bg-white/10 px-3 py-1.5 rounded-full font-bold">View List</button>
+              <button onClick={() => setIsCustomersModalOpen(true)} className="text-xs bg-white/10 hover:bg-white/20 transition-all px-4 py-2 rounded-full font-bold">View List</button>
             </div>
           </div>
         )}
 
-        {/* --- 2. PRODUCTS CATALOG (With Pitch) --- */}
+        {/* --- 2. PRODUCTS CATALOG --- */}
         {activeTab === 'products' && (
           <div className="animate-in fade-in duration-200">
             <h2 className="text-xl font-bold mb-4">Infinite Catalog</h2>
@@ -244,7 +251,6 @@ const PartnerDashboard = () => {
                     </div>
                     <p className="text-purple-400 font-bold text-sm mt-1">₹{p.price}</p>
                     
-                    {/* Pitch Helper */}
                     <div className="mt-3 bg-white/5 p-2 rounded-lg border border-white/5 relative group">
                       <p className="text-[10px] text-gray-400 italic pr-6">"Premium long-lasting fragrance. Best for daily office wear & parties."</p>
                       <button onClick={() => copyPitch("Premium long-lasting fragrance. Best for daily office wear & parties.")} className="absolute right-2 top-2 text-gray-500 hover:text-white"><Copy className="w-3 h-3" /></button>
@@ -256,7 +262,7 @@ const PartnerDashboard = () => {
           </div>
         )}
 
-        {/* --- 3. MY SALES (History) --- */}
+        {/* --- 3. MY SALES --- */}
         {activeTab === 'sales' && (
           <div className="animate-in fade-in duration-200">
             <h2 className="text-xl font-bold mb-4">My Sales History</h2>
@@ -283,7 +289,7 @@ const PartnerDashboard = () => {
           </div>
         )}
 
-        {/* --- 4. PROFILE & PAYOUT --- */}
+        {/* --- 4. PROFILE --- */}
         {activeTab === 'profile' && (
           <div className="animate-in fade-in duration-200 space-y-4">
             <div className="bg-[#111] border border-white/10 rounded-3xl p-6 text-center">
@@ -307,28 +313,64 @@ const PartnerDashboard = () => {
       </div>
 
       {/* =========================================
-          🚀 FLOATING "LOG SALE" MODAL (FAST UI)
+          🔥 CUSTOMERS MODAL (DYNAMIC LIST)
+          ========================================= */}
+      {isCustomersModalOpen && (
+        <div className="fixed inset-0 bg-black/90 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-sm">
+           <div className="bg-[#111] w-full max-w-md h-[85vh] sm:h-auto sm:max-h-[80vh] rounded-t-3xl sm:rounded-3xl border border-white/10 flex flex-col animate-in slide-in-from-bottom duration-200">
+              <div className="p-5 border-b border-white/10 flex justify-between items-center bg-black/50 rounded-t-3xl">
+                <h2 className="text-xl font-black text-white flex items-center gap-2">Saved Customers</h2>
+                <button onClick={() => setIsCustomersModalOpen(false)} className="bg-white/10 p-2 rounded-full text-gray-400 hover:text-white"><X className="w-5 h-5" /></button>
+              </div>
+              <div className="p-5 overflow-y-auto flex-1">
+                {stats.customers?.length > 0 ? (
+                  <div className="space-y-3">
+                    {stats.customers.map((c: any, idx) => (
+                      <div key={idx} className="bg-black border border-white/10 p-4 rounded-xl flex justify-between items-center">
+                        <div>
+                          <p className="font-bold font-mono tracking-wider">{c.customer_phone}</p>
+                          <p className="text-xs text-gray-400 mt-1">Last Order: {new Date(c.last_order).toLocaleDateString()}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-bold text-green-400">₹{c.total_spent}</p>
+                          <div className="mt-1">
+                            {c.orders > 1 ? (
+                              <span className="text-[10px] bg-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded-full font-bold">🔁 Repeat ({c.orders}x)</span>
+                            ) : (
+                              <span className="text-[10px] bg-white/10 text-gray-300 px-2 py-0.5 rounded-full">1 Order</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-center text-gray-500 py-10">No customers saved yet.</p>
+                )}
+              </div>
+           </div>
+        </div>
+      )}
+
+      {/* =========================================
+          🚀 FLOATING "LOG SALE" MODAL
           ========================================= */}
       {isSaleModalOpen && (
         <div className="fixed inset-0 bg-black/90 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-sm">
           <div className="bg-[#111] w-full max-w-md h-[85vh] sm:h-auto sm:max-h-[90vh] rounded-t-3xl sm:rounded-3xl border border-white/10 flex flex-col animate-in slide-in-from-bottom duration-300">
-            
-            {/* Header */}
             <div className="p-5 border-b border-white/10 flex justify-between items-center bg-black/50 rounded-t-3xl">
               <h2 className="text-xl font-black text-white flex items-center gap-2">Log New Sale ⚡</h2>
-              <button onClick={() => setIsSaleModalOpen(false)} className="bg-white/10 p-2 rounded-full text-gray-400 hover:text-white"><Check className="w-5 h-5 rotate-45" /></button>
+              <button onClick={() => setIsSaleModalOpen(false)} className="bg-white/10 p-2 rounded-full text-gray-400 hover:text-white"><X className="w-5 h-5" /></button>
             </div>
 
             {saleSuccessMessage ? (
               <div className="flex-1 flex flex-col items-center justify-center p-8 text-center animate-in zoom-in-95">
                 <div className="bg-green-500/20 p-4 rounded-full mb-4"><CheckCircle className="w-16 h-16 text-green-400" /></div>
                 <h3 className="text-2xl font-black text-white">{saleSuccessMessage}</h3>
-                <p className="text-gray-400 mt-2">Target updated automatically.</p>
+                <p className="text-gray-400 mt-2">Target & Streak updated automatically.</p>
               </div>
             ) : (
               <form onSubmit={handleLogSale} className="p-5 overflow-y-auto flex-1 space-y-6">
-                
-                {/* Product Select (Fast) */}
                 <div>
                   <label className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 block">Select Product</label>
                   <select required value={saleProduct} onChange={(e) => setSaleProduct(e.target.value)} className="w-full bg-black border border-white/20 rounded-xl p-4 text-white font-bold outline-none focus:border-purple-500 appearance-none">
@@ -337,12 +379,10 @@ const PartnerDashboard = () => {
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  {/* Quantity */}
                   <div>
                     <label className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 block">Qty</label>
                     <input type="number" required min="1" value={saleQty} onChange={(e) => setSaleQty(e.target.value)} className="w-full bg-black border border-white/20 rounded-xl p-4 text-white font-bold outline-none text-center focus:border-purple-500" />
                   </div>
-                  {/* Payment Type */}
                   <div>
                     <label className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 block">Payment</label>
                     <div className="flex bg-black border border-white/20 rounded-xl overflow-hidden p-1">
@@ -352,7 +392,6 @@ const PartnerDashboard = () => {
                   </div>
                 </div>
 
-                {/* Customer Phone (Mandatory for fraud check) */}
                 <div>
                   <label className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 block flex justify-between">Customer Phone <span className="text-red-400">* Mandatory</span></label>
                   <input type="number" required placeholder="10-digit number" value={salePhone} onChange={(e) => setSalePhone(e.target.value)} className="w-full bg-black border border-white/20 rounded-xl p-4 text-white font-bold outline-none focus:border-purple-500" />
@@ -370,7 +409,7 @@ const PartnerDashboard = () => {
       )}
 
       {/* =========================================
-          BOTTOM NAVIGATION BAR (Mobile App Feel)
+          BOTTOM NAVIGATION BAR 
           ========================================= */}
       <div className="fixed bottom-0 w-full bg-[#050505] border-t border-white/10 flex justify-between px-2 py-2 pb-safe z-40">
         <button onClick={() => setActiveTab('dashboard')} className={`flex flex-col items-center flex-1 py-2 ${activeTab === 'dashboard' ? 'text-purple-400' : 'text-gray-500'}`}>
@@ -380,7 +419,6 @@ const PartnerDashboard = () => {
           <ShoppingBag className="w-6 h-6" /><span className="text-[10px] mt-1 font-bold">Catalog</span>
         </button>
         
-        {/* HUGE CENTRAL "LOG SALE" FAB */}
         <div className="relative -top-6 flex-1 flex justify-center">
           <button onClick={() => setIsSaleModalOpen(true)} className="bg-gradient-to-tr from-purple-600 to-indigo-600 text-white w-16 h-16 rounded-full flex items-center justify-center shadow-lg shadow-purple-900/50 border-4 border-[#050505] hover:scale-105 transition-transform">
             <span className="text-3xl font-light mb-1">+</span>
