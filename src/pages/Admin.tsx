@@ -36,6 +36,7 @@ const AdminPanel = () => {
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
   const [trackingLinks, setTrackingLinks] = useState<any>({}); 
+  const [isExporting, setIsExporting] = useState(false); // 🔥 NEW STATE FOR EXPORT BUTTON
   
   // 🔥 FILTER STATES
   const [dateFilter, setDateFilter] = useState('all'); 
@@ -86,6 +87,99 @@ const AdminPanel = () => {
       const realOrders = data.filter((o: any) => o.cart_details && o.cart_details !== "null" && o.cart_details !== "[]");
       setOrders(realOrders);
     } catch (err) { console.error("Order load hoyni"); }
+  };
+
+  // --- CSV EXPORT LOGIC ---
+  // 🔥 1. Export Unique Customers from Orders (With Full Address)
+  const downloadCustomerCSV = () => {
+    if (orders.length === 0) return alert("Kono order ekhono aseni.");
+
+    const uniqueCustomers = new Map();
+    orders.forEach((order: any) => {
+      if (!uniqueCustomers.has(order.email)) {
+        try {
+          const addr = JSON.parse(order.address_details || '{}');
+          uniqueCustomers.set(order.email, {
+            Name: addr.name || 'N/A',
+            Email: order.email,
+            Phone: addr.phone || 'N/A',
+            Address: `${addr.flat || ''}, ${addr.area || ''}, ${addr.city || ''} - ${addr.pincode || ''}`.trim(),
+            Status: order.status === 'paid' ? 'Online Customer' : 'COD Customer'
+          });
+        } catch (e) {}
+      }
+    });
+
+    const customerList = Array.from(uniqueCustomers.values());
+    const headers = ["Name", "Email", "Phone", "Full Address", "Payment Type"];
+    
+    const csvRows = [
+      headers.join(','),
+      ...customerList.map(c => `"${c.Name}","${c.Email}","${c.Phone}","${c.Address}","${c.Status}"`)
+    ];
+
+    triggerDownload(csvRows.join('\n'), `Customers_With_Address_${new Date().toLocaleDateString()}.csv`);
+  };
+
+  // 🔥 2. Export All Registered Users (Leads)
+  const downloadAllUsersCSV = async () => {
+    setIsExporting(true);
+    try {
+      const res = await fetch(`${API_URL}/api/admin/users`);
+      if (!res.ok) throw new Error("Failed to fetch users");
+      const users = await res.json();
+
+      if (users.length === 0) {
+        alert("Ekhono kono user register koreni.");
+        setIsExporting(false);
+        return;
+      }
+
+      const headers = ["Name", "Email", "Phone", "Registration Date"];
+      const csvRows = [
+        headers.join(','),
+        ...users.map((u: any) => 
+          `"${u.name || 'No Name'}","${u.email}","${u.phone || 'No Phone'}","${new Date(u.created_at).toLocaleDateString('en-IN')}"`
+        )
+      ];
+
+      triggerDownload(csvRows.join('\n'), `All_Registered_Users_${new Date().toLocaleDateString()}.csv`);
+    } catch (err) {
+      alert("⚠️ Error fetching users database.");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  // Helper for downloading files
+  const triggerDownload = (csvContent: string, fileName: string) => {
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", fileName);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const downloadExcel = () => {
+    let csv = "Order ID,Date,Customer Name,Email,Phone,City,Order Amount,Status\n";
+    currentOrders.forEach((order: any) => {
+      let addr = { name: 'N/A', phone: 'N/A', city: 'N/A' };
+      if (order.address_details) { try { addr = JSON.parse(order.address_details); } catch(e){} }
+      let amount = 0;
+      if (order.cart_details) {
+        try {
+          const items = JSON.parse(order.cart_details);
+          amount = items.reduce((acc: number, item: any) => acc + (item.price * (item.quantity || item.qty)), 0);
+        } catch(e){}
+      }
+      const date = new Date(order.created_at).toLocaleDateString();
+      csv += `"#OR-${order.id}","${date}","${addr.name}","${order.email}","${addr.phone}","${addr.city}","Rs. ${amount}","${order.status}"\n`;
+    });
+
+    triggerDownload(csv, `PerfectFume_Orders_${dateFilter}_${new Date().toLocaleDateString()}.csv`);
   };
 
   // --- ADD PRODUCT LOGIC ---
@@ -216,30 +310,6 @@ const AdminPanel = () => {
 
   const lowStockProducts = products.filter((p: any) => p.stock !== undefined && p.stock < 5);
 
-  const downloadExcel = () => {
-    let csv = "Order ID,Date,Customer Name,Email,Phone,City,Order Amount,Status\n";
-    currentOrders.forEach((order: any) => {
-      let addr = { name: 'N/A', phone: 'N/A', city: 'N/A' };
-      if (order.address_details) { try { addr = JSON.parse(order.address_details); } catch(e){} }
-      let amount = 0;
-      if (order.cart_details) {
-        try {
-          const items = JSON.parse(order.cart_details);
-          amount = items.reduce((acc: number, item: any) => acc + (item.price * (item.quantity || item.qty)), 0);
-        } catch(e){}
-      }
-      const date = new Date(order.created_at).toLocaleDateString();
-      csv += `"#OR-${order.id}","${date}","${addr.name}","${order.email}","${addr.phone}","${addr.city}","Rs. ${amount}","${order.status}"\n`;
-    });
-
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.setAttribute('href', url);
-    a.setAttribute('download', `PerfectFume_Orders_${dateFilter}_${new Date().toLocaleDateString()}.csv`);
-    a.click();
-  };
-
   const getStatusColor = (status: string) => {
     switch(status) {
       case 'verified': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50';
@@ -319,9 +389,23 @@ const AdminPanel = () => {
               </div>
               <div className="bg-gradient-to-br from-green-900/50 to-black p-6 rounded-2xl border border-green-500/30 shadow-lg shadow-green-900/20 flex flex-col justify-center items-center cursor-pointer hover:scale-105 transition-transform" onClick={downloadExcel}>
                 <Users className="text-green-400 w-8 h-8 mb-2" />
-                <h3 className="text-white font-bold text-center">Export {currentOrders.length} Customers</h3>
-                <p className="text-xs text-green-400 mt-1">Download filtered CSV</p>
+                <h3 className="text-white font-bold text-center">Export {currentOrders.length} Orders</h3>
+                <p className="text-xs text-green-400 mt-1">Download filtered Orders CSV</p>
               </div>
+            </div>
+
+            {/* 🔥 NEW CUSTOMER DB EXPORT TOOLS 🔥 */}
+            <div className="flex flex-col md:flex-row gap-4 mt-4 bg-white/5 p-4 rounded-2xl border border-white/10">
+              <div className="flex items-center gap-2 mb-2 md:mb-0 md:w-1/3">
+                <Users className="w-5 h-5 text-indigo-400"/>
+                <h3 className="text-indigo-400 font-bold uppercase tracking-widest text-sm">Customer Data</h3>
+              </div>
+              <button onClick={downloadAllUsersCSV} disabled={isExporting} className="flex-1 bg-indigo-600/20 hover:bg-indigo-600 text-indigo-400 hover:text-white border border-indigo-600/50 font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-all">
+                <Users className="w-5 h-5" /> {isExporting ? "Fetching..." : "Export All Logins (Leads)"}
+              </button>
+              <button onClick={downloadCustomerCSV} className="flex-1 bg-teal-600/20 hover:bg-teal-600 text-teal-400 hover:text-white border border-teal-600/50 font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-all">
+                <Download className="w-5 h-5" /> Export Actual Customers
+              </button>
             </div>
 
             {/* Status Breakdown Cards */}
