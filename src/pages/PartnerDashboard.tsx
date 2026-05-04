@@ -1,26 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { Target, TrendingUp, ShoppingBag, Flame, Trophy, Copy, CheckCircle, Bell, User, Clock, Check, Users, X } from 'lucide-react';
+import { Target, TrendingUp, ShoppingBag, Flame, Trophy, Copy, CheckCircle, Bell, User, Clock, Check, Users, X, Edit3, HelpCircle } from 'lucide-react';
 
 const PartnerDashboard = () => {
-  // --- AUTH STATES ---
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
   const [loginStep, setLoginStep] = useState(1);
   const [isProcessing, setIsProcessing] = useState(false);
   const [agent, setAgent] = useState<any>(null); 
 
-  // --- APP STATES ---
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isSaleModalOpen, setIsSaleModalOpen] = useState(false);
-  const [isCustomersModalOpen, setIsCustomersModalOpen] = useState(false); // 🔥 NEW STATE
+  const [isCustomersModalOpen, setIsCustomersModalOpen] = useState(false); 
   
-  // --- DATA STATES (Updated for Dynamic features) ---
+  // 🔥 EDIT MODAL STATES
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editSaleData, setEditSaleData] = useState<any>(null);
+
   const [products, setProducts] = useState<any[]>([]);
   const [stats, setStats] = useState({ 
-    totalSales: 0, target: 50, earnings: 0, rank: 0, streak: 0, customers: [], recentSales: [] 
+    totalSales: 0, todaySalesCount: 0, target: 50, earnings: 0, rank: 0, streak: 0, customers: [], recentSales: [] 
   });
   
-  // --- LOG SALE STATES ---
   const [saleProduct, setSaleProduct] = useState('');
   const [saleQty, setSaleQty] = useState('1');
   const [salePhone, setSalePhone] = useState('');
@@ -88,19 +88,14 @@ const PartnerDashboard = () => {
       const res = await fetch(`${API_URL}/api/partner/log-sale`, {
         method: 'POST',
         body: JSON.stringify({
-          partner_email: agent.email,
-          product_id: prod.id,
-          product_name: prod.name,
-          price: prod.price,
-          quantity: Number(saleQty),
-          customer_phone: salePhone,
-          payment_type: salePayment
+          partner_email: agent.email, product_id: prod.id, product_name: prod.name,
+          price: prod.price, quantity: Number(saleQty), customer_phone: salePhone, payment_type: salePayment
         })
       });
       const data = await res.json();
       if(data.success) {
         setSaleSuccessMessage("Sale Logged Successfully 🔥");
-        fetchStats(agent.email); // Refresh stats dynamically
+        fetchStats(agent.email); 
         setTimeout(() => {
           setSaleSuccessMessage('');
           setIsSaleModalOpen(false);
@@ -111,13 +106,50 @@ const PartnerDashboard = () => {
     setIsProcessing(false);
   };
 
-  const copyPitch = (text: string) => {
-    navigator.clipboard.writeText(text);
-    alert("Pitch copied to clipboard! 📋");
+  // --- 4. EDIT SALE LOGIC (10 MINS) ---
+  const checkIsEditable = (createdAt: string) => {
+    const saleTime = new Date(createdAt).getTime();
+    const now = new Date().getTime();
+    return (now - saleTime) <= 10 * 60 * 1000; // Under 10 minutes
   };
+
+  const openEditModal = (sale: any) => {
+    if (!checkIsEditable(sale.created_at)) return alert("Editing is locked! You can only edit within 10 minutes of logging.");
+    setEditSaleData({ id: sale.id, quantity: sale.quantity, payment_type: sale.payment_type, price: sale.price });
+    setIsEditModalOpen(true);
+  };
+
+  const handleEditSubmit = async (e: any) => {
+    e.preventDefault();
+    setIsProcessing(true);
+    try {
+      const res = await fetch(`${API_URL}/api/partner/edit-sale`, {
+        method: 'POST', body: JSON.stringify(editSaleData)
+      });
+      const data = await res.json();
+      if(data.success) {
+        alert("Sale Updated! ✅");
+        setIsEditModalOpen(false);
+        fetchStats(agent.email);
+      } else { alert("Update failed."); }
+    } catch(err) { alert("Network Error!"); }
+    setIsProcessing(false);
+  };
+
+  const copyPitch = (text: string) => { navigator.clipboard.writeText(text); alert("Pitch copied! 📋"); };
+
+  // --- DYNAMIC CALCULATIONS ---
+  const dailyTarget = Math.max(1, Math.ceil(stats.target / 30)); // Monthly / 30 days
+  const dailyTargetProgress = Math.min((stats.todaySalesCount / dailyTarget) * 100, 100);
+  const remainingDaily = dailyTarget - stats.todaySalesCount;
 
   const targetProgress = Math.min((stats.totalSales / stats.target) * 100, 100);
   const remainingTarget = stats.target - stats.totalSales;
+
+  // Monthly Target Bonus Calculation (e.g., ₹500 fixed bonus if target met)
+  const isMonthlyTargetMet = stats.totalSales >= stats.target;
+  const MONTHLY_BONUS_AMOUNT = 500; 
+  const finalEarnings = stats.earnings + (isMonthlyTargetMet ? MONTHLY_BONUS_AMOUNT : 0);
 
   // ----------------------------------------------------
   // LOGIN SCREEN
@@ -148,61 +180,60 @@ const PartnerDashboard = () => {
     );
   }
 
-  // ----------------------------------------------------
-  // MAIN AGENT APP UI
-  // ----------------------------------------------------
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white font-sans pb-24">
-      {/* APP HEADER */}
-      <div className="bg-[#111] p-4 border-b border-white/10 sticky top-0 z-10 flex justify-between items-center">
+      {/* APP HEADER (Moved down and cleared global navbar overlap) */}
+      <div className="pt-20 px-4 pb-4 bg-[#111] border-b border-white/10 z-10 flex justify-between items-end shadow-md">
         <div>
-          <h1 className="font-black italic text-lg tracking-wider text-purple-400">PARTNER HUB</h1>
-          <p className="text-xs text-gray-400">Welcome, {agent.name.split(' ')[0]} 👋</p>
+          <h1 className="text-2xl text-gray-300">Welcome,</h1>
+          <p className="text-2xl font-black italic text-purple-400">{agent.name}</p>
         </div>
         <div className="flex gap-3">
-          {/* 🔥 DYNAMIC STREAK */}
-          <div className={`${stats.streak > 0 ? 'bg-orange-500/20 text-orange-400 border-orange-500/30' : 'bg-gray-800 text-gray-400 border-gray-700'} px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 border`}>
-            <Flame className={`w-3 h-3 ${stats.streak > 0 ? 'animate-pulse' : ''}`} /> {stats.streak} Day Streak
+          <div className={`${stats.streak > 0 ? 'bg-orange-500/20 text-orange-400 border-orange-500/30' : 'bg-gray-800 text-gray-400 border-gray-700'} px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1 border`}>
+            <Flame className={`w-4 h-4 ${stats.streak > 0 ? 'animate-pulse' : ''}`} /> {stats.streak} Day Streak
           </div>
         </div>
       </div>
 
-      {/* DYNAMIC TAB CONTENT */}
       <div className="p-4 max-w-lg mx-auto space-y-6">
 
         {/* --- 1. DASHBOARD OVERVIEW --- */}
         {activeTab === 'dashboard' && (
           <div className="animate-in fade-in duration-200">
-            {/* Motivation Alert */}
-            {stats.totalSales === 0 ? (
-              <div className="bg-blue-900/30 border border-blue-500/30 p-3 rounded-xl mb-6 flex items-center gap-3">
-                <Bell className="text-blue-400 w-5 h-5" />
-                <p className="text-sm font-medium text-blue-200">Aaj kono sale hoyni. Let's make the first one! 💪</p>
-              </div>
-            ) : (
-              <div className="bg-green-900/30 border border-green-500/30 p-3 rounded-xl mb-6 flex items-center gap-3">
-                <CheckCircle className="text-green-400 w-5 h-5" />
-                <p className="text-sm font-medium text-green-200">Great job! {stats.totalSales} sales logged so far.</p>
-              </div>
-            )}
-
-            {/* Quick Stats Grid */}
+            
             <div className="grid grid-cols-2 gap-4 mb-6">
               <div className="bg-[#111] border border-white/5 p-4 rounded-2xl relative overflow-hidden">
                 <div className="absolute -right-4 -bottom-4 opacity-5"><TrendingUp className="w-24 h-24" /></div>
                 <p className="text-gray-400 text-xs font-bold uppercase">My Earnings</p>
-                <p className="text-2xl font-black mt-1 text-green-400">₹{stats.earnings}</p>
+                <p className="text-2xl font-black mt-1 text-green-400">₹{finalEarnings}</p>
               </div>
               <div className="bg-[#111] border border-white/5 p-4 rounded-2xl relative overflow-hidden">
                 <div className="absolute -right-4 -bottom-4 opacity-5"><Trophy className="w-24 h-24" /></div>
                 <p className="text-gray-400 text-xs font-bold uppercase">My Rank</p>
-                {/* 🔥 DYNAMIC RANK */}
                 <p className="text-2xl font-black mt-1 text-yellow-400">#{stats.rank || '-'} <span className="text-sm text-gray-500 font-normal">in area</span></p>
               </div>
             </div>
 
+            {/* 🔥 NEW: DAILY TARGET CARD */}
+            <div className="bg-gradient-to-br from-[#1a2e1a] to-[#111] border border-green-500/20 p-5 rounded-3xl mb-4 shadow-lg">
+              <div className="flex justify-between items-end mb-4">
+                <div>
+                  <h3 className="font-bold text-gray-300 flex items-center gap-2"><Target className="w-4 h-4 text-green-400"/> Daily Target</h3>
+                  <p className="text-3xl font-black text-white mt-1">{stats.todaySalesCount} <span className="text-lg text-gray-500 font-medium">/ {dailyTarget}</span></p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-green-300 font-bold bg-green-500/20 px-2 py-1 rounded-lg">
+                    {remainingDaily > 0 ? `${remainingDaily} left today` : 'Daily Target Hit! 🔥'}
+                  </p>
+                </div>
+              </div>
+              <div className="h-2 w-full bg-black rounded-full overflow-hidden border border-white/5">
+                <div className="h-full bg-green-500 transition-all duration-1000 ease-out" style={{ width: `${dailyTargetProgress}%` }}></div>
+              </div>
+            </div>
+
             {/* Monthly Target Card */}
-            <div className="bg-gradient-to-br from-[#1a1a2e] to-[#111] border border-indigo-500/20 p-5 rounded-3xl mb-6 shadow-lg shadow-indigo-900/10">
+            <div className="bg-gradient-to-br from-[#1a1a2e] to-[#111] border border-indigo-500/20 p-5 rounded-3xl mb-6 shadow-lg">
               <div className="flex justify-between items-end mb-4">
                 <div>
                   <h3 className="font-bold text-gray-300 flex items-center gap-2"><Target className="w-4 h-4 text-indigo-400"/> Monthly Target</h3>
@@ -214,24 +245,17 @@ const PartnerDashboard = () => {
                   </p>
                 </div>
               </div>
-              {/* Progress Bar */}
-              <div className="h-3 w-full bg-black rounded-full overflow-hidden border border-white/5">
-                <div className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-1000 ease-out relative" style={{ width: `${targetProgress}%` }}>
-                  <div className="absolute top-0 right-0 bottom-0 w-4 bg-white/20 animate-pulse"></div>
-                </div>
+              <div className="h-2 w-full bg-black rounded-full overflow-hidden border border-white/5">
+                <div className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-1000 ease-out" style={{ width: `${targetProgress}%` }}></div>
               </div>
             </div>
 
-            {/* 🔥 DYNAMIC SAVED CUSTOMERS HIGHLIGHT */}
             <div className="bg-[#111] p-4 rounded-2xl border border-white/5 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="bg-pink-500/20 p-2 rounded-lg"><Users className="text-pink-400 w-5 h-5"/></div>
-                <div>
-                  <h4 className="font-bold text-sm">Saved Customers ({stats.customers?.length || 0})</h4>
-                  <p className="text-xs text-gray-400">Build repeat sales</p>
-                </div>
+                <div><h4 className="font-bold text-sm">Saved Customers ({stats.customers?.length || 0})</h4><p className="text-xs text-gray-400">Build repeat sales</p></div>
               </div>
-              <button onClick={() => setIsCustomersModalOpen(true)} className="text-xs bg-white/10 hover:bg-white/20 transition-all px-4 py-2 rounded-full font-bold">View List</button>
+              <button onClick={() => setIsCustomersModalOpen(true)} className="text-xs bg-white/10 hover:bg-white/20 px-4 py-2 rounded-full font-bold">View List</button>
             </div>
           </div>
         )}
@@ -250,7 +274,6 @@ const PartnerDashboard = () => {
                       <span className="bg-red-500/20 text-red-400 text-[10px] px-2 py-0.5 rounded uppercase font-bold">🔥 Hot</span>
                     </div>
                     <p className="text-purple-400 font-bold text-sm mt-1">₹{p.price}</p>
-                    
                     <div className="mt-3 bg-white/5 p-2 rounded-lg border border-white/5 relative group">
                       <p className="text-[10px] text-gray-400 italic pr-6">"Premium long-lasting fragrance. Best for daily office wear & parties."</p>
                       <button onClick={() => copyPitch("Premium long-lasting fragrance. Best for daily office wear & parties.")} className="absolute right-2 top-2 text-gray-500 hover:text-white"><Copy className="w-3 h-3" /></button>
@@ -262,7 +285,7 @@ const PartnerDashboard = () => {
           </div>
         )}
 
-        {/* --- 3. MY SALES --- */}
+        {/* --- 3. MY SALES (WITH EDIT OPTION) --- */}
         {activeTab === 'sales' && (
           <div className="animate-in fade-in duration-200">
             <h2 className="text-xl font-bold mb-4">My Sales History</h2>
@@ -270,14 +293,20 @@ const PartnerDashboard = () => {
               {stats.recentSales?.length > 0 ? (
                 <div className="divide-y divide-white/5">
                   {stats.recentSales.map((sale: any, idx) => (
-                    <div key={idx} className="p-4 flex justify-between items-center hover:bg-white/5">
+                    <div key={idx} className="p-4 flex justify-between items-center hover:bg-white/5 relative group">
                       <div>
                         <p className="font-bold text-sm">{sale.product_name} <span className="text-xs text-gray-500">x{sale.quantity}</span></p>
-                        <p className="text-[10px] text-gray-400 mt-1 flex items-center gap-1"><Clock className="w-3 h-3"/> {new Date(sale.created_at).toLocaleDateString()}</p>
+                        <p className="text-[10px] text-gray-400 mt-1 flex items-center gap-1"><Clock className="w-3 h-3"/> {new Date(sale.created_at).toLocaleString()}</p>
                       </div>
                       <div className="text-right">
                         <p className="font-bold text-green-400">₹{sale.total_amount}</p>
-                        <p className="text-[10px] bg-white/10 inline-block px-2 py-0.5 rounded mt-1 text-gray-300">{sale.payment_type}</p>
+                        <div className="flex items-center justify-end gap-2 mt-1">
+                          <span className="text-[10px] bg-white/10 px-2 py-0.5 rounded text-gray-300">{sale.payment_type}</span>
+                          {/* 🔥 EDIT BUTTON: Shows only if within 10 minutes */}
+                          {checkIsEditable(sale.created_at) && (
+                            <button onClick={() => openEditModal(sale)} className="text-blue-400 bg-blue-500/20 p-1 rounded-md hover:bg-blue-600 hover:text-white transition-all"><Edit3 className="w-3 h-3" /></button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -289,28 +318,139 @@ const PartnerDashboard = () => {
           </div>
         )}
 
-        {/* --- 4. PROFILE --- */}
+        {/* --- 4. PROFILE & STRICT PAYOUT --- */}
         {activeTab === 'profile' && (
           <div className="animate-in fade-in duration-200 space-y-4">
             <div className="bg-[#111] border border-white/10 rounded-3xl p-6 text-center">
               <div className="w-20 h-20 bg-gradient-to-tr from-purple-600 to-blue-600 rounded-full mx-auto flex items-center justify-center mb-4 text-2xl font-black shadow-lg shadow-purple-900/30">{agent.name.charAt(0)}</div>
               <h2 className="text-xl font-bold">{agent.name}</h2>
               <p className="text-gray-400 text-sm">{agent.phone}</p>
-              <div className="mt-4 flex justify-center gap-4 text-sm font-bold">
-                <span className="bg-white/5 px-4 py-2 rounded-xl border border-white/5">Comm: {agent.commission_rate}%</span>
-                <span className="bg-white/5 px-4 py-2 rounded-xl border border-white/5">Target: {agent.target}</span>
-              </div>
             </div>
 
             <div className="bg-gradient-to-r from-green-900/30 to-[#111] border border-green-500/20 rounded-2xl p-5 shadow-lg">
               <h3 className="text-gray-400 text-sm font-bold uppercase mb-1">Available to Payout</h3>
-              <p className="text-3xl font-black text-white mb-4">₹{stats.earnings}</p>
-              <button onClick={() => alert("Payout request sent to Admin! 💸")} className="w-full bg-green-600 text-white font-bold py-3 rounded-xl hover:bg-green-700 transition-all">Request Payout</button>
+              <p className="text-3xl font-black text-white mb-1">₹{finalEarnings}</p>
+              
+              {/* Monthly Bonus Indicator */}
+              {isMonthlyTargetMet && (
+                <p className="text-xs text-green-400 mb-4 font-bold bg-green-500/10 inline-block px-2 py-1 rounded">🎉 Included Monthly Bonus (₹{MONTHLY_BONUS_AMOUNT})</p>
+              )}
+
+              {/* Strict Payout Logic */}
+              {stats.todaySalesCount >= dailyTarget ? (
+                 <button onClick={() => alert("Payout request sent to Admin! 💸")} className="w-full bg-green-600 text-white font-bold py-3 rounded-xl hover:bg-green-700 transition-all">Request Payout</button>
+              ) : (
+                <div className="w-full bg-gray-800/50 text-gray-500 font-bold py-3 rounded-xl text-center border border-gray-700">
+                  <p className="text-sm">🔒 Payout Locked</p>
+                  <p className="text-[10px] mt-1 font-normal text-gray-400">Complete daily target ({dailyTarget} sales) to unlock.</p>
+                </div>
+              )}
             </div>
+
+            {/* FAQ SECTION */}
+            <div className="bg-[#111] rounded-2xl border border-white/10 p-5 mt-6">
+              <h3 className="text-lg font-bold flex items-center gap-2 mb-4 text-purple-400"><HelpCircle className="w-5 h-5"/> Partner Rules & FAQ</h3>
+              <div className="space-y-4 text-sm text-gray-300">
+                <div className="border-b border-white/5 pb-3">
+                  <p className="font-bold text-white">How do I request a payout?</p>
+                  <p className="text-xs mt-1 text-gray-400">You must hit your "Daily Target" (minimum sales required per day) to unlock the Payout Request button.</p>
+                </div>
+                <div className="border-b border-white/5 pb-3">
+                  <p className="font-bold text-white">Is there a Monthly Bonus?</p>
+                  <p className="text-xs mt-1 text-gray-400">Yes! Hitting your Monthly Target automatically adds an extra ₹{MONTHLY_BONUS_AMOUNT} to your earnings.</p>
+                </div>
+                <div className="pb-1">
+                  <p className="font-bold text-white">I made a mistake in Logging Sale. Can I edit?</p>
+                  <p className="text-xs mt-1 text-gray-400">Yes, you can edit quantity or payment type within the first 10 minutes of logging a sale. Go to History tab.</p>
+                </div>
+              </div>
+            </div>
+
           </div>
         )}
 
       </div>
+
+      {/* =========================================
+          🔥 EDIT SALE MODAL (10 MINS)
+          ========================================= */}
+      {isEditModalOpen && (
+        <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-[#111] w-full max-w-sm rounded-3xl border border-white/10 flex flex-col p-6 animate-in zoom-in-95">
+            <h2 className="text-xl font-bold mb-4">Edit Sale Details</h2>
+            <form onSubmit={handleEditSubmit} className="space-y-4">
+              <div>
+                <label className="text-xs text-gray-400">Edit Quantity</label>
+                <input type="number" required min="1" value={editSaleData?.quantity || ''} onChange={(e) => setEditSaleData({...editSaleData, quantity: e.target.value})} className="w-full bg-black border border-white/20 rounded-xl p-3 text-white mt-1" />
+              </div>
+              <div>
+                <label className="text-xs text-gray-400">Payment Type</label>
+                <div className="flex bg-black border border-white/20 rounded-xl overflow-hidden mt-1 p-1">
+                  <button type="button" onClick={() => setEditSaleData({...editSaleData, payment_type: 'Cash'})} className={`flex-1 py-2 text-sm font-bold rounded-lg ${editSaleData?.payment_type === 'Cash' ? 'bg-green-600 text-white' : 'text-gray-500'}`}>CASH</button>
+                  <button type="button" onClick={() => setEditSaleData({...editSaleData, payment_type: 'UPI'})} className={`flex-1 py-2 text-sm font-bold rounded-lg ${editSaleData?.payment_type === 'UPI' ? 'bg-blue-600 text-white' : 'text-gray-500'}`}>UPI</button>
+                </div>
+              </div>
+              <div className="flex gap-3 pt-4">
+                <button type="button" onClick={() => setIsEditModalOpen(false)} className="flex-1 bg-white/10 hover:bg-white/20 py-3 rounded-xl font-bold">Cancel</button>
+                <button type="submit" disabled={isProcessing} className="flex-1 bg-blue-600 hover:bg-blue-700 py-3 rounded-xl font-bold">Save</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* =========================================
+          🚀 FLOATING "LOG SALE" MODAL
+          ========================================= */}
+      {isSaleModalOpen && (
+        <div className="fixed inset-0 bg-black/90 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-sm">
+          <div className="bg-[#111] w-full max-w-md h-[85vh] sm:h-auto sm:max-h-[90vh] rounded-t-3xl sm:rounded-3xl border border-white/10 flex flex-col animate-in slide-in-from-bottom duration-300">
+            <div className="p-5 border-b border-white/10 flex justify-between items-center bg-black/50 rounded-t-3xl">
+              <h2 className="text-xl font-black text-white flex items-center gap-2">Log New Sale ⚡</h2>
+              <button onClick={() => setIsSaleModalOpen(false)} className="bg-white/10 p-2 rounded-full text-gray-400 hover:text-white"><X className="w-5 h-5" /></button>
+            </div>
+
+            {saleSuccessMessage ? (
+              <div className="flex-1 flex flex-col items-center justify-center p-8 text-center animate-in zoom-in-95">
+                <div className="bg-green-500/20 p-4 rounded-full mb-4"><CheckCircle className="w-16 h-16 text-green-400" /></div>
+                <h3 className="text-2xl font-black text-white">{saleSuccessMessage}</h3>
+                <p className="text-gray-400 mt-2">Target & Streak updated automatically.</p>
+              </div>
+            ) : (
+              <form onSubmit={handleLogSale} className="p-5 overflow-y-auto flex-1 space-y-6">
+                <div>
+                  <label className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 block">Select Product</label>
+                  <select required value={saleProduct} onChange={(e) => setSaleProduct(e.target.value)} className="w-full bg-black border border-white/20 rounded-xl p-4 text-white font-bold outline-none focus:border-purple-500 appearance-none">
+                    {products.map(p => <option key={p.id} value={p.id}>{p.name} - ₹{p.price}</option>)}
+                  </select>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 block">Qty</label>
+                    <input type="number" required min="1" value={saleQty} onChange={(e) => setSaleQty(e.target.value)} className="w-full bg-black border border-white/20 rounded-xl p-4 text-white font-bold outline-none text-center focus:border-purple-500" />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 block">Payment</label>
+                    <div className="flex bg-black border border-white/20 rounded-xl overflow-hidden p-1">
+                      <button type="button" onClick={() => setSalePayment('Cash')} className={`flex-1 py-3 text-sm font-bold rounded-lg transition-all ${salePayment === 'Cash' ? 'bg-green-600 text-white' : 'text-gray-500'}`}>CASH</button>
+                      <button type="button" onClick={() => setSalePayment('UPI')} className={`flex-1 py-3 text-sm font-bold rounded-lg transition-all ${salePayment === 'UPI' ? 'bg-blue-600 text-white' : 'text-gray-500'}`}>UPI</button>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 block flex justify-between">Customer Phone <span className="text-red-400">* Mandatory</span></label>
+                  <input type="number" required placeholder="10-digit number" value={salePhone} onChange={(e) => setSalePhone(e.target.value)} className="w-full bg-black border border-white/20 rounded-xl p-4 text-white font-bold outline-none focus:border-purple-500" />
+                </div>
+                <div className="pt-4">
+                  <button type="submit" disabled={isProcessing} className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-lg py-5 rounded-2xl shadow-xl shadow-purple-900/30 transition-transform active:scale-95 flex items-center justify-center gap-2">
+                    {isProcessing ? 'Processing...' : <><CheckCircle className="w-6 h-6"/> CONFIRM SALE</>}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* =========================================
           🔥 CUSTOMERS MODAL (DYNAMIC LIST)
@@ -352,65 +492,7 @@ const PartnerDashboard = () => {
         </div>
       )}
 
-      {/* =========================================
-          🚀 FLOATING "LOG SALE" MODAL
-          ========================================= */}
-      {isSaleModalOpen && (
-        <div className="fixed inset-0 bg-black/90 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-sm">
-          <div className="bg-[#111] w-full max-w-md h-[85vh] sm:h-auto sm:max-h-[90vh] rounded-t-3xl sm:rounded-3xl border border-white/10 flex flex-col animate-in slide-in-from-bottom duration-300">
-            <div className="p-5 border-b border-white/10 flex justify-between items-center bg-black/50 rounded-t-3xl">
-              <h2 className="text-xl font-black text-white flex items-center gap-2">Log New Sale ⚡</h2>
-              <button onClick={() => setIsSaleModalOpen(false)} className="bg-white/10 p-2 rounded-full text-gray-400 hover:text-white"><X className="w-5 h-5" /></button>
-            </div>
-
-            {saleSuccessMessage ? (
-              <div className="flex-1 flex flex-col items-center justify-center p-8 text-center animate-in zoom-in-95">
-                <div className="bg-green-500/20 p-4 rounded-full mb-4"><CheckCircle className="w-16 h-16 text-green-400" /></div>
-                <h3 className="text-2xl font-black text-white">{saleSuccessMessage}</h3>
-                <p className="text-gray-400 mt-2">Target & Streak updated automatically.</p>
-              </div>
-            ) : (
-              <form onSubmit={handleLogSale} className="p-5 overflow-y-auto flex-1 space-y-6">
-                <div>
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 block">Select Product</label>
-                  <select required value={saleProduct} onChange={(e) => setSaleProduct(e.target.value)} className="w-full bg-black border border-white/20 rounded-xl p-4 text-white font-bold outline-none focus:border-purple-500 appearance-none">
-                    {products.map(p => <option key={p.id} value={p.id}>{p.name} - ₹{p.price}</option>)}
-                  </select>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 block">Qty</label>
-                    <input type="number" required min="1" value={saleQty} onChange={(e) => setSaleQty(e.target.value)} className="w-full bg-black border border-white/20 rounded-xl p-4 text-white font-bold outline-none text-center focus:border-purple-500" />
-                  </div>
-                  <div>
-                    <label className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 block">Payment</label>
-                    <div className="flex bg-black border border-white/20 rounded-xl overflow-hidden p-1">
-                      <button type="button" onClick={() => setSalePayment('Cash')} className={`flex-1 py-3 text-sm font-bold rounded-lg transition-all ${salePayment === 'Cash' ? 'bg-green-600 text-white' : 'text-gray-500'}`}>CASH</button>
-                      <button type="button" onClick={() => setSalePayment('UPI')} className={`flex-1 py-3 text-sm font-bold rounded-lg transition-all ${salePayment === 'UPI' ? 'bg-blue-600 text-white' : 'text-gray-500'}`}>UPI</button>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 block flex justify-between">Customer Phone <span className="text-red-400">* Mandatory</span></label>
-                  <input type="number" required placeholder="10-digit number" value={salePhone} onChange={(e) => setSalePhone(e.target.value)} className="w-full bg-black border border-white/20 rounded-xl p-4 text-white font-bold outline-none focus:border-purple-500" />
-                </div>
-
-                <div className="pt-4">
-                  <button type="submit" disabled={isProcessing} className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-lg py-5 rounded-2xl shadow-xl shadow-purple-900/30 transition-transform active:scale-95 flex items-center justify-center gap-2">
-                    {isProcessing ? 'Processing...' : <><CheckCircle className="w-6 h-6"/> CONFIRM SALE</>}
-                  </button>
-                </div>
-              </form>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* =========================================
-          BOTTOM NAVIGATION BAR 
-          ========================================= */}
+      {/* BOTTOM NAVIGATION BAR */}
       <div className="fixed bottom-0 w-full bg-[#050505] border-t border-white/10 flex justify-between px-2 py-2 pb-safe z-40">
         <button onClick={() => setActiveTab('dashboard')} className={`flex flex-col items-center flex-1 py-2 ${activeTab === 'dashboard' ? 'text-purple-400' : 'text-gray-500'}`}>
           <Target className="w-6 h-6" /><span className="text-[10px] mt-1 font-bold">Home</span>
@@ -418,14 +500,12 @@ const PartnerDashboard = () => {
         <button onClick={() => setActiveTab('products')} className={`flex flex-col items-center flex-1 py-2 ${activeTab === 'products' ? 'text-purple-400' : 'text-gray-500'}`}>
           <ShoppingBag className="w-6 h-6" /><span className="text-[10px] mt-1 font-bold">Catalog</span>
         </button>
-        
         <div className="relative -top-6 flex-1 flex justify-center">
           <button onClick={() => setIsSaleModalOpen(true)} className="bg-gradient-to-tr from-purple-600 to-indigo-600 text-white w-16 h-16 rounded-full flex items-center justify-center shadow-lg shadow-purple-900/50 border-4 border-[#050505] hover:scale-105 transition-transform">
             <span className="text-3xl font-light mb-1">+</span>
           </button>
           <span className="absolute -bottom-1 text-[10px] font-black text-white mt-1 uppercase tracking-widest text-center w-full">Log Sale</span>
         </div>
-
         <button onClick={() => setActiveTab('sales')} className={`flex flex-col items-center flex-1 py-2 ${activeTab === 'sales' ? 'text-purple-400' : 'text-gray-500'}`}>
           <TrendingUp className="w-6 h-6" /><span className="text-[10px] mt-1 font-bold">History</span>
         </button>
@@ -433,7 +513,6 @@ const PartnerDashboard = () => {
           <User className="w-6 h-6" /><span className="text-[10px] mt-1 font-bold">Profile</span>
         </button>
       </div>
-
     </div>
   );
 };
