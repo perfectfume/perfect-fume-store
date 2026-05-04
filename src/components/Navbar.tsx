@@ -25,6 +25,8 @@ const Navbar = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const API_URL = "https://perfect-fume-backend.perfectfumeofficial.workers.dev";
   const ADMIN_WHATSAPP = "918777789394"; 
+  
+  // 🔥 Partner route check to hide Elements
   const isPartnerRoute = window.location.pathname.includes('/partner');
   
 
@@ -194,17 +196,19 @@ const Navbar = () => {
             <button onClick={() => window.location.href = "/contact"} className="text-sm font-bold text-gray-300 hover:text-purple-400 transition-colors">Contact</button>
           </div>
 
-          {/* Right: User & Cart Icons */}
-          <div className="flex items-center gap-6 text-white ml-auto">
-            {!userEmail ? (
-              <div id="nav-login-btn" onClick={() => setIsAuthOpen(true)} className="hidden md:flex flex-col items-center cursor-pointer hover:text-purple-400"><User className="w-6 h-6" /><span className="text-[10px] hidden md:block">Sign In</span></div>
-            ) : (
-              <div onClick={() => { if(window.confirm("Logout korben?")) logout() }} className="hidden md:flex flex-col items-center cursor-pointer text-green-400"><LogOut className="w-6 h-6" /><span className="text-[10px] hidden md:block">Logout</span></div>
-            )}
-            <div onClick={toggleCart} className="flex flex-col items-center cursor-pointer relative"><ShoppingCart className="w-6 h-6" /><span className="text-[10px] hidden md:block">Cart</span>
-              {cartCount > 0 && <span className="absolute -top-1 -right-2 bg-pink-600 text-[10px] rounded-full w-4 h-4 flex items-center justify-center animate-pulse">{cartCount}</span>}
+          {/* 🔥 Right: User & Cart Icons (Hides if on Partner Route) */}
+          {!isPartnerRoute && (
+            <div className="flex items-center gap-6 text-white ml-auto">
+              {!userEmail ? (
+                <div id="nav-login-btn" onClick={() => setIsAuthOpen(true)} className="hidden md:flex flex-col items-center cursor-pointer hover:text-purple-400"><User className="w-6 h-6" /><span className="text-[10px] hidden md:block">Sign In</span></div>
+              ) : (
+                <div onClick={() => { if(window.confirm("Logout korben?")) logout() }} className="hidden md:flex flex-col items-center cursor-pointer text-green-400"><LogOut className="w-6 h-6" /><span className="text-[10px] hidden md:block">Logout</span></div>
+              )}
+              <div onClick={toggleCart} className="flex flex-col items-center cursor-pointer relative"><ShoppingCart className="w-6 h-6" /><span className="text-[10px] hidden md:block">Cart</span>
+                {cartCount > 0 && <span className="absolute -top-1 -right-2 bg-pink-600 text-[10px] rounded-full w-4 h-4 flex items-center justify-center animate-pulse">{cartCount}</span>}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </nav>
 
@@ -311,21 +315,23 @@ const Navbar = () => {
         </div>
       )}
 
-      {/* 🔥 BOTTOM NAVBAR */}
-      <div className="md:hidden fixed bottom-0 w-full bg-[#050505] border-t border-white/10 flex justify-around py-3 z-40 pb-safe">
-        <button onClick={() => window.location.href = "/"} className={`flex flex-col items-center hover:text-purple-400 ${window.location.pathname === '/' ? 'text-purple-400' : 'text-gray-400'}`}>
-          <Search className="w-5 h-5" /><span className="text-[10px] mt-1 font-bold">Home</span>
-        </button>
-        <button onClick={() => window.location.href = "/shop"} className={`flex flex-col items-center hover:text-purple-400 ${window.location.pathname === '/shop' ? 'text-purple-400' : 'text-gray-400'}`}>
-          <ShoppingCart className="w-5 h-5" /><span className="text-[10px] mt-1 font-bold">Shop</span>
-        </button>
-        <button onClick={() => window.location.href = "/wishlist"} className={`flex flex-col items-center hover:text-purple-400 ${window.location.pathname === '/wishlist' ? 'text-pink-400' : 'text-gray-400'}`}>
-          <Heart className="w-5 h-5" /><span className="text-[10px] mt-1 font-bold">Wishlist</span>
-        </button>
-        <button onClick={() => { if(!userEmail) setIsAuthOpen(true); else window.location.href = "/account"; }} className={`flex flex-col items-center hover:text-purple-400 ${window.location.pathname === '/account' ? 'text-purple-400' : 'text-gray-400'}`}>
-          <User className="w-5 h-5" /><span className="text-[10px] mt-1 font-bold">Account</span>
-        </button>
-      </div>
+      {/* 🔥 BOTTOM NAVBAR (Hides if on Partner Route) */}
+      {!isPartnerRoute && (
+        <div className="md:hidden fixed bottom-0 w-full bg-[#050505] border-t border-white/10 flex justify-around py-3 z-40 pb-safe">
+          <button onClick={() => window.location.href = "/"} className={`flex flex-col items-center hover:text-purple-400 ${window.location.pathname === '/' ? 'text-purple-400' : 'text-gray-400'}`}>
+            <Search className="w-5 h-5" /><span className="text-[10px] mt-1 font-bold">Home</span>
+          </button>
+          <button onClick={() => window.location.href = "/shop"} className={`flex flex-col items-center hover:text-purple-400 ${window.location.pathname === '/shop' ? 'text-purple-400' : 'text-gray-400'}`}>
+            <ShoppingCart className="w-5 h-5" /><span className="text-[10px] mt-1 font-bold">Shop</span>
+          </button>
+          <button onClick={() => window.location.href = "/wishlist"} className={`flex flex-col items-center hover:text-purple-400 ${window.location.pathname === '/wishlist' ? 'text-pink-400' : 'text-gray-400'}`}>
+            <Heart className="w-5 h-5" /><span className="text-[10px] mt-1 font-bold">Wishlist</span>
+          </button>
+          <button onClick={() => { if(!userEmail) setIsAuthOpen(true); else window.location.href = "/account"; }} className={`flex flex-col items-center hover:text-purple-400 ${window.location.pathname === '/account' ? 'text-purple-400' : 'text-gray-400'}`}>
+            <User className="w-5 h-5" /><span className="text-[10px] mt-1 font-bold">Account</span>
+          </button>
+        </div>
+      )}
     </>
   );
 };
