@@ -27,14 +27,14 @@ const Navbar = () => {
   const ADMIN_WHATSAPP = "918777789394"; 
 
   // --- LOGIN LOGIC ---
-    const handleSendOtp = async (e: any) => {
+  const handleSendOtp = async (e: any) => {
     e.preventDefault();
     if (!nameInput || !emailInput.includes('@') || phoneInput.length !== 10) {
       return alert("⚠️ Sothik Name, Email ebong 10-digit Phone Number din!");
     }
     
     setIsProcessing(true);
-    console.log("Attempting to send OTP to:", emailInput); // Debugging er jonno
+    console.log("Attempting to send OTP to:", emailInput);
 
     try {
       const res = await fetch(`${API_URL}/api/order`, { 
@@ -45,7 +45,7 @@ const Navbar = () => {
 
       if (res.ok) {
         console.log("OTP Sent successfully");
-        setLoginStep(2); // Eta trigger holei OTP input box asbe
+        setLoginStep(2); 
       } else {
         const errorData = await res.json();
         alert(`❌ OTP pathate somossya hoyeche: ${errorData.message || 'Server Error'}`);
@@ -95,7 +95,7 @@ const Navbar = () => {
       });
       if (res.ok) {
         setCheckoutStep(3); 
-        alert(`✅ COD Order OTP sent to ${userEmail}`);
+        // alert() removed to avoid double popups
       }
     } catch (err) { alert("Network Error!"); }
     setIsProcessing(false);
@@ -108,11 +108,12 @@ const Navbar = () => {
       const res = await fetch(`${API_URL}/api/verify-otp`, { method: 'POST', body: JSON.stringify({ email: userEmail, otp: checkoutOtp }) });
       const data = await res.json();
       if (data.success) {
-        alert("🎉 Order Confirmed! Apnar WhatsApp e order details chole jacche...");
+        // 🔥 DIRECT WHATSAPP REDIRECT (No Popup)
         let itemList = cart.map(item => `▪️ ${item.name} (${item.quantity} pcs) - ₹${item.price}`).join('%0A');
         let waText = `*New COD Order Received!* 🛍️%0A%0A*Customer Details:*%0A👤 Name: ${addressForm.name}%0A📞 Phone: ${addressForm.phone}%0A%0A*Delivery Address:*%0A🏠 ${addressForm.flat}, ${addressForm.area}%0A📍 ${addressForm.city} - ${addressForm.pincode}%0A%0A*Order Items:*%0A${itemList}%0A%0A*Total Amount:* 💰 ₹${total}%0A%0APlease confirm my order!`;
-        window.open(`https://wa.me/${ADMIN_WHATSAPP}?text=${waText}`, '_blank');
+        
         setIsCheckoutOpen(false); setCheckoutOtp(''); clearCart(); 
+        window.location.href = `https://wa.me/${ADMIN_WHATSAPP}?text=${waText}`; 
       } else { alert("Vul OTP!"); }
     } catch (err) { alert("Network Error!"); }
     setIsProcessing(false);
@@ -135,17 +136,22 @@ const Navbar = () => {
         description: "Premium Perfume Purchase",
         order_id: orderData.id,
         handler: async function (response: any) {
-          alert("✅ Payment Successful! Redirecting to WhatsApp...");
-          
+          // 1. Backend-e payment confirm kora
           await fetch(`${API_URL}/api/confirm-online-order`, {
-            method: 'POST', body: JSON.stringify({ email: userEmail, cart, address: addressForm, paymentId: response.razorpay_payment_id })
+            method: 'POST', 
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: userEmail, cart: cart, address: addressForm, paymentId: response.razorpay_payment_id })
           });
 
+          // 2. Clear Cart & Reset Steps
+          setIsCheckoutOpen(false); 
+          clearCart(); 
+
+          // 3. 🔥 DIRECT WHATSAPP REDIRECT (No Popup) 🔥
           let itemList = cart.map(item => `▪️ ${item.name} (${item.quantity} pcs) - ₹${item.price}`).join('%0A');
           let waText = `*New PAID Order!* 💳✅%0A%0A*Customer Details:*%0A👤 Name: ${addressForm.name}%0A📞 Phone: ${addressForm.phone}%0A%0A*Delivery Address:*%0A🏠 ${addressForm.flat}, ${addressForm.area}%0A📍 ${addressForm.city} - ${addressForm.pincode}%0A%0A*Order Items:*%0A${itemList}%0A%0A*Total Paid:* 💰 ₹${total}%0A*Payment ID:* ${response.razorpay_payment_id}%0A%0APlease process my order!`;
-          window.open(`https://wa.me/${ADMIN_WHATSAPP}?text=${waText}`, '_blank');
           
-          setIsCheckoutOpen(false); clearCart(); 
+          window.location.href = `https://wa.me/${ADMIN_WHATSAPP}?text=${waText}`; 
         },
         prefill: { name: addressForm.name, email: userEmail || '', contact: addressForm.phone },
         theme: { color: "#6b21a8" }
@@ -181,10 +187,8 @@ const Navbar = () => {
           {/* Right: User & Cart Icons */}
           <div className="flex items-center gap-6 text-white ml-auto">
             {!userEmail ? (
-              // 🔥 MOBILE-E HIDDEN KORA HOYECHE (hidden md:flex)
               <div id="nav-login-btn" onClick={() => setIsAuthOpen(true)} className="hidden md:flex flex-col items-center cursor-pointer hover:text-purple-400"><User className="w-6 h-6" /><span className="text-[10px] hidden md:block">Sign In</span></div>
             ) : (
-              // 🔥 MOBILE-E HIDDEN KORA HOYECHE (hidden md:flex)
               <div onClick={() => { if(window.confirm("Logout korben?")) logout() }} className="hidden md:flex flex-col items-center cursor-pointer text-green-400"><LogOut className="w-6 h-6" /><span className="text-[10px] hidden md:block">Logout</span></div>
             )}
             <div onClick={toggleCart} className="flex flex-col items-center cursor-pointer relative"><ShoppingCart className="w-6 h-6" /><span className="text-[10px] hidden md:block">Cart</span>
@@ -194,7 +198,7 @@ const Navbar = () => {
         </div>
       </nav>
 
-      {/* CART DRAWER (Omitted for brevity, kept exactly as before) */}
+      {/* CART DRAWER */}
       {isCartOpen && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex justify-end">
           <div className="w-full max-w-md bg-[#111] h-full border-l border-white/10 flex flex-col animate-in slide-in-from-right duration-300">
@@ -216,7 +220,7 @@ const Navbar = () => {
         </div>
       )}
 
-      {/* CHECKOUT MODAL (Kept exactly as before) */}
+      {/* CHECKOUT MODAL */}
       {isCheckoutOpen && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex justify-center items-end md:items-center px-4 pb-4 md:pb-0">
           <div className="bg-white w-full max-w-md rounded-2xl relative shadow-2xl animate-in slide-in-from-bottom text-black overflow-hidden flex flex-col max-h-[85vh]">
@@ -263,7 +267,8 @@ const Navbar = () => {
               {checkoutStep === 3 && (
                 <form onSubmit={handleVerifyCheckoutOtp}>
                   <p className="text-sm text-green-600 mb-4 text-center bg-green-50 p-2 rounded-lg">✅ OTP sent to {userEmail}</p>
-                  <input type="number" required value={checkoutOtp} onChange={(e) => setCheckoutOtp(e.target.value)} placeholder="Enter 4-digit OTP" className="w-full border border-gray-300 rounded-lg p-3 text-center tracking-[1em] font-bold text-xl focus:border-blue-600 mb-4" />
+                  {/* 🔥 UPDATED PLACEHOLDER TO 6-DIGIT */}
+                  <input type="number" required value={checkoutOtp} onChange={(e) => setCheckoutOtp(e.target.value)} placeholder="Enter 6-digit OTP" className="w-full border border-gray-300 rounded-lg p-3 text-center tracking-[1em] font-bold text-xl focus:border-blue-600 mb-4" />
                   <button type="submit" disabled={isProcessing} className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3.5 rounded-lg shadow-lg">
                     {isProcessing ? 'Verifying...' : 'Verify & Place Order'}
                   </button>
@@ -289,6 +294,7 @@ const Navbar = () => {
               </form>
             ) : (
               <form onSubmit={handleVerifyOtp}>
+                {/* 🔥 PLACEHOLDER WAS ALREADY 6-DIGIT HERE */}
                 <input type="number" required placeholder="Enter 6-digit OTP" value={otpInput} onChange={(e) => setOtpInput(e.target.value)} className="w-full bg-black border border-white/10 rounded-lg p-3 text-white text-center tracking-[1em] font-bold text-xl focus:border-green-500 mb-4" />
                 <button type="submit" disabled={isProcessing} className="w-full bg-green-600 text-white font-bold py-3 rounded-lg">Verify & Login</button>
               </form>
@@ -308,7 +314,6 @@ const Navbar = () => {
         <button onClick={() => window.location.href = "/wishlist"} className={`flex flex-col items-center hover:text-purple-400 ${window.location.pathname === '/wishlist' ? 'text-pink-400' : 'text-gray-400'}`}>
           <Heart className="w-5 h-5" /><span className="text-[10px] mt-1 font-bold">Wishlist</span>
         </button>
-        {/* 🔥 MAGIC CONNECTION: Logged out thakle Account tab click korlei direct popup khulbe */}
         <button onClick={() => { if(!userEmail) setIsAuthOpen(true); else window.location.href = "/account"; }} className={`flex flex-col items-center hover:text-purple-400 ${window.location.pathname === '/account' ? 'text-purple-400' : 'text-gray-400'}`}>
           <User className="w-5 h-5" /><span className="text-[10px] mt-1 font-bold">Account</span>
         </button>
