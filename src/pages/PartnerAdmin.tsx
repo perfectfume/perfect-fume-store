@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, TrendingUp, DollarSign, UserPlus, List, Lock, Activity, CheckCircle, X, Banknote, ShieldAlert, Check } from 'lucide-react';
-
+import { Users, TrendingUp, DollarSign, UserPlus, List, Lock, Activity, CheckCircle, X, Banknote, ShieldAlert, Check, Trash2 } from 'lucide-react';
 const PartnerAdmin = () => {
   // --- AUTH STATES ---
   const [email, setEmail] = useState('');
