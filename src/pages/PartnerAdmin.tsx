@@ -341,7 +341,13 @@ const PartnerAdmin = () => {
                       <td className="py-3 font-bold text-white">{sale.product_name} <span className="text-xs text-gray-500">x{sale.quantity}</span></td>
                       <td className="py-3 font-mono text-gray-400">{sale.customer_phone}</td>
                       <td className="py-3"><span className={`px-2 py-0.5 rounded text-[10px] font-bold ${sale.payment_type === 'UPI' ? 'bg-blue-500/20 text-blue-400' : 'bg-green-500/20 text-green-400'}`}>{sale.payment_type}</span></td>
-                      <td className="py-3 text-right font-bold text-white">₹{sale.total_amount}</td>
+                      <td className="py-3 text-right font-bold text-white flex items-center justify-end gap-3">
+                        ₹{sale.total_amount}
+                        <button onClick={() => handleDeleteSale(sale.id)} className="text-red-500 hover:bg-red-500/20 p-1.5 rounded-md transition-colors" title="Delete Sale">
+                           <Trash2 className="w-4 h-4"/>
+                        </button>
+                      </td>
+                      
                     </tr>
                   ))}
                 </tbody>
