@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Target, TrendingUp, ShoppingBag, Flame, Trophy, Copy, CheckCircle, Bell, User, Clock, Check, Users, X, Edit3, HelpCircle } from 'lucide-react';
+import { Target, TrendingUp, ShoppingBag, Flame, Trophy, Copy, CheckCircle, Bell, User, Clock, Check, Users, X, Edit3, HelpCircle, AlertCircle } from 'lucide-react';
 
 const PartnerDashboard = () => {
   const [email, setEmail] = useState('');
@@ -18,7 +18,7 @@ const PartnerDashboard = () => {
 
   const [products, setProducts] = useState<any[]>([]);
   const [stats, setStats] = useState({ 
-    totalSales: 0, todaySalesCount: 0, target: 50, earnings: 0, rank: 0, streak: 0, customers: [], recentSales: [] 
+    totalSales: 0, todaySalesCount: undefined, target: 50, earnings: 0, rank: 0, streak: 0, customers: [], recentSales: [] 
   });
   
   const [saleProduct, setSaleProduct] = useState('');
@@ -106,11 +106,14 @@ const PartnerDashboard = () => {
     setIsProcessing(false);
   };
 
-  // --- 4. EDIT SALE LOGIC (10 MINS) ---
+  // --- 4. EDIT SALE LOGIC (TIMEZONE FIXED FOR 10 MINS) ---
   const checkIsEditable = (createdAt: string) => {
-    const saleTime = new Date(createdAt).getTime();
+    if (!createdAt) return false;
+    // D1 Database returns UTC without 'Z', appending 'Z' explicitly tells JS it's UTC time.
+    const dateStr = createdAt.includes('Z') ? createdAt : createdAt.replace(' ', 'T') + 'Z';
+    const saleTime = new Date(dateStr).getTime();
     const now = new Date().getTime();
-    return (now - saleTime) <= 10 * 60 * 1000; // Under 10 minutes
+    return (now - saleTime) <= 10 * 60 * 1000 && (now - saleTime) >= -60000; // Allows up to 10 mins logic
   };
 
   const openEditModal = (sale: any) => {
@@ -139,17 +142,32 @@ const PartnerDashboard = () => {
   const copyPitch = (text: string) => { navigator.clipboard.writeText(text); alert("Pitch copied! 📋"); };
 
   // --- DYNAMIC CALCULATIONS ---
-  const dailyTarget = Math.max(1, Math.ceil(stats.target / 30)); // Monthly / 30 days
-  const dailyTargetProgress = Math.min((stats.todaySalesCount / dailyTarget) * 100, 100);
-  const remainingDaily = dailyTarget - stats.todaySalesCount;
+  const dailyTarget = Math.max(1, Math.ceil(stats.target / 30)); 
+
+  // 🔥 FRONTEND TODAY'S SALES FALLBACK (Fixes the missing Daily Target value)
+  const actualTodaySales = stats.todaySalesCount !== undefined ? stats.todaySalesCount : (
+    stats.recentSales?.filter((s: any) => {
+      const d = s.created_at.includes('Z') ? new Date(s.created_at) : new Date(s.created_at.replace(' ', 'T') + 'Z');
+      return d.toLocaleDateString() === new Date().toLocaleDateString();
+    }).reduce((sum: number, s: any) => sum + s.quantity, 0) || 0
+  );
+
+  const dailyTargetProgress = Math.min((actualTodaySales / dailyTarget) * 100, 100);
+  const remainingDaily = dailyTarget - actualTodaySales;
 
   const targetProgress = Math.min((stats.totalSales / stats.target) * 100, 100);
   const remainingTarget = stats.target - stats.totalSales;
 
-  // Monthly Target Bonus Calculation (e.g., ₹500 fixed bonus if target met)
   const isMonthlyTargetMet = stats.totalSales >= stats.target;
   const MONTHLY_BONUS_AMOUNT = 500; 
   const finalEarnings = stats.earnings + (isMonthlyTargetMet ? MONTHLY_BONUS_AMOUNT : 0);
+
+  // 🔥 CASH COLLECTED (Company Due)
+  const cashCollected = stats.recentSales?.reduce((sum: number, sale: any) => {
+    if(sale.payment_type === 'Cash') return sum + sale.total_amount;
+    return sum;
+  }, 0) || 0;
+
 
   // ----------------------------------------------------
   // LOGIN SCREEN
@@ -182,7 +200,7 @@ const PartnerDashboard = () => {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white font-sans pb-24">
-      {/* APP HEADER (Moved down and cleared global navbar overlap) */}
+      {/* APP HEADER */}
       <div className="pt-20 px-4 pb-4 bg-[#111] border-b border-white/10 z-10 flex justify-between items-end shadow-md">
         <div>
           <h1 className="text-2xl text-gray-300">Welcome,</h1>
@@ -214,12 +232,12 @@ const PartnerDashboard = () => {
               </div>
             </div>
 
-            {/* 🔥 NEW: DAILY TARGET CARD */}
+            {/* DAILY TARGET CARD */}
             <div className="bg-gradient-to-br from-[#1a2e1a] to-[#111] border border-green-500/20 p-5 rounded-3xl mb-4 shadow-lg">
               <div className="flex justify-between items-end mb-4">
                 <div>
                   <h3 className="font-bold text-gray-300 flex items-center gap-2"><Target className="w-4 h-4 text-green-400"/> Daily Target</h3>
-                  <p className="text-3xl font-black text-white mt-1">{stats.todaySalesCount} <span className="text-lg text-gray-500 font-medium">/ {dailyTarget}</span></p>
+                  <p className="text-3xl font-black text-white mt-1">{actualTodaySales} <span className="text-lg text-gray-500 font-medium">/ {dailyTarget}</span></p>
                 </div>
                 <div className="text-right">
                   <p className="text-xs text-green-300 font-bold bg-green-500/20 px-2 py-1 rounded-lg">
@@ -298,11 +316,11 @@ const PartnerDashboard = () => {
                         <p className="font-bold text-sm">{sale.product_name} <span className="text-xs text-gray-500">x{sale.quantity}</span></p>
                         <p className="text-[10px] text-gray-400 mt-1 flex items-center gap-1"><Clock className="w-3 h-3"/> {new Date(sale.created_at).toLocaleString()}</p>
                       </div>
-                      <div className="text-right">
+                      <div className="text-right flex flex-col items-end">
                         <p className="font-bold text-green-400">₹{sale.total_amount}</p>
-                        <div className="flex items-center justify-end gap-2 mt-1">
+                        <div className="flex items-center gap-2 mt-1">
                           <span className="text-[10px] bg-white/10 px-2 py-0.5 rounded text-gray-300">{sale.payment_type}</span>
-                          {/* 🔥 EDIT BUTTON: Shows only if within 10 minutes */}
+                          {/* 🔥 EDIT BUTTON */}
                           {checkIsEditable(sale.created_at) && (
                             <button onClick={() => openEditModal(sale)} className="text-blue-400 bg-blue-500/20 p-1 rounded-md hover:bg-blue-600 hover:text-white transition-all"><Edit3 className="w-3 h-3" /></button>
                           )}
@@ -327,17 +345,26 @@ const PartnerDashboard = () => {
               <p className="text-gray-400 text-sm">{agent.phone}</p>
             </div>
 
+            {/* 🔥 NEW: CASH DUE TO COMPANY CARD */}
+            <div className="bg-red-900/20 border border-red-500/20 rounded-2xl p-4 flex items-center justify-between">
+              <div>
+                <h3 className="text-xs font-bold text-red-400 uppercase tracking-widest mb-1 flex items-center gap-1"><AlertCircle className="w-3 h-3"/> Cash Collected</h3>
+                <p className="text-gray-400 text-[10px]">Due to Company</p>
+              </div>
+              <p className="text-xl font-black text-red-400">₹{cashCollected}</p>
+            </div>
+
+            {/* PAYOUT CARD */}
             <div className="bg-gradient-to-r from-green-900/30 to-[#111] border border-green-500/20 rounded-2xl p-5 shadow-lg">
               <h3 className="text-gray-400 text-sm font-bold uppercase mb-1">Available to Payout</h3>
               <p className="text-3xl font-black text-white mb-1">₹{finalEarnings}</p>
               
-              {/* Monthly Bonus Indicator */}
               {isMonthlyTargetMet && (
                 <p className="text-xs text-green-400 mb-4 font-bold bg-green-500/10 inline-block px-2 py-1 rounded">🎉 Included Monthly Bonus (₹{MONTHLY_BONUS_AMOUNT})</p>
               )}
 
-              {/* Strict Payout Logic */}
-              {stats.todaySalesCount >= dailyTarget ? (
+              {/* Strict Payout Logic using actualTodaySales */}
+              {actualTodaySales >= dailyTarget ? (
                  <button onClick={() => alert("Payout request sent to Admin! 💸")} className="w-full bg-green-600 text-white font-bold py-3 rounded-xl hover:bg-green-700 transition-all">Request Payout</button>
               ) : (
                 <div className="w-full bg-gray-800/50 text-gray-500 font-bold py-3 rounded-xl text-center border border-gray-700">
@@ -356,11 +383,15 @@ const PartnerDashboard = () => {
                   <p className="text-xs mt-1 text-gray-400">You must hit your "Daily Target" (minimum sales required per day) to unlock the Payout Request button.</p>
                 </div>
                 <div className="border-b border-white/5 pb-3">
+                  <p className="font-bold text-white">What is "Cash Collected"?</p>
+                  <p className="text-xs mt-1 text-gray-400">This is the total amount you collected via Cash. You must deposit this due amount to the company.</p>
+                </div>
+                <div className="border-b border-white/5 pb-3">
                   <p className="font-bold text-white">Is there a Monthly Bonus?</p>
                   <p className="text-xs mt-1 text-gray-400">Yes! Hitting your Monthly Target automatically adds an extra ₹{MONTHLY_BONUS_AMOUNT} to your earnings.</p>
                 </div>
                 <div className="pb-1">
-                  <p className="font-bold text-white">I made a mistake in Logging Sale. Can I edit?</p>
+                  <p className="font-bold text-white">Can I edit a logged sale?</p>
                   <p className="text-xs mt-1 text-gray-400">Yes, you can edit quantity or payment type within the first 10 minutes of logging a sale. Go to History tab.</p>
                 </div>
               </div>
@@ -371,9 +402,7 @@ const PartnerDashboard = () => {
 
       </div>
 
-      {/* =========================================
-          🔥 EDIT SALE MODAL (10 MINS)
-          ========================================= */}
+      {/* 🔥 EDIT SALE MODAL (10 MINS) */}
       {isEditModalOpen && (
         <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
           <div className="bg-[#111] w-full max-w-sm rounded-3xl border border-white/10 flex flex-col p-6 animate-in zoom-in-95">
@@ -399,9 +428,45 @@ const PartnerDashboard = () => {
         </div>
       )}
 
-      {/* =========================================
-          🚀 FLOATING "LOG SALE" MODAL
-          ========================================= */}
+      {/* CUSTOMERS MODAL (DYNAMIC LIST) */}
+      {isCustomersModalOpen && (
+        <div className="fixed inset-0 bg-black/90 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-sm">
+           <div className="bg-[#111] w-full max-w-md h-[85vh] sm:h-auto sm:max-h-[80vh] rounded-t-3xl sm:rounded-3xl border border-white/10 flex flex-col animate-in slide-in-from-bottom duration-200">
+              <div className="p-5 border-b border-white/10 flex justify-between items-center bg-black/50 rounded-t-3xl">
+                <h2 className="text-xl font-black text-white flex items-center gap-2">Saved Customers</h2>
+                <button onClick={() => setIsCustomersModalOpen(false)} className="bg-white/10 p-2 rounded-full text-gray-400 hover:text-white"><X className="w-5 h-5" /></button>
+              </div>
+              <div className="p-5 overflow-y-auto flex-1">
+                {stats.customers?.length > 0 ? (
+                  <div className="space-y-3">
+                    {stats.customers.map((c: any, idx) => (
+                      <div key={idx} className="bg-black border border-white/10 p-4 rounded-xl flex justify-between items-center">
+                        <div>
+                          <p className="font-bold font-mono tracking-wider">{c.customer_phone}</p>
+                          <p className="text-xs text-gray-400 mt-1">Last Order: {new Date(c.last_order).toLocaleDateString()}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-bold text-green-400">₹{c.total_spent}</p>
+                          <div className="mt-1">
+                            {c.orders > 1 ? (
+                              <span className="text-[10px] bg-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded-full font-bold">🔁 Repeat ({c.orders}x)</span>
+                            ) : (
+                              <span className="text-[10px] bg-white/10 text-gray-300 px-2 py-0.5 rounded-full">1 Order</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-center text-gray-500 py-10">No customers saved yet.</p>
+                )}
+              </div>
+           </div>
+        </div>
+      )}
+
+      {/* FLOATING "LOG SALE" MODAL */}
       {isSaleModalOpen && (
         <div className="fixed inset-0 bg-black/90 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-sm">
           <div className="bg-[#111] w-full max-w-md h-[85vh] sm:h-auto sm:max-h-[90vh] rounded-t-3xl sm:rounded-3xl border border-white/10 flex flex-col animate-in slide-in-from-bottom duration-300">
@@ -449,46 +514,6 @@ const PartnerDashboard = () => {
               </form>
             )}
           </div>
-        </div>
-      )}
-
-      {/* =========================================
-          🔥 CUSTOMERS MODAL (DYNAMIC LIST)
-          ========================================= */}
-      {isCustomersModalOpen && (
-        <div className="fixed inset-0 bg-black/90 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-sm">
-           <div className="bg-[#111] w-full max-w-md h-[85vh] sm:h-auto sm:max-h-[80vh] rounded-t-3xl sm:rounded-3xl border border-white/10 flex flex-col animate-in slide-in-from-bottom duration-200">
-              <div className="p-5 border-b border-white/10 flex justify-between items-center bg-black/50 rounded-t-3xl">
-                <h2 className="text-xl font-black text-white flex items-center gap-2">Saved Customers</h2>
-                <button onClick={() => setIsCustomersModalOpen(false)} className="bg-white/10 p-2 rounded-full text-gray-400 hover:text-white"><X className="w-5 h-5" /></button>
-              </div>
-              <div className="p-5 overflow-y-auto flex-1">
-                {stats.customers?.length > 0 ? (
-                  <div className="space-y-3">
-                    {stats.customers.map((c: any, idx) => (
-                      <div key={idx} className="bg-black border border-white/10 p-4 rounded-xl flex justify-between items-center">
-                        <div>
-                          <p className="font-bold font-mono tracking-wider">{c.customer_phone}</p>
-                          <p className="text-xs text-gray-400 mt-1">Last Order: {new Date(c.last_order).toLocaleDateString()}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-bold text-green-400">₹{c.total_spent}</p>
-                          <div className="mt-1">
-                            {c.orders > 1 ? (
-                              <span className="text-[10px] bg-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded-full font-bold">🔁 Repeat ({c.orders}x)</span>
-                            ) : (
-                              <span className="text-[10px] bg-white/10 text-gray-300 px-2 py-0.5 rounded-full">1 Order</span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-center text-gray-500 py-10">No customers saved yet.</p>
-                )}
-              </div>
-           </div>
         </div>
       )}
 
