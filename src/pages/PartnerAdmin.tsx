@@ -210,12 +210,14 @@ const PartnerAdmin = () => {
             {/* Quick Agent Add Form */}
             <div className="bg-[#111] p-6 rounded-3xl border border-white/10 mt-8">
               <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2"><UserPlus className="w-5 h-5 text-indigo-400"/> Onboard New Agent</h3>
-              <form onSubmit={handleAddPartner} className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <form onSubmit={handleAddPartner} className="grid grid-cols-1 md:grid-cols-5 gap-4">
                 <input required placeholder="Agent Name" value={newPartner.name} onChange={(e)=>setNewPartner({...newPartner, name: e.target.value})} className="bg-black border border-white/10 rounded-xl p-3 text-white outline-none focus:border-indigo-500" />
                 <input required type="email" placeholder="Email (Login ID)" value={newPartner.email} onChange={(e)=>setNewPartner({...newPartner, email: e.target.value})} className="bg-black border border-white/10 rounded-xl p-3 text-white outline-none focus:border-indigo-500" />
                 <input required type="number" placeholder="Phone Number" value={newPartner.phone} onChange={(e)=>setNewPartner({...newPartner, phone: e.target.value})} className="bg-black border border-white/10 rounded-xl p-3 text-white outline-none focus:border-indigo-500" />
+                <input placeholder="Referral Code (Optional)" value={newPartner.referredBy} onChange={(e)=>setNewPartner({...newPartner, referredBy: e.target.value})} className="bg-black border border-white/10 rounded-xl p-3 text-white outline-none focus:border-indigo-500" />
                 <button type="submit" disabled={isAdding} className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl p-3 transition-all">{isAdding ? 'Adding...' : '+ Create Agent'}</button>
               </form>
+              
             </div>
           </div>
         )}
