@@ -140,7 +140,7 @@ const PartnerDashboard = () => {
 
   const copyText = (text: string, msg: string) => { navigator.clipboard.writeText(text); alert(msg); };
 
-  // ====================================================================
+    // ====================================================================
   // 🔥 DYNAMIC CALCULATIONS (NEW SLAB & TIER SYSTEM)
   // ====================================================================
   const salesQty = stats.totalSales || 0;
@@ -170,7 +170,7 @@ const PartnerDashboard = () => {
 
   const finalEarnings = baseEarnings + perfBonus;
 
-  // 4. Daily Target & Target Progress
+  // 4. Daily Target & Target Progress (🔥 COMPULSORY 12 SALES)
   const actualTodaySales = stats.todaySalesCount !== undefined ? stats.todaySalesCount : (
     stats.recentSales?.filter((s: any) => {
       const d = s.created_at.includes('Z') ? new Date(s.created_at) : new Date(s.created_at.replace(' ', 'T') + 'Z');
@@ -178,19 +178,17 @@ const PartnerDashboard = () => {
     }).reduce((sum: number, s: any) => sum + s.quantity, 0) || 0
   );
 
-  const dailyTarget = Math.max(1, Math.ceil(nextTierTarget / 30)); 
+  const dailyTarget = 12; // 🔥 HARDCODED TO 12 AS REQUESTED
   const dailyTargetProgress = Math.min((actualTodaySales / dailyTarget) * 100, 100);
   const remainingDaily = dailyTarget - actualTodaySales;
 
   const targetProgress = Math.min((salesQty / nextTierTarget) * 100, 100);
   const remainingTarget = nextTierTarget - salesQty;
 
-  // 5. Cash Collected (Company Due)
-  const cashCollected = stats.recentSales?.reduce((sum: number, sale: any) => {
-    if(sale.payment_type === 'Cash') return sum + sale.total_amount;
-    return sum;
-  }, 0) || 0;
+  // 5. Cash Collected (Company Due - 🔥 DIRECT FROM BACKEND)
+  const cashCollected = stats.cashCollected || 0;
 
+  
 
   // ----------------------------------------------------
   // LOGIN SCREEN
