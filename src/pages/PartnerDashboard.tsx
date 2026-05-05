@@ -62,7 +62,9 @@ const PartnerDashboard = () => {
       const res = await fetch(`${API_URL}/api/partner/verify-otp`, { method: 'POST', body: JSON.stringify({ email, otp }) });
       const data = await res.json();
       if (data.success) {
+        localStorage.setItem('partner_agent', JSON.stringify(data.partner)); // 🔥 NEW
         setAgent(data.partner);
+
         fetchProducts();
         fetchStats(data.partner.email);
       } else { alert("Invalid OTP!"); }
