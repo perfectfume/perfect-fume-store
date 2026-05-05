@@ -406,7 +406,22 @@ const PartnerDashboard = () => {
 
               {/* Strict Payout Logic */}
               {actualTodaySales >= dailyTarget ? (
-                 <button onClick={() => alert("Payout request sent to Admin! 💸")} className="w-full bg-green-600 text-white font-bold py-3 rounded-xl hover:bg-green-700 transition-all shadow-lg">Request Payout</button>
+                 <button 
+                   onClick={async () => {
+                     setIsProcessing(true);
+                     try {
+                         const res = await fetch(`${API_URL}/api/partner/request-payout`, {
+                             method: 'POST', headers: { 'Content-Type': 'application/json' },
+                             body: JSON.stringify({ email: agent.email, amount: finalEarnings })
+                         });
+                         if((await res.json()).success) alert("Payout request sent to Admin! 💸");
+                     } catch(e) { alert("Error sending request."); }
+                     setIsProcessing(false);
+                   }} 
+                   disabled={isProcessing} 
+                   className="w-full bg-green-600 text-white font-bold py-3 rounded-xl hover:bg-green-700 transition-all shadow-lg">
+                   {isProcessing ? 'Requesting...' : 'Request Payout'}
+                 </button>
               ) : (
                 <div className="w-full bg-gray-800/50 text-gray-500 font-bold py-3 rounded-xl text-center border border-gray-700">
                   <p className="text-sm">🔒 Payout Locked</p>
