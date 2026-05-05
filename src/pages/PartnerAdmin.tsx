@@ -16,7 +16,7 @@ const PartnerAdmin = () => {
   const [payouts, setPayouts] = useState<any[]>([]);
 
   // --- ADD PARTNER STATES ---
-  const [newPartner, setNewPartner] = useState({ name: '', email: '', phone: '', target: '150', commission: '20' });
+  const [newPartner, setNewPartner] = useState({ name: '', email: '', phone: '', target: '150', commission: '20', referredBy: '' });
   const [isAdding, setIsAdding] = useState(false);
 
   const ADMIN_SECRET = "Himanshu@2026"; 
