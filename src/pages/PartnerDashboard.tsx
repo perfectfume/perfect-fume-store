@@ -18,7 +18,7 @@ const PartnerDashboard = () => {
 
   const [products, setProducts] = useState<any[]>([]);
   const [stats, setStats] = useState({ 
-    totalSales: 0, todaySalesCount: undefined, target: 50, earnings: 0, rank: 0, streak: 0, customers: [], recentSales: [] 
+    totalSales: 0, todaySalesCount: undefined, target: 50, earnings: 0, rank: 0, streak: 0, cashCollected: 0, customers: [], recentSales: [] 
   });
   
   const [saleProduct, setSaleProduct] = useState('');
