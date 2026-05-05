@@ -25,7 +25,7 @@ const PartnerDashboard = () => {
   const [saleQty, setSaleQty] = useState('1');
   const [salePhone, setSalePhone] = useState('');
   const [salePayment, setSalePayment] = useState('Cash');
-    const [saleSuccessMessage, setSaleSuccessMessage] = useState('');
+  const [saleSuccessMessage, setSaleSuccessMessage] = useState('');
 
   // 👇 Ei useEffect ta add korun 👇
   useEffect(() => {
