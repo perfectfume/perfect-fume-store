@@ -61,7 +61,7 @@ const PartnerAdmin = () => {
   };
 
   // --- ACTIONS ---
-  const handleAddPartner = async (e: any) => {
+    const handleAddPartner = async (e: any) => {
     e.preventDefault();
     setIsAdding(true);
     try {
@@ -69,18 +69,32 @@ const PartnerAdmin = () => {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: newPartner.name, email: newPartner.email, phone: newPartner.phone, 
-          target: Number(newPartner.target), commission: Number(newPartner.commission)
+          target: Number(newPartner.target), commission: Number(newPartner.commission),
+          referredBy: newPartner.referredBy // 🔥 Added Referral
         })
       });
       const data = await res.json();
       if (data.success) {
         alert("✅ New Agent Added Successfully!");
-        setNewPartner({ name: '', email: '', phone: '', target: '150', commission: '20' });
+        setNewPartner({ name: '', email: '', phone: '', target: '150', commission: '20', referredBy: '' });
         fetchAllData();
       } else { alert("❌ Error: Might be a duplicate email."); }
     } catch (err) { alert("Network Error!"); }
     setIsAdding(false);
   };
+
+  // 🔥 NEW: Delete Sale Function
+  const handleDeleteSale = async (saleId: number) => {
+      if(!window.confirm("Are you sure you want to permanently delete this sale?")) return;
+      try {
+        const res = await fetch(`${API_URL}/api/partner/admin/delete-sale`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: saleId })
+        });
+        if((await res.json()).success) { alert("Sale Deleted ✅"); fetchAllData(); }
+      } catch(e) { alert("Error deleting sale"); }
+  };
+  
 
   const handleApprovePayout = async (payoutId: number) => {
       if(!window.confirm("Approve this payout? Ensure you have sent the money.")) return;
