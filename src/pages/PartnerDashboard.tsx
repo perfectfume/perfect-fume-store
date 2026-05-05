@@ -25,9 +25,22 @@ const PartnerDashboard = () => {
   const [saleQty, setSaleQty] = useState('1');
   const [salePhone, setSalePhone] = useState('');
   const [salePayment, setSalePayment] = useState('Cash');
-  const [saleSuccessMessage, setSaleSuccessMessage] = useState('');
+    const [saleSuccessMessage, setSaleSuccessMessage] = useState('');
+
+  // 👇 Ei useEffect ta add korun 👇
+  useEffect(() => {
+    const savedAgent = localStorage.getItem('partner_agent');
+    if (savedAgent) {
+      const agentData = JSON.parse(savedAgent);
+      setAgent(agentData);
+      fetchProducts();
+      fetchStats(agentData.email);
+    }
+  }, []);
+  // 👆 ---------------------- 👆
 
   const API_URL = import.meta.env.VITE_API_URL || "https://perfect-fume-backend.perfectfumeofficial.workers.dev";
+
 
   // --- 1. AUTHENTICATION ---
   const handleRequestOtp = async (e: any) => {
