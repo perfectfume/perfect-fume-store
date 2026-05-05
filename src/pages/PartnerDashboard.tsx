@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Target, TrendingUp, ShoppingBag, Flame, Trophy, Copy, CheckCircle, Bell, User, Clock, Check, Users, X, Edit3, HelpCircle, AlertCircle } from 'lucide-react';
+import { Target, TrendingUp, ShoppingBag, Flame, Trophy, Copy, CheckCircle, Bell, User, Clock, Check, Users, X, Edit3, HelpCircle, AlertCircle, Share2, Award } from 'lucide-react';
 
 const PartnerDashboard = () => {
   const [email, setEmail] = useState('');
@@ -109,11 +109,10 @@ const PartnerDashboard = () => {
   // --- 4. EDIT SALE LOGIC (TIMEZONE FIXED FOR 10 MINS) ---
   const checkIsEditable = (createdAt: string) => {
     if (!createdAt) return false;
-    // D1 Database returns UTC without 'Z', appending 'Z' explicitly tells JS it's UTC time.
     const dateStr = createdAt.includes('Z') ? createdAt : createdAt.replace(' ', 'T') + 'Z';
     const saleTime = new Date(dateStr).getTime();
     const now = new Date().getTime();
-    return (now - saleTime) <= 10 * 60 * 1000 && (now - saleTime) >= -60000; // Allows up to 10 mins logic
+    return (now - saleTime) <= 10 * 60 * 1000 && (now - saleTime) >= -60000;
   };
 
   const openEditModal = (sale: any) => {
@@ -139,12 +138,39 @@ const PartnerDashboard = () => {
     setIsProcessing(false);
   };
 
-  const copyPitch = (text: string) => { navigator.clipboard.writeText(text); alert("Pitch copied! 📋"); };
+  const copyText = (text: string, msg: string) => { navigator.clipboard.writeText(text); alert(msg); };
 
-  // --- DYNAMIC CALCULATIONS ---
-  const dailyTarget = Math.max(1, Math.ceil(stats.target / 30)); 
+  // ====================================================================
+  // 🔥 DYNAMIC CALCULATIONS (NEW SLAB & TIER SYSTEM)
+  // ====================================================================
+  const salesQty = stats.totalSales || 0;
 
-  // 🔥 FRONTEND TODAY'S SALES FALLBACK (Fixes the missing Daily Target value)
+  // 1. Determine Tier & Per Product Rate
+  let perProductRate = 20; 
+  let currentTierName = 'Starter';
+  let nextTierTarget = 150;
+  let tierColor = 'text-gray-400';
+
+  if (salesQty >= 450) { 
+    perProductRate = 30; currentTierName = 'Gold Level 🥇'; nextTierTarget = 450; tierColor = 'text-yellow-400'; 
+  } else if (salesQty >= 300) { 
+    perProductRate = 30; currentTierName = 'Silver Level 🥈'; nextTierTarget = 450; tierColor = 'text-gray-300'; 
+  } else if (salesQty >= 150) { 
+    perProductRate = 25; currentTierName = 'Bronze Level 🥉'; nextTierTarget = 300; tierColor = 'text-orange-400'; 
+  }
+
+  // 2. Earnings Calculation
+  const baseEarnings = salesQty * perProductRate;
+  
+  // 3. Performance Bonus Calculation
+  let perfBonus = 0;
+  if (salesQty >= 450) perfBonus = 3000;
+  else if (salesQty >= 400) perfBonus = 2000;
+  else if (salesQty >= 300) perfBonus = 1000;
+
+  const finalEarnings = baseEarnings + perfBonus;
+
+  // 4. Daily Target & Target Progress
   const actualTodaySales = stats.todaySalesCount !== undefined ? stats.todaySalesCount : (
     stats.recentSales?.filter((s: any) => {
       const d = s.created_at.includes('Z') ? new Date(s.created_at) : new Date(s.created_at.replace(' ', 'T') + 'Z');
@@ -152,17 +178,14 @@ const PartnerDashboard = () => {
     }).reduce((sum: number, s: any) => sum + s.quantity, 0) || 0
   );
 
+  const dailyTarget = Math.max(1, Math.ceil(nextTierTarget / 30)); 
   const dailyTargetProgress = Math.min((actualTodaySales / dailyTarget) * 100, 100);
   const remainingDaily = dailyTarget - actualTodaySales;
 
-  const targetProgress = Math.min((stats.totalSales / stats.target) * 100, 100);
-  const remainingTarget = stats.target - stats.totalSales;
+  const targetProgress = Math.min((salesQty / nextTierTarget) * 100, 100);
+  const remainingTarget = nextTierTarget - salesQty;
 
-  const isMonthlyTargetMet = stats.totalSales >= stats.target;
-  const MONTHLY_BONUS_AMOUNT = 500; 
-  const finalEarnings = stats.earnings + (isMonthlyTargetMet ? MONTHLY_BONUS_AMOUNT : 0);
-
-  // 🔥 CASH COLLECTED (Company Due)
+  // 5. Cash Collected (Company Due)
   const cashCollected = stats.recentSales?.reduce((sum: number, sale: any) => {
     if(sale.payment_type === 'Cash') return sum + sale.total_amount;
     return sum;
@@ -226,9 +249,9 @@ const PartnerDashboard = () => {
                 <p className="text-2xl font-black mt-1 text-green-400">₹{finalEarnings}</p>
               </div>
               <div className="bg-[#111] border border-white/5 p-4 rounded-2xl relative overflow-hidden">
-                <div className="absolute -right-4 -bottom-4 opacity-5"><Trophy className="w-24 h-24" /></div>
-                <p className="text-gray-400 text-xs font-bold uppercase">My Rank</p>
-                <p className="text-2xl font-black mt-1 text-yellow-400">#{stats.rank || '-'} <span className="text-sm text-gray-500 font-normal">in area</span></p>
+                <div className="absolute -right-4 -bottom-4 opacity-5"><Award className="w-24 h-24" /></div>
+                <p className="text-gray-400 text-xs font-bold uppercase">Current Tier</p>
+                <p className={`text-xl font-black mt-1 leading-tight ${tierColor}`}>{currentTierName}</p>
               </div>
             </div>
 
@@ -250,16 +273,16 @@ const PartnerDashboard = () => {
               </div>
             </div>
 
-            {/* Monthly Target Card */}
+            {/* MONTHLY PROGRESS CARD (Dynamic Tier Target) */}
             <div className="bg-gradient-to-br from-[#1a1a2e] to-[#111] border border-indigo-500/20 p-5 rounded-3xl mb-6 shadow-lg">
               <div className="flex justify-between items-end mb-4">
                 <div>
-                  <h3 className="font-bold text-gray-300 flex items-center gap-2"><Target className="w-4 h-4 text-indigo-400"/> Monthly Target</h3>
-                  <p className="text-3xl font-black text-white mt-1">{stats.totalSales} <span className="text-lg text-gray-500 font-medium">/ {stats.target}</span></p>
+                  <h3 className="font-bold text-gray-300 flex items-center gap-2"><Target className="w-4 h-4 text-indigo-400"/> Monthly Progress</h3>
+                  <p className="text-3xl font-black text-white mt-1">{salesQty} <span className="text-lg text-gray-500 font-medium">/ {nextTierTarget}</span></p>
                 </div>
                 <div className="text-right">
                   <p className="text-xs text-indigo-300 font-bold bg-indigo-500/20 px-2 py-1 rounded-lg">
-                    {remainingTarget > 0 ? `${remainingTarget} more to goal` : 'Goal Reached! 🎉'}
+                    {salesQty >= 450 ? 'Max Tier Reached! 🎉' : `${remainingTarget} more for next tier`}
                   </p>
                 </div>
               </div>
@@ -294,7 +317,7 @@ const PartnerDashboard = () => {
                     <p className="text-purple-400 font-bold text-sm mt-1">₹{p.price}</p>
                     <div className="mt-3 bg-white/5 p-2 rounded-lg border border-white/5 relative group">
                       <p className="text-[10px] text-gray-400 italic pr-6">"Premium long-lasting fragrance. Best for daily office wear & parties."</p>
-                      <button onClick={() => copyPitch("Premium long-lasting fragrance. Best for daily office wear & parties.")} className="absolute right-2 top-2 text-gray-500 hover:text-white"><Copy className="w-3 h-3" /></button>
+                      <button onClick={() => copyText("Premium long-lasting fragrance. Best for daily office wear & parties.", "Pitch copied! 📋")} className="absolute right-2 top-2 text-gray-500 hover:text-white"><Copy className="w-3 h-3" /></button>
                     </div>
                   </div>
                 </div>
@@ -336,16 +359,19 @@ const PartnerDashboard = () => {
           </div>
         )}
 
-        {/* --- 4. PROFILE & STRICT PAYOUT --- */}
+        {/* --- 4. PROFILE, EARNINGS & FAQ --- */}
         {activeTab === 'profile' && (
           <div className="animate-in fade-in duration-200 space-y-4">
             <div className="bg-[#111] border border-white/10 rounded-3xl p-6 text-center">
               <div className="w-20 h-20 bg-gradient-to-tr from-purple-600 to-blue-600 rounded-full mx-auto flex items-center justify-center mb-4 text-2xl font-black shadow-lg shadow-purple-900/30">{agent.name.charAt(0)}</div>
               <h2 className="text-xl font-bold">{agent.name}</h2>
               <p className="text-gray-400 text-sm">{agent.phone}</p>
+              <div className="mt-3 flex justify-center">
+                <span className={`px-4 py-1 rounded-full text-xs font-bold border border-white/10 ${tierColor} bg-black`}>Current Status: {currentTierName}</span>
+              </div>
             </div>
 
-            {/* 🔥 NEW: CASH DUE TO COMPANY CARD */}
+            {/* CASH DUE TO COMPANY CARD */}
             <div className="bg-red-900/20 border border-red-500/20 rounded-2xl p-4 flex items-center justify-between">
               <div>
                 <h3 className="text-xs font-bold text-red-400 uppercase tracking-widest mb-1 flex items-center gap-1"><AlertCircle className="w-3 h-3"/> Cash Collected</h3>
@@ -354,18 +380,20 @@ const PartnerDashboard = () => {
               <p className="text-xl font-black text-red-400">₹{cashCollected}</p>
             </div>
 
-            {/* PAYOUT CARD */}
+            {/* PAYOUT CARD WITH EARNINGS BREAKDOWN */}
             <div className="bg-gradient-to-r from-green-900/30 to-[#111] border border-green-500/20 rounded-2xl p-5 shadow-lg">
               <h3 className="text-gray-400 text-sm font-bold uppercase mb-1">Available to Payout</h3>
-              <p className="text-3xl font-black text-white mb-1">₹{finalEarnings}</p>
+              <p className="text-4xl font-black text-white mb-3">₹{finalEarnings}</p>
               
-              {isMonthlyTargetMet && (
-                <p className="text-xs text-green-400 mb-4 font-bold bg-green-500/10 inline-block px-2 py-1 rounded">🎉 Included Monthly Bonus (₹{MONTHLY_BONUS_AMOUNT})</p>
-              )}
+              {/* Breakdown */}
+              <div className="space-y-1 mb-4 border-t border-green-500/20 pt-3 text-xs text-gray-300">
+                <div className="flex justify-between"><span>Base Commission ({salesQty}x ₹{perProductRate}):</span> <span className="font-bold">₹{baseEarnings}</span></div>
+                {perfBonus > 0 && <div className="flex justify-between text-yellow-400"><span>Performance Bonus:</span> <span className="font-bold">+ ₹{perfBonus}</span></div>}
+              </div>
 
-              {/* Strict Payout Logic using actualTodaySales */}
+              {/* Strict Payout Logic */}
               {actualTodaySales >= dailyTarget ? (
-                 <button onClick={() => alert("Payout request sent to Admin! 💸")} className="w-full bg-green-600 text-white font-bold py-3 rounded-xl hover:bg-green-700 transition-all">Request Payout</button>
+                 <button onClick={() => alert("Payout request sent to Admin! 💸")} className="w-full bg-green-600 text-white font-bold py-3 rounded-xl hover:bg-green-700 transition-all shadow-lg">Request Payout</button>
               ) : (
                 <div className="w-full bg-gray-800/50 text-gray-500 font-bold py-3 rounded-xl text-center border border-gray-700">
                   <p className="text-sm">🔒 Payout Locked</p>
@@ -374,25 +402,53 @@ const PartnerDashboard = () => {
               )}
             </div>
 
-            {/* FAQ SECTION */}
+            {/* 🔥 REFERRAL SYSTEM BANNER */}
+            <div className="bg-gradient-to-tr from-indigo-900/40 to-[#111] border border-indigo-500/30 rounded-2xl p-5 relative overflow-hidden">
+              <div className="relative z-10">
+                <h3 className="text-lg font-bold text-indigo-400 flex items-center gap-2"><Share2 className="w-5 h-5"/> Refer & Earn ₹500</h3>
+                <p className="text-xs text-gray-300 mt-1 mb-3 leading-relaxed">Bring a new active partner to our network and get a flat ₹500 bonus directly to your payout!</p>
+                <div className="flex items-center gap-2">
+                  <div className="bg-black border border-indigo-500/30 px-3 py-2 rounded-lg flex-1 text-center font-mono text-sm tracking-widest text-indigo-200">
+                    REF-{agent.name.substring(0,4).toUpperCase()}500
+                  </div>
+                  <button onClick={() => copyText(`Join Perfect Fume Partner Network & earn big! Use my code: REF-${agent.name.substring(0,4).toUpperCase()}500`, "Referral Code Copied! 🤝")} className="bg-indigo-600 hover:bg-indigo-700 p-2.5 rounded-lg transition-colors"><Copy className="w-4 h-4 text-white"/></button>
+                </div>
+              </div>
+            </div>
+
+            {/* FAQ SECTION (UPDATED FOR NEW RULES) */}
             <div className="bg-[#111] rounded-2xl border border-white/10 p-5 mt-6">
               <h3 className="text-lg font-bold flex items-center gap-2 mb-4 text-purple-400"><HelpCircle className="w-5 h-5"/> Partner Rules & FAQ</h3>
               <div className="space-y-4 text-sm text-gray-300">
                 <div className="border-b border-white/5 pb-3">
+                  <p className="font-bold text-white">How is my Commission calculated?</p>
+                  <p className="text-xs mt-1 text-gray-400 leading-relaxed">
+                    Your per-product commission increases based on your total monthly sales:<br/>
+                    • <strong>Under 150 sales:</strong> ₹20 per product.<br/>
+                    • <strong>Bronze (150 - 299):</strong> ₹25 per product.<br/>
+                    • <strong>Silver/Gold (300+):</strong> ₹30 per product.
+                  </p>
+                </div>
+                <div className="border-b border-white/5 pb-3">
+                  <p className="font-bold text-white">Is there a Performance Bonus?</p>
+                  <p className="text-xs mt-1 text-gray-400 leading-relaxed">
+                    Yes! You get extra cash bonuses based on major monthly milestones:<br/>
+                    • Hit <strong>300+ sales:</strong> ₹1000 Bonus<br/>
+                    • Hit <strong>400+ sales:</strong> ₹2000 Bonus<br/>
+                    • Hit <strong>450+ sales:</strong> ₹3000 Bonus
+                  </p>
+                </div>
+                <div className="border-b border-white/5 pb-3">
+                  <p className="font-bold text-white">How does the Referral System work?</p>
+                  <p className="text-xs mt-1 text-gray-400 leading-relaxed">Share your unique Referral Code with someone. If they join and start selling, a flat ₹500 bonus will be added to your earnings!</p>
+                </div>
+                <div className="border-b border-white/5 pb-3">
                   <p className="font-bold text-white">How do I request a payout?</p>
-                  <p className="text-xs mt-1 text-gray-400">You must hit your "Daily Target" (minimum sales required per day) to unlock the Payout Request button.</p>
-                </div>
-                <div className="border-b border-white/5 pb-3">
-                  <p className="font-bold text-white">What is "Cash Collected"?</p>
-                  <p className="text-xs mt-1 text-gray-400">This is the total amount you collected via Cash. You must deposit this due amount to the company.</p>
-                </div>
-                <div className="border-b border-white/5 pb-3">
-                  <p className="font-bold text-white">Is there a Monthly Bonus?</p>
-                  <p className="text-xs mt-1 text-gray-400">Yes! Hitting your Monthly Target automatically adds an extra ₹{MONTHLY_BONUS_AMOUNT} to your earnings.</p>
+                  <p className="text-xs mt-1 text-gray-400">You must hit your "Daily Target" to unlock the Request Payout button. This ensures regular activity.</p>
                 </div>
                 <div className="pb-1">
-                  <p className="font-bold text-white">Can I edit a logged sale?</p>
-                  <p className="text-xs mt-1 text-gray-400">Yes, you can edit quantity or payment type within the first 10 minutes of logging a sale. Go to History tab.</p>
+                  <p className="font-bold text-white">What is "Cash Collected"?</p>
+                  <p className="text-xs mt-1 text-gray-400">Total offline cash you collected. You must deposit this to the company.</p>
                 </div>
               </div>
             </div>
