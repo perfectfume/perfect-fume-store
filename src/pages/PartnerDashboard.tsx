@@ -402,33 +402,23 @@ const PartnerDashboard = () => {
 
             {/* PAYOUT CARD WITH EARNINGS BREAKDOWN */}
             <div className="bg-gradient-to-r from-green-900/30 to-[#111] border border-green-500/20 rounded-2xl p-5 shadow-lg">
-              <h3 className="text-gray-400 text-sm font-bold uppercase mb-1">Available to Payout</h3>
-              <p className="text-4xl font-black text-white mb-3">₹{finalEarnings}</p>
+              <div className="flex justify-between items-start mb-2">
+                 <h3 className="text-gray-400 text-sm font-bold uppercase">Available to Payout</h3>
+                 <div className="text-right">
+                    <p className="text-[10px] text-gray-500 uppercase">Lifetime Earnings</p>
+                    <p className="text-sm font-bold text-green-300">₹{lifetimeEarnings}</p>
+                 </div>
+              </div>
+              <p className="text-4xl font-black text-white mb-3">₹{availableBalance}</p>
               
-              {/* Breakdown */}
               <div className="space-y-1 mb-4 border-t border-green-500/20 pt-3 text-xs text-gray-300">
-                <div className="flex justify-between"><span>Base Commission ({salesQty}x ₹{perProductRate}):</span> <span className="font-bold">₹{baseEarnings}</span></div>
+                <div className="flex justify-between"><span>Base Commission:</span> <span className="font-bold">₹{baseEarnings}</span></div>
                 {perfBonus > 0 && <div className="flex justify-between text-yellow-400"><span>Performance Bonus:</span> <span className="font-bold">+ ₹{perfBonus}</span></div>}
+                <div className="flex justify-between text-red-400 pt-1 border-t border-white/5 mt-1"><span>Total Payouts Taken:</span> <span className="font-bold">- ₹{stats.totalPayoutsTaken || 0}</span></div>
               </div>
 
-              {/* Strict Payout Logic */}
               {actualTodaySales >= dailyTarget ? (
-                 <button 
-                   onClick={async () => {
-                     setIsProcessing(true);
-                     try {
-                         const res = await fetch(`${API_URL}/api/partner/request-payout`, {
-                             method: 'POST', headers: { 'Content-Type': 'application/json' },
-                             body: JSON.stringify({ email: agent.email, amount: finalEarnings })
-                         });
-                         if((await res.json()).success) alert("Payout request sent to Admin! 💸");
-                     } catch(e) { alert("Error sending request."); }
-                     setIsProcessing(false);
-                   }} 
-                   disabled={isProcessing} 
-                   className="w-full bg-green-600 text-white font-bold py-3 rounded-xl hover:bg-green-700 transition-all shadow-lg">
-                   {isProcessing ? 'Requesting...' : 'Request Payout'}
-                 </button>
+                 <button onClick={() => setIsPayoutModalOpen(true)} className="w-full bg-green-600 text-white font-bold py-3 rounded-xl hover:bg-green-700 transition-all shadow-lg">Request Early Payout</button>
               ) : (
                 <div className="w-full bg-gray-800/50 text-gray-500 font-bold py-3 rounded-xl text-center border border-gray-700">
                   <p className="text-sm">🔒 Payout Locked</p>
@@ -436,6 +426,17 @@ const PartnerDashboard = () => {
                 </div>
               )}
             </div>
+
+            {/* 🔥 LOGOUT BUTTON */}
+            <button onClick={() => {
+                if(window.confirm("Are you sure you want to log out?")) {
+                    localStorage.removeItem('partner_agent');
+                    window.location.reload();
+                }
+            }} className="w-full bg-red-900/20 border border-red-500/20 text-red-400 font-bold py-3 rounded-xl hover:bg-red-900/40 transition-all mt-4 mb-4">
+                Secure Log Out
+            </button>
+                
 
             {/* 🔥 REFERRAL SYSTEM BANNER */}
             <div className="bg-gradient-to-tr from-indigo-900/40 to-[#111] border border-indigo-500/30 rounded-2xl p-5 relative overflow-hidden">
@@ -607,7 +608,104 @@ const PartnerDashboard = () => {
           </div>
         </div>
       )}
+      {/* 🔥 PAYOUT MODAL & HISTORY */}
+      {isPayoutModalOpen && (
+        <div className="fixed inset-0 bg-black/90 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-sm">
+           <div className="bg-[#111] w-full max-w-md h-[85vh] sm:h-auto sm:max-h-[80vh] rounded-t-3xl sm:rounded-3xl border border-white/10 flex flex-col animate-in slide-in-from-bottom duration-200">
+              <div className="p-5 border-b border-white/10 flex justify-between items-center bg-black/50 rounded-t-3xl">
+                <h2 className="text-xl font-black text-white">Withdrawal & History</h2>
+                <button onClick={() => setIsPayoutModalOpen(false)} className="bg-white/10 p-2 rounded-full text-gray-400 hover:text-white"><X className="w-5 h-5" /></button>
+              </div>
+              <div className="p-5 overflow-y-auto flex-1 space-y-6">
+                 
+                 {/* Withdrawal Form */}
+                 <div className="bg-green-900/10 border border-green-500/20 p-4 rounded-2xl">
+                    <h3 className="font-bold text-sm text-green-400 mb-2">Request Early Payout</h3>
+                    <p className="text-xs text-gray-400 mb-4 leading-relaxed">You can apply for up to <span className="font-bold text-white">70% (₹{Math.floor(maxEarlyPayout)})</span> of your available payout. <span className="text-red-400 font-bold">Note: 2% TDS will be deducted</span> from early payouts.</p>
+                    
+                    <input 
+                      type="number" 
+                      placeholder={`Enter amount (Max: ₹${Math.floor(maxEarlyPayout)})`}
+                      value={payoutAmount} 
+                      onChange={(e) => setPayoutAmount(e.target.value)} 
+                      className="w-full bg-black border border-white/20 rounded-xl p-3 text-white font-bold outline-none focus:border-green-500 mb-3" 
+                    />
+                    
+                    <button 
+                      onClick={async () => {
+                         const reqAmt = Number(payoutAmount);
+                         if(reqAmt <= 0 || reqAmt > maxEarlyPayout) return alert(`Amount must be between ₹1 and ₹${Math.floor(maxEarlyPayout)}`);
+                         setIsProcessing(true);
+                         try {
+                             const res = await fetch(`${API_URL}/api/partner/request-payout`, {
+                                 method: 'POST', headers: { 'Content-Type': 'application/json' },
+                                 body: JSON.stringify({ email: agent.email, amount: reqAmt })
+                             });
+                             if((await res.json()).success) {
+                                 alert("Payout request sent to Admin successfully! 💸");
+                                 setIsPayoutModalOpen(false);
+                                 setPayoutAmount('');
+                                 fetchStats(agent.email);
+                             }
+                         } catch(e) { alert("Error sending request."); }
+                         setIsProcessing(false);
+                      }}
+                      disabled={isProcessing} 
+                      className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl transition-all">
+                      {isProcessing ? 'Processing...' : 'Submit Request'}
+                    </button>
+                 </div>
 
+                 {/* Month-wise History */}
+                 <div>
+                    <h3 className="font-bold text-sm text-gray-300 mb-3 border-b border-white/10 pb-2">Last 1 Year History</h3>
+                    <div className="space-y-3">
+                       {(() => {
+                           const historyMap: any = {};
+                           // Group Sales
+                           (stats.recentSales || []).forEach((s: any) => {
+                              const m = new Date(s.created_at).toLocaleString('default', { month: 'short', year: 'numeric' });
+                              if (!historyMap[m]) historyMap[m] = { items: 0, payouts: 0 };
+                              historyMap[m].items += s.quantity;
+                           });
+                           // Group Payouts
+                           (stats.payoutsHistory || []).forEach((p: any) => {
+                              const m = new Date(p.requested_at).toLocaleString('default', { month: 'short', year: 'numeric' });
+                              if (!historyMap[m]) historyMap[m] = { items: 0, payouts: 0 };
+                              if(p.status === 'paid') historyMap[m].payouts += p.amount;
+                           });
+
+                           return Object.keys(historyMap).map((k, idx) => {
+                               const items = historyMap[k].items;
+                               let rate = 20; let bonus = 0;
+                               if(items >= 450) { rate = 30; bonus = 3000; }
+                               else if(items >= 300) { rate = 30; bonus = 1000; }
+                               else if(items >= 150) { rate = 25; }
+                               const earned = (items * rate) + bonus;
+
+                               return (
+                                  <div key={idx} className="bg-black border border-white/5 p-3 rounded-xl">
+                                     <h4 className="font-bold text-indigo-400 mb-1">{k}</h4>
+                                     <div className="flex justify-between text-xs text-gray-400">
+                                        <span>Work: ₹{(items * rate)} {bonus > 0 ? `(+₹${bonus} Bonus)` : ''}</span>
+                                        <span className="font-bold text-white">Total: ₹{earned}</span>
+                                     </div>
+                                     <div className="flex justify-between text-xs text-red-400 mt-1 pt-1 border-t border-white/5">
+                                        <span>Early Payout Taken:</span>
+                                        <span className="font-bold">₹{historyMap[k].payouts}</span>
+                                     </div>
+                                  </div>
+                               );
+                           });
+                       })()}
+                    </div>
+                 </div>
+
+              </div>
+           </div>
+        </div>
+      )}
+                            
       {/* BOTTOM NAVIGATION BAR */}
       <div className="fixed bottom-0 w-full bg-[#050505] border-t border-white/10 flex justify-between px-2 py-2 pb-safe z-40">
         <button onClick={() => setActiveTab('dashboard')} className={`flex flex-col items-center flex-1 py-2 ${activeTab === 'dashboard' ? 'text-purple-400' : 'text-gray-500'}`}>
