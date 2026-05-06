@@ -142,6 +142,27 @@ const PartnerAdmin = () => {
         if((await res.json()).success) { alert("Payout Approved ✅"); fetchAllData(); }
       } catch(e) { alert("Error"); }
   };
+    // --- 6. SAVE REWARDS FUNCTION ---
+  const handleSaveRewards = async () => {
+      setIsProcessing(true);
+      try {
+        const res = await fetch(`${API_URL}/api/partner/admin/update-rewards`, {
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(rewardSlabs)
+        });
+        const data = await res.json();
+        if(data.success) { 
+            alert("Reward Settings Saved Successfully! ✅"); 
+        } else {
+            alert("Error saving rewards!");
+        }
+      } catch(e) { 
+          alert("Network Error!"); 
+      }
+      setIsProcessing(false);
+  };
+  
 
   // --- 5. SETTLE CASH FUNCTION ---
   const handleSettleCash = async (agentEmail: string, amount: number) => {
@@ -477,9 +498,13 @@ const PartnerAdmin = () => {
                </div>
             </div>
 
-            <button className="w-full py-4 mt-4 bg-yellow-600 hover:bg-yellow-700 text-white font-bold rounded-xl transition-all">
-               💾 Save Reward Settings
-            </button>
+            <button 
+    onClick={handleSaveRewards} 
+    disabled={isProcessing}
+    className={`w-full py-4 mt-4 text-white font-bold rounded-xl transition-all ${isProcessing ? 'bg-yellow-800' : 'bg-yellow-600 hover:bg-yellow-700'}`}
+>
+   {isProcessing ? 'Saving Please Wait...' : '💾 Save Reward Settings'}
+</button>
           </div>
         )}
 
