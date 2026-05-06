@@ -67,8 +67,25 @@ const PartnerAdmin = () => {
     } catch (err) { console.error("Failed to load data"); }
   };
 
-  // --- ACTIONS ---
-    const handleAddPartner = async (e: any) => {
+  
+      
+      const data = await res.json();
+      if (data.success) {
+        alert("✅ New Agent Added Successfully!");
+        setNewPartner({ name: '', email: '', phone: '', target: '150', commission: '20', referredBy: '' });
+        fetchAllData();
+      } else { alert("❌ Error: Might be a duplicate email."); }
+    } catch (err) { alert("Network Error!"); }
+    setIsAdding(false);
+  };
+
+  // 🔥 NEW: Delete Sale Function
+  const handleDeleteSale = async (saleId: number) => {
+      if(!window.confirm("Are you sure you want to permanently delete this sale?")) return;
+      try {
+        const res = await fetch(`${API_URL}/api/partner/admin/delete-sale`, {
+            method: 'POST', headers: { 'Content-Type': 'appl// --- 1. ADD PARTNER FUNCTION ---
+  const handleAddPartner = async (e: any) => {
     e.preventDefault();
     setIsAdding(true);
     try {
@@ -80,7 +97,21 @@ const PartnerAdmin = () => {
           referredBy: newPartner.referredBy // 🔥 Added Referral
         })
       });
-    const handleToggleStatus = async (email: string, currentStatus: string) => {
+      const data = await res.json();
+      if(data.success) {
+          alert("Partner Added Successfully!");
+          fetchAllData(); // Auto refresh list
+      } else {
+          alert("Error adding partner!");
+      }
+    } catch (err) {
+        alert("Network Error!");
+    }
+    setIsAdding(false);
+  };
+
+  // --- 2. BLOCK / UNBLOCK FUNCTION (EKDUM ALADA) ---
+  const handleToggleStatus = async (email: string, currentStatus: string) => {
     const isBlocked = currentStatus === 'blocked';
     if(!window.confirm(`Are you sure you want to ${isBlocked ? 'UNBLOCK' : 'BLOCK'} this agent?`)) return;
     
@@ -102,24 +133,7 @@ const PartnerAdmin = () => {
         alert("Network Error!");
     }
     setIsProcessing(false);
-  };
-      
-      const data = await res.json();
-      if (data.success) {
-        alert("✅ New Agent Added Successfully!");
-        setNewPartner({ name: '', email: '', phone: '', target: '150', commission: '20', referredBy: '' });
-        fetchAllData();
-      } else { alert("❌ Error: Might be a duplicate email."); }
-    } catch (err) { alert("Network Error!"); }
-    setIsAdding(false);
-  };
-
-  // 🔥 NEW: Delete Sale Function
-  const handleDeleteSale = async (saleId: number) => {
-      if(!window.confirm("Are you sure you want to permanently delete this sale?")) return;
-      try {
-        const res = await fetch(`${API_URL}/api/partner/admin/delete-sale`, {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
+  };ication/json' },
             body: JSON.stringify({ id: saleId })
         });
         if((await res.json()).success) { alert("Sale Deleted ✅"); fetchAllData(); }
