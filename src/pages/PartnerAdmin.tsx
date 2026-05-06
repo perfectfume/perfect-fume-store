@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Users, TrendingUp, DollarSign, UserPlus, List, Lock, Activity, CheckCircle, X, Banknote, ShieldAlert, Check, Trash2 } from 'lucide-react';
+
 const PartnerAdmin = () => {
   // --- AUTH STATES ---
   const [email, setEmail] = useState('');
@@ -15,6 +16,7 @@ const PartnerAdmin = () => {
   const [partners, setPartners] = useState<any[]>([]);
   const [sales, setSales] = useState<any[]>([]);
   const [payouts, setPayouts] = useState<any[]>([]);
+  
   // 🔥 DYNAMIC REWARD SLABS STATE
   const [rewardSlabs, setRewardSlabs] = useState({
       bronze: { target: 150, rate: 25, bonus: 0 },
@@ -67,24 +69,7 @@ const PartnerAdmin = () => {
     } catch (err) { console.error("Failed to load data"); }
   };
 
-  
-      
-      const data = await res.json();
-      if (data.success) {
-        alert("✅ New Agent Added Successfully!");
-        setNewPartner({ name: '', email: '', phone: '', target: '150', commission: '20', referredBy: '' });
-        fetchAllData();
-      } else { alert("❌ Error: Might be a duplicate email."); }
-    } catch (err) { alert("Network Error!"); }
-    setIsAdding(false);
-  };
-
-  // 🔥 NEW: Delete Sale Function
-  const handleDeleteSale = async (saleId: number) => {
-      if(!window.confirm("Are you sure you want to permanently delete this sale?")) return;
-      try {
-        const res = await fetch(`${API_URL}/api/partner/admin/delete-sale`, {
-            method: 'POST', headers: { 'Content-Type': 'appl// --- 1. ADD PARTNER FUNCTION ---
+  // --- 1. ADD PARTNER FUNCTION ---
   const handleAddPartner = async (e: any) => {
     e.preventDefault();
     setIsAdding(true);
@@ -98,19 +83,18 @@ const PartnerAdmin = () => {
         })
       });
       const data = await res.json();
-      if(data.success) {
-          alert("Partner Added Successfully!");
-          fetchAllData(); // Auto refresh list
-      } else {
-          alert("Error adding partner!");
+      if (data.success) {
+        alert("✅ New Agent Added Successfully!");
+        setNewPartner({ name: '', email: '', phone: '', target: '150', commission: '20', referredBy: '' });
+        fetchAllData();
+      } else { 
+        alert("❌ Error: Might be a duplicate email."); 
       }
-    } catch (err) {
-        alert("Network Error!");
-    }
+    } catch (err) { alert("Network Error!"); }
     setIsAdding(false);
   };
 
-  // --- 2. BLOCK / UNBLOCK FUNCTION (EKDUM ALADA) ---
+  // --- 2. BLOCK / UNBLOCK FUNCTION ---
   const handleToggleStatus = async (email: string, currentStatus: string) => {
     const isBlocked = currentStatus === 'blocked';
     if(!window.confirm(`Are you sure you want to ${isBlocked ? 'UNBLOCK' : 'BLOCK'} this agent?`)) return;
@@ -133,14 +117,21 @@ const PartnerAdmin = () => {
         alert("Network Error!");
     }
     setIsProcessing(false);
-  };ication/json' },
+  };
+
+  // --- 3. DELETE SALE FUNCTION ---
+  const handleDeleteSale = async (saleId: number) => {
+      if(!window.confirm("Are you sure you want to permanently delete this sale?")) return;
+      try {
+        const res = await fetch(`${API_URL}/api/partner/admin/delete-sale`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ id: saleId })
         });
         if((await res.json()).success) { alert("Sale Deleted ✅"); fetchAllData(); }
       } catch(e) { alert("Error deleting sale"); }
   };
   
-
+  // --- 4. PAYOUT APPROVE FUNCTION ---
   const handleApprovePayout = async (payoutId: number) => {
       if(!window.confirm("Approve this payout? Ensure you have sent the money.")) return;
       try {
@@ -152,6 +143,7 @@ const PartnerAdmin = () => {
       } catch(e) { alert("Error"); }
   };
 
+  // --- 5. SETTLE CASH FUNCTION ---
   const handleSettleCash = async (agentEmail: string, amount: number) => {
       if(!window.confirm(`Confirm you received ₹${amount} cash from ${agentEmail}?`)) return;
       try {
@@ -162,7 +154,6 @@ const PartnerAdmin = () => {
         if((await res.json()).success) { alert("Cash Settled ✅"); fetchAllData(); }
       } catch(e) { alert("Error"); }
   };
-
 
   // 🔥 TIME FILTER LOGIC (Data filter kora hocche dropdown onujayi)
   const now = new Date();
@@ -197,10 +188,9 @@ const PartnerAdmin = () => {
       return true;
   });
 
-  // --- CALCULATIONS FOR DASHBOARD (Ekhon filtered data theke hobe) ---
+  // --- CALCULATIONS FOR DASHBOARD ---
   const totalRevenue = filteredSales.reduce((sum: number, sale: any) => sum + (sale.total_amount || 0), 0);
   
-  // Calculate total cash due across all agents
   const totalCashDue = filteredSales.reduce((sum: number, sale: any) => {
       if (sale.payment_type === 'Cash' && (!sale.is_settled || sale.is_settled === 0)) {
           return sum + sale.total_amount;
@@ -208,7 +198,6 @@ const PartnerAdmin = () => {
       return sum;
   }, 0);
 
-  // Calculate pending payouts globally
   const totalPendingPayouts = filteredPayouts.filter((p: any) => p.status === 'pending').reduce((sum: number, p: any) => sum + p.amount, 0);
 
 
@@ -254,12 +243,7 @@ const PartnerAdmin = () => {
             <button onClick={() => setActiveTab('agents')} className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'agents' ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-white'}`}>Agents & Cash</button>
             <button onClick={() => setActiveTab('payouts')} className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'payouts' ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-white flex items-center gap-1'}`}>Payouts {totalPendingPayouts > 0 && <span className="w-2 h-2 rounded-full bg-red-500"></span>}</button>
             <button onClick={() => setActiveTab('sales')} className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'sales' ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-white'}`}>Live Sales</button>
-        {/* REWARDS BUTTON */}
-        <button onClick={() => setActiveTab('rewards')} className={`flex flex-col items-center flex-1 py-2 ${activeTab === 'rewards' ? 'text-yellow-400' : 'text-gray-500'}`}>
-            <span className="text-xl">🏆</span>
-            <span className="text-[10px] mt-1 font-bold">Rewards</span>
-        </button>
-            
+            <button onClick={() => setActiveTab('rewards')} className={`px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-1 ${activeTab === 'rewards' ? 'bg-yellow-600 text-white' : 'text-gray-400 hover:text-white'}`}>🏆 Rewards</button>
           </div>
         </div>
 
@@ -267,7 +251,6 @@ const PartnerAdmin = () => {
         {activeTab === 'dashboard' && (
           <div className="space-y-6 animate-in fade-in">
             
-            {/* 🔥 TIME FILTER DROPDOWN */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-gradient-to-r from-purple-900/20 to-[#111] p-4 rounded-2xl border border-indigo-500/20 gap-4">
                <div>
                    <h2 className="text-lg font-bold text-white flex items-center gap-2"><Activity className="w-5 h-5 text-indigo-400"/> Performance Dashboard</h2>
@@ -297,7 +280,7 @@ const PartnerAdmin = () => {
               </div>
               <div className="bg-red-900/20 p-6 rounded-3xl border border-red-500/20 relative overflow-hidden">
                  <Banknote className="text-red-400 w-6 h-6 mb-3 relative z-10" />
-                 <h3 className="text-red-400/80 text-xs font-bold uppercase tracking-wider mb-1 relative z-10">Total Cash Due (From Agents)</h3>
+                 <h3 className="text-red-400/80 text-xs font-bold uppercase tracking-wider mb-1 relative z-10">Total Cash Due</h3>
                  <p className="text-3xl font-black text-red-400 relative z-10">₹{totalCashDue}</p>
                  <ShieldAlert className="absolute -right-4 -bottom-4 w-24 h-24 text-red-500/10" />
               </div>
@@ -318,7 +301,6 @@ const PartnerAdmin = () => {
                 <input placeholder="Referral Code (Optional)" value={newPartner.referredBy} onChange={(e)=>setNewPartner({...newPartner, referredBy: e.target.value})} className="bg-black border border-white/10 rounded-xl p-3 text-white outline-none focus:border-indigo-500" />
                 <button type="submit" disabled={isAdding} className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl p-3 transition-all">{isAdding ? 'Adding...' : '+ Create Agent'}</button>
               </form>
-              
             </div>
           </div>
         )}
@@ -332,13 +314,11 @@ const PartnerAdmin = () => {
                 const agentSales = filteredSales.filter((s: any) => s.partner_email === partner.email);
                 const itemsSold = agentSales.reduce((sum: number, s: any) => sum + s.quantity, 0);
                 
-                // Tier Logic
                 let tier = 'Starter'; let color = 'text-gray-400 bg-gray-500/10';
                 if(itemsSold >= 450) { tier = 'Gold 🥇'; color = 'text-yellow-400 bg-yellow-500/10'; }
                 else if(itemsSold >= 300) { tier = 'Silver 🥈'; color = 'text-gray-200 bg-gray-300/10'; }
                 else if(itemsSold >= 150) { tier = 'Bronze 🥉'; color = 'text-orange-400 bg-orange-500/10'; }
 
-                // Cash Due Logic
                 const agentCashDue = agentSales.reduce((sum: number, sale: any) => {
                     if (sale.payment_type === 'Cash' && (!sale.is_settled || sale.is_settled === 0)) return sum + sale.total_amount;
                     return sum;
@@ -349,27 +329,25 @@ const PartnerAdmin = () => {
                     <div className="flex justify-between items-start mb-4">
                         <div>
                             <h3 className="font-bold text-lg text-white flex items-center gap-2">
-                {partner.name}
-                {partner.status === 'blocked' && <span className="bg-red-500/20 text-red-500 px-2 py-0.5 rounded text-[10px] uppercase">Blocked</span>}
-             </h3>
-             <p className="text-xs text-gray-500 font-mono">{partner.email}</p>
-             
-             <div className="flex items-center gap-2 mt-2">
-                 <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold ${color}`}>{tier} ({itemsSold})</span>
-                 
-                 {/* 🔥 BLOCK / UNBLOCK BUTTON */}
-                 <button
-                    onClick={() => handleToggleStatus(partner.email, partner.status)}
-                    className={`px-2 py-0.5 text-[10px] font-bold rounded border transition-all ${
-                        partner.status === 'blocked' 
-                        ? 'bg-green-900/20 border-green-500/30 text-green-400 hover:bg-green-900/40' 
-                        : 'bg-red-900/20 border-red-500/30 text-red-400 hover:bg-red-900/40'
-                    }`}
-                 >
-                    {partner.status === 'blocked' ? 'Unblock Agent' : 'Block Agent'}
-                 </button>
-             </div>
-
+                                {partner.name}
+                                {partner.status === 'blocked' && <span className="bg-red-500/20 text-red-500 px-2 py-0.5 rounded text-[10px] uppercase">Blocked</span>}
+                            </h3>
+                            <p className="text-xs text-gray-500 font-mono">{partner.email}</p>
+                            
+                            <div className="flex items-center gap-2 mt-2">
+                                <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold ${color}`}>{tier} ({itemsSold})</span>
+                                
+                                <button
+                                    onClick={() => handleToggleStatus(partner.email, partner.status)}
+                                    className={`px-2 py-0.5 text-[10px] font-bold rounded border transition-all ${
+                                        partner.status === 'blocked' 
+                                        ? 'bg-green-900/20 border-green-500/30 text-green-400 hover:bg-green-900/40' 
+                                        : 'bg-red-900/20 border-red-500/30 text-red-400 hover:bg-red-900/40'
+                                    }`}
+                                >
+                                    {partner.status === 'blocked' ? 'Unblock Agent' : 'Block Agent'}
+                                </button>
+                            </div>
                         </div>
                         <div className="text-right">
                              <p className="text-[10px] text-gray-400 uppercase tracking-widest mb-1">Cash Due</p>
@@ -434,6 +412,7 @@ const PartnerAdmin = () => {
             </div>
           </div>
         )}
+
         {/* --- 4. REWARDS TAB --- */}
         {activeTab === 'rewards' && (
           <div className="space-y-6 animate-in slide-in-from-bottom-4">
@@ -443,7 +422,6 @@ const PartnerAdmin = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-               {/* BRONZE SLAB */}
                <div className="bg-[#111] p-5 rounded-2xl border border-orange-500/30">
                   <h3 className="font-bold text-lg text-orange-400 mb-4 flex items-center gap-2">🥉 Bronze Tier</h3>
                   <div className="space-y-3">
@@ -462,7 +440,6 @@ const PartnerAdmin = () => {
                   </div>
                </div>
 
-               {/* SILVER SLAB */}
                <div className="bg-[#111] p-5 rounded-2xl border border-gray-400/30">
                   <h3 className="font-bold text-lg text-gray-300 mb-4 flex items-center gap-2">🥈 Silver Tier</h3>
                   <div className="space-y-3">
@@ -481,7 +458,6 @@ const PartnerAdmin = () => {
                   </div>
                </div>
 
-               {/* GOLD SLAB */}
                <div className="bg-[#111] p-5 rounded-2xl border border-yellow-500/30">
                   <h3 className="font-bold text-lg text-yellow-400 mb-4 flex items-center gap-2">🥇 Gold Tier</h3>
                   <div className="space-y-3">
@@ -506,7 +482,8 @@ const PartnerAdmin = () => {
             </button>
           </div>
         )}
-                {/* --- 4. SALES LOGS TAB --- */}
+
+        {/* --- 5. SALES LOGS TAB --- */}
         {activeTab === 'sales' && (
           <div className="bg-[#111] p-6 rounded-3xl border border-white/10 animate-in slide-in-from-bottom-4">
              <div className="flex justify-between items-center mb-6">
@@ -538,7 +515,6 @@ const PartnerAdmin = () => {
                            <Trash2 className="w-4 h-4"/>
                         </button>
                       </td>
-                      
                     </tr>
                   ))}
                 </tbody>
