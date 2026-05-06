@@ -414,7 +414,78 @@ const PartnerAdmin = () => {
             </div>
           </div>
         )}
+        {/* --- 4. REWARDS TAB --- */}
+        {activeTab === 'rewards' && (
+          <div className="space-y-6 animate-in slide-in-from-bottom-4">
+            <div className="bg-gradient-to-r from-yellow-900/20 to-[#111] p-6 rounded-3xl border border-yellow-500/20 mb-6">
+                <h2 className="text-xl font-black text-white flex items-center gap-2">🏆 Master Reward Settings</h2>
+                <p className="text-xs text-gray-400 mt-1">Change target slabs, commission rates, and bonuses for all agents dynamically.</p>
+            </div>
 
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+               {/* BRONZE SLAB */}
+               <div className="bg-[#111] p-5 rounded-2xl border border-orange-500/30">
+                  <h3 className="font-bold text-lg text-orange-400 mb-4 flex items-center gap-2">🥉 Bronze Tier</h3>
+                  <div className="space-y-3">
+                     <div>
+                        <label className="text-xs text-gray-400">Target Sales</label>
+                        <input type="number" value={rewardSlabs.bronze.target} onChange={(e) => setRewardSlabs({...rewardSlabs, bronze: {...rewardSlabs.bronze, target: Number(e.target.value)}})} className="w-full bg-black border border-white/10 rounded-lg p-2 text-white outline-none focus:border-orange-500" />
+                     </div>
+                     <div>
+                        <label className="text-xs text-gray-400">Commission Rate (₹)</label>
+                        <input type="number" value={rewardSlabs.bronze.rate} onChange={(e) => setRewardSlabs({...rewardSlabs, bronze: {...rewardSlabs.bronze, rate: Number(e.target.value)}})} className="w-full bg-black border border-white/10 rounded-lg p-2 text-white outline-none focus:border-orange-500" />
+                     </div>
+                     <div>
+                        <label className="text-xs text-gray-400">Extra Bonus (₹)</label>
+                        <input type="number" value={rewardSlabs.bronze.bonus} onChange={(e) => setRewardSlabs({...rewardSlabs, bronze: {...rewardSlabs.bronze, bonus: Number(e.target.value)}})} className="w-full bg-black border border-white/10 rounded-lg p-2 text-white outline-none focus:border-orange-500" />
+                     </div>
+                  </div>
+               </div>
+
+               {/* SILVER SLAB */}
+               <div className="bg-[#111] p-5 rounded-2xl border border-gray-400/30">
+                  <h3 className="font-bold text-lg text-gray-300 mb-4 flex items-center gap-2">🥈 Silver Tier</h3>
+                  <div className="space-y-3">
+                     <div>
+                        <label className="text-xs text-gray-400">Target Sales</label>
+                        <input type="number" value={rewardSlabs.silver.target} onChange={(e) => setRewardSlabs({...rewardSlabs, silver: {...rewardSlabs.silver, target: Number(e.target.value)}})} className="w-full bg-black border border-white/10 rounded-lg p-2 text-white outline-none focus:border-gray-400" />
+                     </div>
+                     <div>
+                        <label className="text-xs text-gray-400">Commission Rate (₹)</label>
+                        <input type="number" value={rewardSlabs.silver.rate} onChange={(e) => setRewardSlabs({...rewardSlabs, silver: {...rewardSlabs.silver, rate: Number(e.target.value)}})} className="w-full bg-black border border-white/10 rounded-lg p-2 text-white outline-none focus:border-gray-400" />
+                     </div>
+                     <div>
+                        <label className="text-xs text-gray-400">Extra Bonus (₹)</label>
+                        <input type="number" value={rewardSlabs.silver.bonus} onChange={(e) => setRewardSlabs({...rewardSlabs, silver: {...rewardSlabs.silver, bonus: Number(e.target.value)}})} className="w-full bg-black border border-white/10 rounded-lg p-2 text-white outline-none focus:border-gray-400" />
+                     </div>
+                  </div>
+               </div>
+
+               {/* GOLD SLAB */}
+               <div className="bg-[#111] p-5 rounded-2xl border border-yellow-500/30">
+                  <h3 className="font-bold text-lg text-yellow-400 mb-4 flex items-center gap-2">🥇 Gold Tier</h3>
+                  <div className="space-y-3">
+                     <div>
+                        <label className="text-xs text-gray-400">Target Sales</label>
+                        <input type="number" value={rewardSlabs.gold.target} onChange={(e) => setRewardSlabs({...rewardSlabs, gold: {...rewardSlabs.gold, target: Number(e.target.value)}})} className="w-full bg-black border border-white/10 rounded-lg p-2 text-white outline-none focus:border-yellow-500" />
+                     </div>
+                     <div>
+                        <label className="text-xs text-gray-400">Commission Rate (₹)</label>
+                        <input type="number" value={rewardSlabs.gold.rate} onChange={(e) => setRewardSlabs({...rewardSlabs, gold: {...rewardSlabs.gold, rate: Number(e.target.value)}})} className="w-full bg-black border border-white/10 rounded-lg p-2 text-white outline-none focus:border-yellow-500" />
+                     </div>
+                     <div>
+                        <label className="text-xs text-gray-400">Extra Bonus (₹)</label>
+                        <input type="number" value={rewardSlabs.gold.bonus} onChange={(e) => setRewardSlabs({...rewardSlabs, gold: {...rewardSlabs.gold, bonus: Number(e.target.value)}})} className="w-full bg-black border border-white/10 rounded-lg p-2 text-white outline-none focus:border-yellow-500" />
+                     </div>
+                  </div>
+               </div>
+            </div>
+
+            <button className="w-full py-4 mt-4 bg-yellow-600 hover:bg-yellow-700 text-white font-bold rounded-xl transition-all">
+               💾 Save Reward Settings
+            </button>
+          </div>
+        )}
                 {/* --- 4. SALES LOGS TAB --- */}
         {activeTab === 'sales' && (
           <div className="bg-[#111] p-6 rounded-3xl border border-white/10 animate-in slide-in-from-bottom-4">
