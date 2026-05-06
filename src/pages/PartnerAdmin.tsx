@@ -11,6 +11,7 @@ const PartnerAdmin = () => {
 
   // --- DATA STATES ---
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [timeFilter, setTimeFilter] = useState('lifetime');
   const [partners, setPartners] = useState<any[]>([]);
   const [sales, setSales] = useState<any[]>([]);
   const [payouts, setPayouts] = useState<any[]>([]);
@@ -143,12 +144,44 @@ const PartnerAdmin = () => {
   };
 
 
-  // --- CALCULATIONS FOR DASHBOARD ---
-  const totalRevenue = sales.reduce((sum: number, sale: any) => sum + (sale.total_amount || 0), 0);
+  // 🔥 TIME FILTER LOGIC (Data filter kora hocche dropdown onujayi)
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+
+  const filteredSales = sales.filter((sale: any) => {
+      if (timeFilter === 'lifetime') return true;
+      const saleDate = new Date(sale.created_at); // Db te created_at column ache dhore nilam
+      if (timeFilter === 'this_month') {
+          return saleDate.getMonth() === currentMonth && saleDate.getFullYear() === currentYear;
+      }
+      if (timeFilter === 'last_month') {
+          const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+          const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+          return saleDate.getMonth() === lastMonth && saleDate.getFullYear() === lastMonthYear;
+      }
+      return true;
+  });
+
+  const filteredPayouts = payouts.filter((p: any) => {
+      if (timeFilter === 'lifetime') return true;
+      const pDate = new Date(p.requested_at || p.created_at); 
+      if (timeFilter === 'this_month') {
+          return pDate.getMonth() === currentMonth && pDate.getFullYear() === currentYear;
+      }
+      if (timeFilter === 'last_month') {
+          const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+          const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+          return pDate.getMonth() === lastMonth && pDate.getFullYear() === lastMonthYear;
+      }
+      return true;
+  });
+
+  // --- CALCULATIONS FOR DASHBOARD (Ekhon filtered data theke hobe) ---
+  const totalRevenue = filteredSales.reduce((sum: number, sale: any) => sum + (sale.total_amount || 0), 0);
   
   // Calculate total cash due across all agents
-  const totalCashDue = sales.reduce((sum: number, sale: any) => {
-      // Assuming missing is_settled means 0 (unsettled)
+  const totalCashDue = filteredSales.reduce((sum: number, sale: any) => {
       if (sale.payment_type === 'Cash' && (!sale.is_settled || sale.is_settled === 0)) {
           return sum + sale.total_amount;
       }
@@ -156,7 +189,7 @@ const PartnerAdmin = () => {
   }, 0);
 
   // Calculate pending payouts globally
-  const totalPendingPayouts = payouts.filter(p => p.status === 'pending').reduce((sum, p) => sum + p.amount, 0);
+  const totalPendingPayouts = filteredPayouts.filter((p: any) => p.status === 'pending').reduce((sum: number, p: any) => sum + p.amount, 0);
 
 
   if (!isAuthorized) {
@@ -207,6 +240,24 @@ const PartnerAdmin = () => {
         {/* --- 1. DASHBOARD TAB --- */}
         {activeTab === 'dashboard' && (
           <div className="space-y-6 animate-in fade-in">
+            
+            {/* 🔥 TIME FILTER DROPDOWN */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-gradient-to-r from-purple-900/20 to-[#111] p-4 rounded-2xl border border-indigo-500/20 gap-4">
+               <div>
+                   <h2 className="text-lg font-bold text-white flex items-center gap-2"><Activity className="w-5 h-5 text-indigo-400"/> Performance Dashboard</h2>
+                   <p className="text-xs text-gray-400">Track agent sales & revenue based on time</p>
+               </div>
+               <select 
+                   value={timeFilter}
+                   onChange={(e) => setTimeFilter(e.target.value)}
+                   className="bg-black border border-white/20 text-white text-sm rounded-xl px-4 py-2 outline-none focus:border-indigo-500 font-bold"
+               >
+                   <option value="lifetime">All Time (Lifetime)</option>
+                   <option value="this_month">This Month</option>
+                   <option value="last_month">Last Month</option>
+               </select>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <div className="bg-[#111] p-6 rounded-3xl border border-white/10">
                 <Users className="text-blue-400 w-6 h-6 mb-3" />
