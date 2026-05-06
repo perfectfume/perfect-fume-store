@@ -73,6 +73,30 @@ const PartnerAdmin = () => {
           referredBy: newPartner.referredBy // 🔥 Added Referral
         })
       });
+    const handleToggleStatus = async (email: string, currentStatus: string) => {
+    const isBlocked = currentStatus === 'blocked';
+    if(!window.confirm(`Are you sure you want to ${isBlocked ? 'UNBLOCK' : 'BLOCK'} this agent?`)) return;
+    
+    setIsProcessing(true);
+    try {
+        const res = await fetch(`${API_URL}/api/partner/admin/toggle-status`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, currentStatus: currentStatus || 'active' })
+        });
+        const data = await res.json();
+        if(data.success) {
+            alert(`Agent successfully ${data.newStatus === 'active' ? 'Unblocked ✅' : 'Blocked ❌'}!`);
+            fetchAllData(); // Auto refresh the list
+        } else {
+            alert("Error: " + data.error);
+        }
+    } catch (e) {
+        alert("Network Error!");
+    }
+    setIsProcessing(false);
+  };
+      
       const data = await res.json();
       if (data.success) {
         alert("✅ New Agent Added Successfully!");
@@ -247,9 +271,28 @@ const PartnerAdmin = () => {
                   <div key={partner.id} className="bg-[#111] p-5 rounded-2xl border border-white/10 flex flex-col justify-between">
                     <div className="flex justify-between items-start mb-4">
                         <div>
-                            <h3 className="font-bold text-lg text-white">{partner.name}</h3>
-                            <p className="text-xs text-gray-500 font-mono">{partner.email}</p>
-                            <span className={`inline-block mt-2 px-2 py-0.5 rounded text-[10px] font-bold ${color}`}>{tier} ({itemsSold} Sales)</span>
+                            <h3 className="font-bold text-lg text-white flex items-center gap-2">
+                {partner.name}
+                {partner.status === 'blocked' && <span className="bg-red-500/20 text-red-500 px-2 py-0.5 rounded text-[10px] uppercase">Blocked</span>}
+             </h3>
+             <p className="text-xs text-gray-500 font-mono">{partner.email}</p>
+             
+             <div className="flex items-center gap-2 mt-2">
+                 <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold ${color}`}>{tier} ({itemsSold})</span>
+                 
+                 {/* 🔥 BLOCK / UNBLOCK BUTTON */}
+                 <button
+                    onClick={() => handleToggleStatus(partner.email, partner.status)}
+                    className={`px-2 py-0.5 text-[10px] font-bold rounded border transition-all ${
+                        partner.status === 'blocked' 
+                        ? 'bg-green-900/20 border-green-500/30 text-green-400 hover:bg-green-900/40' 
+                        : 'bg-red-900/20 border-red-500/30 text-red-400 hover:bg-red-900/40'
+                    }`}
+                 >
+                    {partner.status === 'blocked' ? 'Unblock Agent' : 'Block Agent'}
+                 </button>
+             </div>
+
                         </div>
                         <div className="text-right">
                              <p className="text-[10px] text-gray-400 uppercase tracking-widest mb-1">Cash Due</p>
