@@ -15,6 +15,12 @@ const PartnerAdmin = () => {
   const [partners, setPartners] = useState<any[]>([]);
   const [sales, setSales] = useState<any[]>([]);
   const [payouts, setPayouts] = useState<any[]>([]);
+  // 🔥 DYNAMIC REWARD SLABS STATE
+  const [rewardSlabs, setRewardSlabs] = useState({
+      bronze: { target: 150, rate: 25, bonus: 0 },
+      silver: { target: 300, rate: 30, bonus: 1000 },
+      gold:   { target: 450, rate: 30, bonus: 3000 }
+  });
 
   // --- ADD PARTNER STATES ---
   const [newPartner, setNewPartner] = useState({ name: '', email: '', phone: '', target: '150', commission: '20', referredBy: '' });
