@@ -220,8 +220,20 @@ const PartnerAdmin = () => {
   }, 0);
 
   const totalPendingPayouts = filteredPayouts.filter((p: any) => p.status === 'pending').reduce((sum: number, p: any) => sum + p.amount, 0);
+    // 🔥 ADVANCED ANALYTICS: Top Selling Products
+  const productSales = filteredSales.reduce((acc: any, sale: any) => {
+      acc[sale.product_name] = (acc[sale.product_name] || 0) + sale.quantity;
+      return acc;
+  }, {});
+  
+  const topProducts = Object.entries(productSales)
+      .sort((a: any, b: any) => b[1] - a[1])
+      .slice(0, 5); // Top 5 products
+  
+  const maxProductSales = topProducts.length > 0 ? Number(topProducts[0][1]) : 1;
+  
 
-
+  
   if (!isAuthorized) {
     return (
       <div className="min-h-screen bg-[#050505] flex items-center justify-center px-4 font-sans text-white">
@@ -311,6 +323,32 @@ const PartnerAdmin = () => {
                 <p className="text-3xl font-black text-indigo-400">₹{totalPendingPayouts}</p>
               </div>
             </div>
+            {/* 🔥 Advanced Analytics Section */}
+<div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+  <div className="bg-[#111] p-6 rounded-3xl border border-white/10">
+    <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
+      <TrendingUp className="w-5 h-5 text-green-400"/> Top Selling Products
+    </h3>
+    <div className="space-y-4">
+      {topProducts.map(([name, qty]: any, index: number) => (
+        <div key={index}>
+          <div className="flex justify-between text-xs mb-1">
+            <span className="text-gray-300 font-bold">{name}</span>
+            <span className="text-indigo-400 font-bold">{qty} Sold</span>
+          </div>
+          <div className="w-full bg-white/5 rounded-full h-2">
+            <div 
+              className="bg-gradient-to-r from-indigo-500 to-purple-500 h-2 rounded-full transition-all duration-1000" 
+              style={{ width: `${(qty / maxProductSales) * 100}%` }}
+            ></div>
+          </div>
+        </div>
+      ))}
+      {topProducts.length === 0 && <p className="text-xs text-gray-500">No sales data available yet.</p>}
+    </div>
+  </div>
+</div>
+            
 
             {/* Quick Agent Add Form */}
             <div className="bg-[#111] p-6 rounded-3xl border border-white/10 mt-8">
@@ -344,6 +382,9 @@ const PartnerAdmin = () => {
                     if (sale.payment_type === 'Cash' && (!sale.is_settled || sale.is_settled === 0)) return sum + sale.total_amount;
                     return sum;
                 }, 0);
+            // Low Performance Alert Logic (Jodi 10 tar kom sale thake)
+                const isLowPerforming = itemsSold < 10; 
+            
 
                 return (
                   <div key={partner.id} className="bg-[#111] p-5 rounded-2xl border border-white/10 flex flex-col justify-between">
@@ -352,6 +393,12 @@ const PartnerAdmin = () => {
                             <h3 className="font-bold text-lg text-white flex items-center gap-2">
                                 {partner.name}
                                 {partner.status === 'blocked' && <span className="bg-red-500/20 text-red-500 px-2 py-0.5 rounded text-[10px] uppercase">Blocked</span>}
+                              {isLowPerforming && (
+    <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-red-900/40 text-red-400 border border-red-500/30 animate-pulse">
+        ⚠️ Low Performance
+    </span>
+)}
+                              
                             </h3>
                             <p className="text-xs text-gray-500 font-mono">{partner.email}</p>
                             
