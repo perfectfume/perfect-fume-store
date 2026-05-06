@@ -58,7 +58,7 @@ const PartnerAdmin = () => {
     setIsProcessing(false);
   };
 
-  // --- DATA FETCHING ---
+  // --- DATA FETCHING (UPDATED TO LOAD REWARDS) ---
   const fetchAllData = async () => {
     try {
       const res = await fetch(`${API_URL}/api/partner/admin/all-data`);
@@ -66,6 +66,14 @@ const PartnerAdmin = () => {
       setPartners(data.partners || []);
       setSales(data.sales || []);
       setPayouts(data.payouts || []);
+      
+      // 🔥 LOAD REWARD SLABS FROM DATABASE
+      if (data.settings && data.settings.reward_slabs) {
+          try {
+              const savedSlabs = JSON.parse(data.settings.reward_slabs);
+              setRewardSlabs(savedSlabs);
+          } catch(e) { console.error("Error parsing reward slabs"); }
+      }
     } catch (err) { console.error("Failed to load data"); }
   };
 
@@ -142,27 +150,6 @@ const PartnerAdmin = () => {
         if((await res.json()).success) { alert("Payout Approved ✅"); fetchAllData(); }
       } catch(e) { alert("Error"); }
   };
-    // --- 6. SAVE REWARDS FUNCTION ---
-  const handleSaveRewards = async () => {
-      setIsProcessing(true);
-      try {
-        const res = await fetch(`${API_URL}/api/partner/admin/update-rewards`, {
-            method: 'POST', 
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(rewardSlabs)
-        });
-        const data = await res.json();
-        if(data.success) { 
-            alert("Reward Settings Saved Successfully! ✅"); 
-        } else {
-            alert("Error saving rewards!");
-        }
-      } catch(e) { 
-          alert("Network Error!"); 
-      }
-      setIsProcessing(false);
-  };
-  
 
   // --- 5. SETTLE CASH FUNCTION ---
   const handleSettleCash = async (agentEmail: string, amount: number) => {
@@ -175,6 +162,7 @@ const PartnerAdmin = () => {
         if((await res.json()).success) { alert("Cash Settled ✅"); fetchAllData(); }
       } catch(e) { alert("Error"); }
   };
+
   // --- 6. SAVE REWARDS FUNCTION ---
   const handleSaveRewards = async () => {
       setIsProcessing(true);
@@ -240,20 +228,20 @@ const PartnerAdmin = () => {
   }, 0);
 
   const totalPendingPayouts = filteredPayouts.filter((p: any) => p.status === 'pending').reduce((sum: number, p: any) => sum + p.amount, 0);
-    // 🔥 ADVANCED ANALYTICS: Top Selling Products
+  
+  // 🔥 ADVANCED ANALYTICS: Top Selling Products
   const productSales = filteredSales.reduce((acc: any, sale: any) => {
       acc[sale.product_name] = (acc[sale.product_name] || 0) + sale.quantity;
       return acc;
   }, {});
   
   const topProducts = Object.entries(productSales)
-      .sort((a: any, b: any) => b[1] - a[1])
+      .sort((a: any, b: any) => (b[1] as number) - (a[1] as number))
       .slice(0, 5); // Top 5 products
   
   const maxProductSales = topProducts.length > 0 ? Number(topProducts[0][1]) : 1;
   
 
-  
   if (!isAuthorized) {
     return (
       <div className="min-h-screen bg-[#050505] flex items-center justify-center px-4 font-sans text-white">
@@ -343,33 +331,33 @@ const PartnerAdmin = () => {
                 <p className="text-3xl font-black text-indigo-400">₹{totalPendingPayouts}</p>
               </div>
             </div>
-            {/* 🔥 Advanced Analytics Section */}
-<div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-  <div className="bg-[#111] p-6 rounded-3xl border border-white/10">
-    <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
-      <TrendingUp className="w-5 h-5 text-green-400"/> Top Selling Products
-    </h3>
-    <div className="space-y-4">
-      {topProducts.map(([name, qty]: any, index: number) => (
-        <div key={index}>
-          <div className="flex justify-between text-xs mb-1">
-            <span className="text-gray-300 font-bold">{name}</span>
-            <span className="text-indigo-400 font-bold">{qty} Sold</span>
-          </div>
-          <div className="w-full bg-white/5 rounded-full h-2">
-            <div 
-              className="bg-gradient-to-r from-indigo-500 to-purple-500 h-2 rounded-full transition-all duration-1000" 
-              style={{ width: `${(qty / maxProductSales) * 100}%` }}
-            ></div>
-          </div>
-        </div>
-      ))}
-      {topProducts.length === 0 && <p className="text-xs text-gray-500">No sales data available yet.</p>}
-    </div>
-  </div>
-</div>
             
-
+            {/* 🔥 Advanced Analytics Section */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+              <div className="bg-[#111] p-6 rounded-3xl border border-white/10">
+                <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5 text-green-400"/> Top Selling Products
+                </h3>
+                <div className="space-y-4">
+                  {topProducts.map(([name, qty]: any, index: number) => (
+                    <div key={index}>
+                      <div className="flex justify-between text-xs mb-1">
+                        <span className="text-gray-300 font-bold">{name}</span>
+                        <span className="text-indigo-400 font-bold">{qty} Sold</span>
+                      </div>
+                      <div className="w-full bg-white/5 rounded-full h-2">
+                        <div 
+                          className="bg-gradient-to-r from-indigo-500 to-purple-500 h-2 rounded-full transition-all duration-1000" 
+                          style={{ width: `${(qty / maxProductSales) * 100}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  ))}
+                  {topProducts.length === 0 && <p className="text-xs text-gray-500">No sales data available yet.</p>}
+                </div>
+              </div>
+            </div>
+            
             {/* Quick Agent Add Form */}
             <div className="bg-[#111] p-6 rounded-3xl border border-white/10 mt-8">
               <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2"><UserPlus className="w-5 h-5 text-indigo-400"/> Onboard New Agent</h3>
@@ -383,7 +371,6 @@ const PartnerAdmin = () => {
             </div>
           </div>
         )}
-
         {/* --- 2. AGENTS & CASH TAB --- */}
         {activeTab === 'agents' && (
           <div className="space-y-4 animate-in slide-in-from-bottom-4">
@@ -394,17 +381,17 @@ const PartnerAdmin = () => {
                 const itemsSold = agentSales.reduce((sum: number, s: any) => sum + s.quantity, 0);
                 
                 let tier = 'Starter'; let color = 'text-gray-400 bg-gray-500/10';
-                if(itemsSold >= 450) { tier = 'Gold 🥇'; color = 'text-yellow-400 bg-yellow-500/10'; }
-                else if(itemsSold >= 300) { tier = 'Silver 🥈'; color = 'text-gray-200 bg-gray-300/10'; }
-                else if(itemsSold >= 150) { tier = 'Bronze 🥉'; color = 'text-orange-400 bg-orange-500/10'; }
+                if(itemsSold >= rewardSlabs.gold.target) { tier = 'Gold 🥇'; color = 'text-yellow-400 bg-yellow-500/10'; }
+                else if(itemsSold >= rewardSlabs.silver.target) { tier = 'Silver 🥈'; color = 'text-gray-200 bg-gray-300/10'; }
+                else if(itemsSold >= rewardSlabs.bronze.target) { tier = 'Bronze 🥉'; color = 'text-orange-400 bg-orange-500/10'; }
 
                 const agentCashDue = agentSales.reduce((sum: number, sale: any) => {
                     if (sale.payment_type === 'Cash' && (!sale.is_settled || sale.is_settled === 0)) return sum + sale.total_amount;
                     return sum;
                 }, 0);
-            // Low Performance Alert Logic (Jodi 10 tar kom sale thake)
+                
+                // Low Performance Alert Logic (Jodi 10 tar kom sale thake)
                 const isLowPerforming = itemsSold < 10; 
-            
 
                 return (
                   <div key={partner.id} className="bg-[#111] p-5 rounded-2xl border border-white/10 flex flex-col justify-between">
@@ -414,11 +401,10 @@ const PartnerAdmin = () => {
                                 {partner.name}
                                 {partner.status === 'blocked' && <span className="bg-red-500/20 text-red-500 px-2 py-0.5 rounded text-[10px] uppercase">Blocked</span>}
                               {isLowPerforming && (
-    <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-red-900/40 text-red-400 border border-red-500/30 animate-pulse">
-        ⚠️ Low Performance
-    </span>
-)}
-                              
+                                  <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-red-900/40 text-red-400 border border-red-500/30 animate-pulse">
+                                      ⚠️ Low Performance
+                                  </span>
+                              )}
                             </h3>
                             <p className="text-xs text-gray-500 font-mono">{partner.email}</p>
                             
@@ -500,7 +486,6 @@ const PartnerAdmin = () => {
             </div>
           </div>
         )}
-
         {/* --- 4. REWARDS TAB --- */}
         {activeTab === 'rewards' && (
           <div className="space-y-6 animate-in slide-in-from-bottom-4">
@@ -566,12 +551,12 @@ const PartnerAdmin = () => {
             </div>
 
             <button 
-    onClick={handleSaveRewards} 
-    disabled={isProcessing}
-    className={`w-full py-4 mt-4 text-white font-bold rounded-xl transition-all ${isProcessing ? 'bg-yellow-800' : 'bg-yellow-600 hover:bg-yellow-700'}`}
->
-   {isProcessing ? 'Saving Please Wait...' : '💾 Save Reward Settings'}
-</button>
+                onClick={handleSaveRewards} 
+                disabled={isProcessing}
+                className={`w-full py-4 mt-4 text-white font-bold rounded-xl transition-all ${isProcessing ? 'bg-yellow-800' : 'bg-yellow-600 hover:bg-yellow-700'}`}
+            >
+               {isProcessing ? 'Saving Please Wait...' : '💾 Save Reward Settings'}
+            </button>
           </div>
         )}
 
