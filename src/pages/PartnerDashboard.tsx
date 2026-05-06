@@ -187,6 +187,7 @@ const PartnerDashboard = () => {
   else if (salesQty >= 400) perfBonus = 2000;
   else if (salesQty >= 300) perfBonus = 1000;
 
+  const finalEarnings = baseEarnings + perfBonus; // 🔥 Ei line ta add korun
   const lifetimeEarnings = baseEarnings + perfBonus;
   const availableBalance = lifetimeEarnings - (stats.totalPayoutsTaken || 0);
   const maxEarlyPayout = availableBalance * 0.70; // 70% Limit
