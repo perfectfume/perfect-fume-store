@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Target, TrendingUp, ShoppingBag, Flame, Trophy, Copy, CheckCircle, Bell, User, Clock, Check, Users, X, Edit3, HelpCircle, AlertCircle, Share2, Award } from 'lucide-react';
+import { Target, TrendingUp, ShoppingBag, Flame, Trophy, Copy, CheckCircle, Bell, User, Clock, Check, Users, X, Edit3, HelpCircle, AlertCircle, Share2, Award, History } from 'lucide-react';
 
 const PartnerDashboard = () => {
   const [email, setEmail] = useState('');
@@ -427,6 +427,14 @@ const PartnerDashboard = () => {
                 </div>
               )}
             </div>
+            {/* 🔥 DEDICATED PAYMENT HISTORY BUTTON */}
+            <button 
+                onClick={() => setIsPayoutModalOpen(true)} 
+                className="w-full bg-indigo-900/20 border border-indigo-500/20 text-indigo-400 font-bold py-3 rounded-xl hover:bg-indigo-900/30 transition-all flex items-center justify-center gap-2 mt-4"
+            >
+                <History className="w-5 h-5"/> View Payment History
+            </button>
+            
 
             {/* 🔥 LOGOUT BUTTON */}
             <button onClick={() => {
