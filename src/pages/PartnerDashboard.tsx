@@ -10,7 +10,10 @@ const PartnerDashboard = () => {
 
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isSaleModalOpen, setIsSaleModalOpen] = useState(false);
-  const [isCustomersModalOpen, setIsCustomersModalOpen] = useState(false); 
+  const [isCustomersModalOpen, setIsCustomersModalOpen] = useState(false);
+  const [isPayoutModalOpen, setIsPayoutModalOpen] = useState(false);
+  const [payoutAmount, setPayoutAmount] = useState('');
+  
   
   // 🔥 EDIT MODAL STATES
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -18,8 +21,9 @@ const PartnerDashboard = () => {
 
   const [products, setProducts] = useState<any[]>([]);
   const [stats, setStats] = useState({ 
-    totalSales: 0, todaySalesCount: undefined, target: 50, earnings: 0, rank: 0, streak: 0, cashCollected: 0, customers: [], recentSales: [] 
+    totalSales: 0, todaySalesCount: undefined, target: 50, earnings: 0, rank: 0, streak: 0, cashCollected: 0, customers: [], recentSales: [], totalPayoutsTaken: 0, payoutsHistory: [] 
   });
+
   
   const [saleProduct, setSaleProduct] = useState('');
   const [saleQty, setSaleQty] = useState('1');
@@ -183,7 +187,10 @@ const PartnerDashboard = () => {
   else if (salesQty >= 400) perfBonus = 2000;
   else if (salesQty >= 300) perfBonus = 1000;
 
-  const finalEarnings = baseEarnings + perfBonus;
+  const lifetimeEarnings = baseEarnings + perfBonus;
+  const availableBalance = lifetimeEarnings - (stats.totalPayoutsTaken || 0);
+  const maxEarlyPayout = availableBalance * 0.70; // 70% Limit
+
 
   // 4. Daily Target & Target Progress (🔥 COMPULSORY 12 SALES)
   const actualTodaySales = stats.todaySalesCount !== undefined ? stats.todaySalesCount : (
@@ -215,7 +222,7 @@ const PartnerDashboard = () => {
           <div className="bg-gradient-to-br from-purple-600 to-indigo-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-purple-900/50">
             <Flame className="w-8 h-8 text-white" />
           </div>
-          <h2 className="text-2xl font-black italic">Sales Partner</h2>
+          <h2 className="text-2xl font-black italic">Partner</h2>
           <p className="text-gray-400 text-sm mt-1 mb-8">Login to your field agent dashboard</p>
           
           {loginStep === 1 ? (
