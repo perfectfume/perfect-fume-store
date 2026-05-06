@@ -240,6 +240,12 @@ const PartnerAdmin = () => {
             <button onClick={() => setActiveTab('agents')} className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'agents' ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-white'}`}>Agents & Cash</button>
             <button onClick={() => setActiveTab('payouts')} className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'payouts' ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-white flex items-center gap-1'}`}>Payouts {totalPendingPayouts > 0 && <span className="w-2 h-2 rounded-full bg-red-500"></span>}</button>
             <button onClick={() => setActiveTab('sales')} className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'sales' ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-white'}`}>Live Sales</button>
+        {/* REWARDS BUTTON */}
+        <button onClick={() => setActiveTab('rewards')} className={`flex flex-col items-center flex-1 py-2 ${activeTab === 'rewards' ? 'text-yellow-400' : 'text-gray-500'}`}>
+            <span className="text-xl">🏆</span>
+            <span className="text-[10px] mt-1 font-bold">Rewards</span>
+        </button>
+            
           </div>
         </div>
 
