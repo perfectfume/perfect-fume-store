@@ -303,7 +303,7 @@ const PartnerAdmin = () => {
             <h2 className="text-xl font-bold mb-4 text-indigo-400">Agent Roster & Cash Settlements</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {partners.map((partner: any) => {
-                const agentSales = sales.filter((s: any) => s.partner_email === partner.email);
+                const agentSales = filteredSales.filter((s: any) => s.partner_email === partner.email);
                 const itemsSold = agentSales.reduce((sum: number, s: any) => sum + s.quantity, 0);
                 
                 // Tier Logic
