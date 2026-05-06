@@ -175,6 +175,26 @@ const PartnerAdmin = () => {
         if((await res.json()).success) { alert("Cash Settled ✅"); fetchAllData(); }
       } catch(e) { alert("Error"); }
   };
+  // --- 6. SAVE REWARDS FUNCTION ---
+  const handleSaveRewards = async () => {
+      setIsProcessing(true);
+      try {
+          const res = await fetch(`${API_URL}/api/partner/admin/save-rewards`, {
+              method: 'POST', 
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(rewardSlabs)
+          });
+          const data = await res.json();
+          if(data.success) {
+              alert("🏆 Reward Settings Saved Successfully!");
+          } else {
+              alert("Error: " + data.error);
+          }
+      } catch(e) { 
+          alert("Network Error!"); 
+      }
+      setIsProcessing(false);
+  };
 
   // 🔥 TIME FILTER LOGIC (Data filter kora hocche dropdown onujayi)
   const now = new Date();
