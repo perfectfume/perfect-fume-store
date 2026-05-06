@@ -13,7 +13,7 @@ const PartnerDashboard = () => {
   const [isCustomersModalOpen, setIsCustomersModalOpen] = useState(false);
   const [isPayoutModalOpen, setIsPayoutModalOpen] = useState(false);
   const [payoutAmount, setPayoutAmount] = useState('');
-  
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   
   // 🔥 EDIT MODAL STATES
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -429,7 +429,7 @@ const PartnerDashboard = () => {
             </div>
             {/* 🔥 DEDICATED PAYMENT HISTORY BUTTON */}
             <button 
-                onClick={() => setIsPayoutModalOpen(true)} 
+                onClick={() => setIsHistoryModalOpen(true)} 
                 className="w-full bg-indigo-900/20 border border-indigo-500/20 text-indigo-400 font-bold py-3 rounded-xl hover:bg-indigo-900/30 transition-all flex items-center justify-center gap-2 mt-4"
             >
                 <History className="w-5 h-5"/> View Payment History
@@ -617,20 +617,17 @@ const PartnerDashboard = () => {
           </div>
         </div>
       )}
-      {/* 🔥 PAYOUT MODAL & HISTORY */}
+            {/* 🔥 1. ONLY PAYOUT REQUEST MODAL */}
       {isPayoutModalOpen && (
         <div className="fixed inset-0 bg-black/90 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-sm">
-           <div className="bg-[#111] w-full max-w-md h-[85vh] sm:h-auto sm:max-h-[80vh] rounded-t-3xl sm:rounded-3xl border border-white/10 flex flex-col animate-in slide-in-from-bottom duration-200">
+           <div className="bg-[#111] w-full max-w-md h-auto rounded-t-3xl sm:rounded-3xl border border-white/10 flex flex-col animate-in slide-in-from-bottom duration-200">
               <div className="p-5 border-b border-white/10 flex justify-between items-center bg-black/50 rounded-t-3xl">
-                <h2 className="text-xl font-black text-white">Withdrawal & History</h2>
+                <h2 className="text-xl font-black text-white">Request Payout</h2>
                 <button onClick={() => setIsPayoutModalOpen(false)} className="bg-white/10 p-2 rounded-full text-gray-400 hover:text-white"><X className="w-5 h-5" /></button>
               </div>
-              <div className="p-5 overflow-y-auto flex-1 space-y-6">
-                 
-                 {/* Withdrawal Form */}
+              <div className="p-5">
                  <div className="bg-green-900/10 border border-green-500/20 p-4 rounded-2xl">
-                    <h3 className="font-bold text-sm text-green-400 mb-2">Request Early Payout</h3>
-                    <p className="text-xs text-gray-400 mb-4 leading-relaxed">You can apply for up to <span className="font-bold text-white">70% (₹{Math.floor(maxEarlyPayout)})</span> of your available payout. <span className="text-red-400 font-bold">Note: 2% TDS will be deducted</span> from early payouts.</p>
+                    <p className="text-xs text-gray-400 mb-4 leading-relaxed">You can apply for up to <span className="font-bold text-white">70% (₹{Math.floor(maxEarlyPayout)})</span> of your available payout. <span className="text-red-400 font-bold">Note: 2% TDS will be deducted.</span></p>
                     
                     <input 
                       type="number" 
@@ -664,52 +661,61 @@ const PartnerDashboard = () => {
                       {isProcessing ? 'Processing...' : 'Submit Request'}
                     </button>
                  </div>
+              </div>
+           </div>
+        </div>
+      )}
 
-                 {/* Month-wise History */}
-                 <div>
-                    <h3 className="font-bold text-sm text-gray-300 mb-3 border-b border-white/10 pb-2">Last 1 Year History</h3>
-                    <div className="space-y-3">
-                       {(() => {
-                           const historyMap: any = {};
-                           // Group Sales
-                           (stats.recentSales || []).forEach((s: any) => {
-                              const m = new Date(s.created_at).toLocaleString('default', { month: 'short', year: 'numeric' });
-                              if (!historyMap[m]) historyMap[m] = { items: 0, payouts: 0 };
-                              historyMap[m].items += s.quantity;
-                           });
-                           // Group Payouts
-                           (stats.payoutsHistory || []).forEach((p: any) => {
-                              const m = new Date(p.requested_at).toLocaleString('default', { month: 'short', year: 'numeric' });
-                              if (!historyMap[m]) historyMap[m] = { items: 0, payouts: 0 };
-                              if(p.status === 'paid') historyMap[m].payouts += p.amount;
-                           });
+      {/* 🔥 2. ONLY HISTORY MODAL */}
+      {isHistoryModalOpen && (
+        <div className="fixed inset-0 bg-black/90 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-sm">
+           <div className="bg-[#111] w-full max-w-md h-[85vh] sm:h-auto sm:max-h-[80vh] rounded-t-3xl sm:rounded-3xl border border-white/10 flex flex-col animate-in slide-in-from-bottom duration-200">
+              <div className="p-5 border-b border-white/10 flex justify-between items-center bg-black/50 rounded-t-3xl">
+                <h2 className="text-xl font-black text-white">Payout History</h2>
+                <button onClick={() => setIsHistoryModalOpen(false)} className="bg-white/10 p-2 rounded-full text-gray-400 hover:text-white"><X className="w-5 h-5" /></button>
+              </div>
+              <div className="p-5 overflow-y-auto flex-1">
+                 <div className="space-y-3">
+                    {(() => {
+                        const historyMap: any = {};
+                        (stats.recentSales || []).forEach((s: any) => {
+                           const m = new Date(s.created_at).toLocaleString('default', { month: 'short', year: 'numeric' });
+                           if (!historyMap[m]) historyMap[m] = { items: 0, payouts: 0 };
+                           historyMap[m].items += s.quantity;
+                        });
+                        (stats.payoutsHistory || []).forEach((p: any) => {
+                           const m = new Date(p.requested_at).toLocaleString('default', { month: 'short', year: 'numeric' });
+                           if (!historyMap[m]) historyMap[m] = { items: 0, payouts: 0 };
+                           if(p.status === 'paid') historyMap[m].payouts += p.amount;
+                        });
 
-                           return Object.keys(historyMap).map((k, idx) => {
-                               const items = historyMap[k].items;
-                               let rate = 20; let bonus = 0;
-                               if(items >= 450) { rate = 30; bonus = 3000; }
-                               else if(items >= 300) { rate = 30; bonus = 1000; }
-                               else if(items >= 150) { rate = 25; }
-                               const earned = (items * rate) + bonus;
+                        const keys = Object.keys(historyMap);
+                        if (keys.length === 0) return <p className="text-center text-gray-500 mt-10">No history available yet.</p>;
 
-                               return (
-                                  <div key={idx} className="bg-black border border-white/5 p-3 rounded-xl">
-                                     <h4 className="font-bold text-indigo-400 mb-1">{k}</h4>
-                                     <div className="flex justify-between text-xs text-gray-400">
-                                        <span>Work: ₹{(items * rate)} {bonus > 0 ? `(+₹${bonus} Bonus)` : ''}</span>
-                                        <span className="font-bold text-white">Total: ₹{earned}</span>
-                                     </div>
-                                     <div className="flex justify-between text-xs text-red-400 mt-1 pt-1 border-t border-white/5">
-                                        <span>Early Payout Taken:</span>
-                                        <span className="font-bold">₹{historyMap[k].payouts}</span>
-                                     </div>
+                        return keys.map((k, idx) => {
+                            const items = historyMap[k].items;
+                            let rate = 20; let bonus = 0;
+                            if(items >= 450) { rate = 30; bonus = 3000; }
+                            else if(items >= 300) { rate = 30; bonus = 1000; }
+                            else if(items >= 150) { rate = 25; }
+                            const earned = (items * rate) + bonus;
+
+                            return (
+                               <div key={idx} className="bg-black border border-white/5 p-4 rounded-xl">
+                                  <h4 className="font-bold text-indigo-400 mb-2">{k}</h4>
+                                  <div className="flex justify-between text-sm text-gray-400 mb-1">
+                                     <span>Work: ₹{(items * rate)} {bonus > 0 ? `(+₹${bonus} Bonus)` : ''}</span>
+                                     <span className="font-bold text-white">Total: ₹{earned}</span>
                                   </div>
-                               );
-                           });
-                       })()}
-                    </div>
+                                  <div className="flex justify-between text-sm text-red-400 mt-2 pt-2 border-t border-white/5">
+                                     <span>Early Payout Taken:</span>
+                                     <span className="font-bold">₹{historyMap[k].payouts}</span>
+                                  </div>
+                               </div>
+                            );
+                        });
+                    })()}
                  </div>
-
               </div>
            </div>
         </div>
