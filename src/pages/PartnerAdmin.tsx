@@ -183,6 +183,25 @@ const PartnerAdmin = () => {
       }
       setIsProcessing(false);
   };
+  // --- 7. RESET STATS FUNCTION (DANGER ZONE) ---
+  const handleResetStats = async () => {
+      if(!window.confirm("🚨 WARNING: Are you sure? This will RESET Sales, Rankings, and Earnings to ZERO for ALL agents starting today! (Payout history will remain safe)")) return;
+      
+      setIsProcessing(true);
+      try {
+          const res = await fetch(`${API_URL}/api/partner/admin/reset-stats`, {
+              method: 'POST', headers: { 'Content-Type': 'application/json' }
+          });
+          const data = await res.json();
+          if(data.success) {
+              alert("✅ All Stats & Leaderboard Reset Successfully! Fresh start from today.");
+              fetchAllData();
+          } else {
+              alert("Error resetting stats!");
+          }
+      } catch(e) { alert("Network Error!"); }
+      setIsProcessing(false);
+  };
 
   // 🔥 TIME FILTER LOGIC (Data filter kora hocche dropdown onujayi)
   const now = new Date();
@@ -557,6 +576,20 @@ const PartnerAdmin = () => {
             >
                {isProcessing ? 'Saving Please Wait...' : '💾 Save Reward Settings'}
             </button>
+            {/* 🔥 DANGER ZONE: RESET BUTTON */}
+            <div className="mt-10 p-6 bg-red-900/10 border border-red-500/30 rounded-3xl">
+                <h3 className="text-xl font-black text-red-500 flex items-center gap-2 mb-2">
+                    <ShieldAlert className="w-6 h-6"/> Danger Zone
+                </h3>
+                <p className="text-sm text-gray-400 mb-6">Resetting will clear the current Sales, Rankings, and Earnings for all agents. They will start fresh from today. (Past payout history will remain safe).</p>
+                <button 
+                    onClick={handleResetStats}
+                    disabled={isProcessing}
+                    className="w-full py-4 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-red-900/20"
+                >
+                   {isProcessing ? 'Resetting...' : '🚨 Reset All Agent Stats Now'}
+                </button>
+            </div>
           </div>
         )}
 
