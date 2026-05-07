@@ -202,6 +202,33 @@ const PartnerAdmin = () => {
       } catch(e) { alert("Network Error!"); }
       setIsProcessing(false);
   };
+  // --- 8. EXPORT TO CSV FUNCTION ---
+  const exportToCSV = (data: any[], filename: string) => {
+    if (!data || data.length === 0) {
+      alert("Download korar moto kono data nei!");
+      return;
+    }
+
+    // JSON theke headers ber kora (column names)
+    const headers = Object.keys(data[0]).join(",");
+    
+    // Data row gulo toiri kora
+    const rows = data.map(item => 
+      Object.values(item).map(val => `"${val}"`).join(",")
+    );
+
+    const csvContent = [headers, ...rows].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `${filename}_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   // 🔥 TIME FILTER LOGIC (Data filter kora hocche dropdown onujayi)
   const now = new Date();
@@ -326,6 +353,20 @@ const PartnerAdmin = () => {
                    <option value="last_month">Last Month</option>
                </select>
             </div>
+            <div className="flex justify-end gap-2 mb-4">
+    <button 
+        onClick={() => exportToCSV(partners, 'Agents_List')}
+        className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 px-4 py-2 rounded-xl text-xs font-bold transition-all"
+    >
+        📊 Download Agents (CSV)
+    </button>
+    <button 
+        onClick={() => exportToCSV(filteredSales, 'Sales_Report')}
+        className="flex items-center gap-2 bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/30 px-4 py-2 rounded-xl text-xs font-bold text-indigo-400 transition-all"
+    >
+        📄 Download Sales Report (CSV)
+    </button>
+</div>
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <div className="bg-[#111] p-6 rounded-3xl border border-white/10">
