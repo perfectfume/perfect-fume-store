@@ -36,7 +36,7 @@ const Navbar = () => {
   const handleSendOtp = async (e: any) => {
     e.preventDefault();
     if (!nameInput || !emailInput.includes('@') || phoneInput.length !== 10) {
-      return alert("Please provide a valid Name, Email and 10-digit Phone Number!");
+      return alert("Please provide a valid Name, Email and 10-digit Phone Number.");
     }
     
     setIsProcessing(true);
@@ -54,7 +54,7 @@ const Navbar = () => {
         alert(`Error sending OTP: ${errorData.message || 'Server Error'}`);
       }
     } catch (err) {
-      alert("Cannot connect to backend server!");
+      alert("Cannot connect to the server. Please try again later.");
     } finally {
       setIsProcessing(false);
     }
@@ -77,13 +77,13 @@ const Navbar = () => {
       if (data.success) {
         setUserAuth(nameInput, emailInput, phoneInput); 
         setIsAuthOpen(false); setLoginStep(1); setOtpInput('');
-      } else { alert("Wrong OTP!"); }
-    } catch (err) { alert("Network Error!"); }
+      } else { alert("Invalid OTP. Please try again."); }
+    } catch (err) { alert("Network Error. Please check your connection."); }
     setIsProcessing(false);
   };
 
   const handleProceedToAddress = () => {
-    if (cart.length === 0) return alert("Cart is empty!");
+    if (cart.length === 0) return alert("Your cart is empty.");
     setAddressForm({ ...addressForm, name: userName || '', phone: userPhone || '' });
     setIsCheckoutOpen(true);
     setCheckoutStep(1);
@@ -104,7 +104,7 @@ const Navbar = () => {
       if (res.ok) {
         setCheckoutStep(3); 
       }
-    } catch (err) { alert("Network Error!"); }
+    } catch (err) { alert("Network Error. Please try again."); }
     setIsProcessing(false);
   };
 
@@ -115,17 +115,17 @@ const Navbar = () => {
       const res = await fetch(`${API_URL}/api/verify-otp`, { method: 'POST', body: JSON.stringify({ email: userEmail, otp: checkoutOtp }) });
       const data = await res.json();
       if (data.success) {
-        let itemList = cart.map(item => `▪️ ${item.name} (${item.quantity} pcs) - ₹${item.price}`).join('%0A');
-        let waText = `*New COD Order Received!* %0A%0A*Customer Details:*%0A Name: ${addressForm.name}%0A Phone: ${addressForm.phone}%0A%0A*Delivery Address:*%0A ${addressForm.flat}, ${addressForm.area}%0A ${addressForm.city} - ${addressForm.pincode}%0A%0A*Order Items:*%0A${itemList}%0A%0A*Total Amount:* ₹${total}%0A%0APlease confirm my order!`;
+        let itemList = cart.map(item => `- ${item.name} (${item.quantity} pcs) - Rs.${item.price}`).join('%0A');
+        let waText = `*New COD Order Received.*%0A%0A*Customer Details:*%0AName: ${addressForm.name}%0APhone: ${addressForm.phone}%0A%0A*Delivery Address:*%0A${addressForm.flat}, ${addressForm.area}%0A${addressForm.city} - ${addressForm.pincode}%0A%0A*Order Items:*%0A${itemList}%0A%0A*Total Amount:* Rs.${total}%0A%0APlease confirm my order.`;
         
         setIsCheckoutOpen(false); setCheckoutOtp(''); clearCart(); 
         window.location.href = `https://wa.me/${ADMIN_WHATSAPP}?text=${waText}`; 
-      } else { alert("Wrong OTP!"); }
-    } catch (err) { alert("Network Error!"); }
+      } else { alert("Invalid OTP. Please try again."); }
+    } catch (err) { alert("Network Error. Please try again."); }
     setIsProcessing(false);
   };
 
-    const handlePayOnline = async () => {
+  const handlePayOnline = async () => {
     setIsProcessing(true);
     try {
       const res = await fetch(`${API_URL}/api/create-razorpay-order`, {
@@ -150,8 +150,8 @@ const Navbar = () => {
           });
           setIsCheckoutOpen(false); 
           clearCart(); 
-          let itemList = cart.map(item => `▪️ ${item.name} (${item.quantity} pcs) - ₹${item.price}`).join('%0A');
-          let waText = `*New PAID Order!* %0A%0A*Customer Details:*%0A Name: ${addressForm.name}%0A📞 Phone: ${addressForm.phone}%0A%0A*Delivery Address:*%0A ${addressForm.flat}, ${addressForm.area}%0A ${addressForm.city} - ${addressForm.pincode}%0A%0A*Order Items:*%0A${itemList}%0A%0A*Total Paid:*  ₹${total}%0A*Payment ID:* ${response.razorpay_payment_id}%0A%0APlease process my order!`;
+          let itemList = cart.map(item => `- ${item.name} (${item.quantity} pcs) - Rs.${item.price}`).join('%0A');
+          let waText = `*New PAID Order.*%0A%0A*Customer Details:*%0AName: ${addressForm.name}%0APhone: ${addressForm.phone}%0A%0A*Delivery Address:*%0A${addressForm.flat}, ${addressForm.area}%0A${addressForm.city} - ${addressForm.pincode}%0A%0A*Order Items:*%0A${itemList}%0A%0A*Total Paid:* Rs.${total}%0A*Payment ID:* ${response.razorpay_payment_id}%0A%0APlease process my order.`;
           window.location.href = `https://wa.me/${ADMIN_WHATSAPP}?text=${waText}`; 
         },
         prefill: { name: addressForm.name, email: userEmail || '', contact: addressForm.phone },
@@ -159,7 +159,7 @@ const Navbar = () => {
       };
       const rzp = new (window as any).Razorpay(options);
       rzp.open();
-    } catch(err) { alert("Payment initiation failed!"); }
+    } catch(err) { alert("Payment initiation failed. Please try again."); }
     setIsProcessing(false);
   };
 
@@ -190,7 +190,7 @@ const Navbar = () => {
               {!userEmail ? (
                 <div id="nav-login-btn" onClick={() => setIsAuthOpen(true)} className="hidden md:flex flex-col items-center cursor-pointer hover:text-purple-400"><User className="w-6 h-6" /><span className="text-[10px] hidden md:block">Sign In</span></div>
               ) : (
-                <div onClick={() => { if(window.confirm("Logout now?")) logout() }} className="hidden md:flex flex-col items-center cursor-pointer text-green-400"><LogOut className="w-6 h-6" /><span className="text-[10px] hidden md:block">Logout</span></div>
+                <div onClick={() => { if(window.confirm("Are you sure you want to logout?")) logout() }} className="hidden md:flex flex-col items-center cursor-pointer text-green-400"><LogOut className="w-6 h-6" /><span className="text-[10px] hidden md:block">Logout</span></div>
               )}
               <div onClick={toggleCart} className="flex flex-col items-center cursor-pointer relative"><ShoppingCart className="w-6 h-6" /><span className="text-[10px] hidden md:block">Cart</span>
                 {cartCount > 0 && <span className="absolute -top-1 -right-2 bg-pink-600 text-[10px] rounded-full w-4 h-4 flex items-center justify-center animate-pulse">{cartCount}</span>}
@@ -265,7 +265,7 @@ const Navbar = () => {
               )}
               {checkoutStep === 3 && (
                 <form onSubmit={handleVerifyCheckoutOtp}>
-                  <p className="text-sm text-green-600 mb-4 text-center bg-green-50 p-2 rounded-lg">✅ OTP sent to {userEmail}</p>
+                  <p className="text-sm text-green-600 mb-4 text-center bg-green-50 p-2 rounded-lg">OTP sent to {userEmail}</p>
                   <input type="number" required value={checkoutOtp} onChange={(e) => setCheckoutOtp(e.target.value)} placeholder="Enter 6-digit OTP" className="w-full border border-gray-300 rounded-lg p-3 text-center tracking-[1em] font-bold text-xl focus:border-blue-600 mb-4" />
                   <button type="submit" disabled={isProcessing} className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3.5 rounded-lg shadow-lg">
                     {isProcessing ? 'Verifying...' : 'Verify & Place Order'}
@@ -280,7 +280,7 @@ const Navbar = () => {
       {/* LOGIN MODAL */}
       {isAuthOpen && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex justify-center items-center px-4">
-          <div className="bg-[#111] w-full max-sm rounded-2xl border border-white/10 p-6 relative shadow-2xl">
+          <div className="bg-[#111] w-full max-w-sm rounded-2xl border border-white/10 p-6 relative shadow-2xl">
             <button onClick={() => {setIsAuthOpen(false); setLoginStep(1);}} className="absolute top-4 right-4 text-gray-500 hover:text-white bg-white/5 p-2 rounded-full"><X className="w-4 h-4" /></button>
             <div className="text-center mb-6"><User className="w-12 h-12 text-purple-500 mx-auto mb-2 bg-purple-500/10 p-2 rounded-full" /><h2 className="text-2xl font-bold text-white italic">Sign In</h2></div>
             {loginStep === 1 ? (
@@ -300,7 +300,7 @@ const Navbar = () => {
         </div>
       )}
 
-      {/* BOTTOM NAVBAR */}
+            {/* BOTTOM NAVBAR */}
       {!isPartnerRoute && (
         <div className="md:hidden fixed bottom-0 w-full bg-[#050505] border-t border-white/10 flex justify-around py-3 z-40 pb-safe">
           <button onClick={() => window.location.href = "/"} className={`flex flex-col items-center hover:text-purple-400 ${window.location.pathname === '/' ? 'text-purple-400' : 'text-gray-400'}`}>
