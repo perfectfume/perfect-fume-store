@@ -1,39 +1,50 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useStore } from '../store/useStore';
-import { Heart, Star, Truck, ShieldCheck, Droplets, Wind, ArrowLeft, CheckCircle } from 'lucide-react';
+import { Heart, Star, Truck, ShieldCheck, Droplets, Wind, ArrowLeft, CheckCircle, User, MessageCircle } from 'lucide-react';
 
 const ProductDetails = () => {
-  const { id } = useParams(); // URL theke product ID ta nebe
+  const { id } = useParams();
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [mainImage, setMainImage] = useState('');
   const [gallery, setGallery] = useState<string[]>([]);
   
+  // 🔥 NEW: REVIEWS STATES
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
   const { userEmail, addToCart, isCartOpen, toggleCart } = useStore();
   const API_URL = import.meta.env.VITE_API_URL || "https://perfect-fume-backend.perfectfumeofficial.workers.dev";
 
   useEffect(() => {
-    window.scrollTo(0, 0); // Ekdom top theke page open hobe
+    window.scrollTo(0, 0); 
     
-    const fetchProduct = async () => {
+    const fetchProductAndReviews = async () => {
       try {
+        // 1. Fetch Product
         const res = await fetch(`${API_URL}/api/catalog`);
         const data = await res.json();
-        // ID diye sothik product ta khunje ber kora
         const foundProduct = data.find((p: any) => p.id.toString() === id);
         
         if (foundProduct) {
           setProduct(foundProduct);
           setMainImage(foundProduct.image);
           
-          // Gallery images parse kora (Admin panel e jeta add kora hoyechilo)
           let parsedGallery = [];
           try {
             parsedGallery = foundProduct.gallery ? JSON.parse(foundProduct.gallery) : [];
           } catch (e) {}
           setGallery([foundProduct.image, ...parsedGallery]);
         }
+
+        // 2. Fetch Reviews
+        const revRes = await fetch(`${API_URL}/api/reviews?product_id=${id}`);
+        const revData = await revRes.json();
+        if(Array.isArray(revData)) setReviews(revData);
+
       } catch (error) {
         console.error("Failed to fetch product details");
       } finally {
@@ -41,17 +52,54 @@ const ProductDetails = () => {
       }
     };
     
-    fetchProduct();
-  }, [id]);
+    fetchProductAndReviews();
+  }, [id, API_URL]);
+
+  // --- SUBMIT REVIEW LOGIC ---
+  const handleSubmitReview = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!userEmail) return alert("⚠️ Please Login to write a review!");
+    if (!comment.trim()) return alert("⚠️ Please write a comment!");
+    
+    setIsSubmitting(true);
+    try {
+      const res = await fetch(`${API_URL}/api/reviews`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          product_id: id,
+          user_email: userEmail,
+          user_name: userEmail.split('@')[0],
+          rating: rating,
+          comment: comment
+        })
+      });
+      
+      const data = await res.json();
+      if (data.success) {
+        alert("✅ Review submitted successfully!");
+        setComment('');
+        setRating(5);
+        // Refresh reviews list
+        const updatedReviews = await fetch(`${API_URL}/api/reviews?product_id=${id}`).then(r => r.json());
+        if(Array.isArray(updatedReviews)) setReviews(updatedReviews);
+      } else {
+        alert("❌ Failed to submit review.");
+      }
+    } catch (err) {
+      alert("Network Error!");
+    }
+    setIsSubmitting(false);
+  };
 
   const handleAddToCart = () => {
-    if (!userEmail) return alert("⚠️ Sobaiprothome upore 'Sign In'-e click kore Login korun!");
+    if (!userEmail) return alert("⚠️ Please Login first to add items to your cart!");
     addToCart(product);
-    alert(`✅ ${product.name} apnar Jhhuri-te (Cart) add hoyeche!`);
+    alert(`✅ ${product.name} added to cart!`);
   };
 
   const handleBuyNow = () => {
-    if (!userEmail) return alert("⚠️ Sobaiprothome upore 'Sign In'-e click kore Login korun!");
+    if (!userEmail) return alert("⚠️ Please Login first to buy items!");
     addToCart(product);
     if (!isCartOpen) toggleCart();
   };
@@ -64,11 +112,16 @@ const ProductDetails = () => {
     return <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center text-white"><h2 className="text-2xl font-bold mb-4">Product Not Found</h2><button onClick={() => window.location.href = '/shop'} className="bg-purple-600 px-6 py-2 rounded-lg">Back to Shop</button></div>;
   }
 
+  // Calculate Average Rating dynamically
+  const avgRating = reviews.length > 0 
+    ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1) 
+    : "5.0";
+
   return (
     <div className="min-h-screen bg-[#050505] text-white pt-16 md:pt-24 pb-24 font-sans">
       <main className="max-w-6xl mx-auto px-4">
         
-        {/* Back Button (Mobile e beshi kaje lage) */}
+        {/* Back Button */}
         <button onClick={() => window.history.back()} className="flex items-center gap-2 text-gray-400 hover:text-white mb-6 transition-colors">
           <ArrowLeft className="w-5 h-5" /> <span className="text-sm font-bold">Back</span>
         </button>
@@ -108,9 +161,9 @@ const ProductDetails = () => {
             <div className="flex items-center gap-3 mb-6">
               <div className="flex items-center gap-1 bg-white/5 border border-white/10 px-3 py-1 rounded-full">
                 <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                <span className="text-sm font-bold">4.8</span>
+                <span className="text-sm font-bold">{avgRating}</span>
               </div>
-              <span className="text-gray-500 text-sm underline cursor-pointer hover:text-white">Read 124 Reviews</span>
+              <span className="text-gray-500 text-sm underline cursor-pointer hover:text-white">Read {reviews.length} Reviews</span>
             </div>
 
             <p className="text-3xl md:text-4xl font-bold text-white mb-6">₹{product.price}</p>
@@ -119,7 +172,7 @@ const ProductDetails = () => {
               {product.description || "Experience a fragrance that defines elegance. Crafted with the finest ingredients, this perfume is designed to leave a lasting impression wherever you go."}
             </p>
 
-            {/* Desktop Action Buttons (Mobile e fixed bottom thakbe) */}
+            {/* Desktop Action Buttons */}
             <div className="hidden md:flex gap-4 mb-10">
               <button onClick={handleAddToCart} className="flex-1 bg-white/10 hover:bg-white/20 border border-white/10 text-white font-bold py-4 rounded-xl transition-all flex justify-center items-center gap-2">
                 Add to Cart
@@ -167,6 +220,71 @@ const ProductDetails = () => {
 
           </div>
         </div>
+
+        {/* 🔥 NEW: CUSTOMER REVIEWS SECTION 🔥 */}
+        <div className="border-t border-white/10 pt-16 mt-8">
+          <h2 className="text-2xl font-bold italic mb-8 flex items-center gap-2">
+            <MessageCircle className="w-6 h-6 text-purple-400" /> Customer Reviews
+          </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+            {/* WRITE A REVIEW FORM */}
+            <div className="md:col-span-1 bg-[#111] border border-white/5 p-6 rounded-3xl h-fit">
+              <h3 className="font-bold mb-4 text-lg">Write a Review</h3>
+              <form onSubmit={handleSubmitReview} className="space-y-4">
+                <div>
+                  <p className="text-xs text-gray-400 mb-2 uppercase tracking-wider">Rate this product</p>
+                  <div className="flex gap-2">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button type="button" key={star} onClick={() => setRating(star)} className="focus:outline-none transition-all hover:scale-110">
+                        <Star className={`w-6 h-6 ${rating >= star ? 'text-yellow-500 fill-yellow-500' : 'text-gray-600'}`} />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                
+                <div>
+                  <textarea required value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Share your thoughts about this perfume..." className="w-full bg-black border border-white/10 rounded-xl p-4 outline-none focus:border-purple-500 text-sm h-32 resize-none transition-all"></textarea>
+                </div>
+                
+                <button type="submit" disabled={isSubmitting} className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-xl transition-all text-sm uppercase tracking-wider">
+                  {isSubmitting ? 'Submitting...' : 'Submit Review'}
+                </button>
+              </form>
+            </div>
+
+            {/* REVIEWS LIST */}
+            <div className="md:col-span-2 space-y-4">
+              {reviews.length === 0 ? (
+                <div className="bg-[#111] border border-white/5 p-8 rounded-3xl text-center flex flex-col items-center justify-center h-full min-h-[200px]">
+                  <MessageCircle className="w-12 h-12 text-gray-600 mb-3" />
+                  <p className="text-gray-400">No reviews yet. Be the first to review this product!</p>
+                </div>
+              ) : (
+                reviews.map((rev) => (
+                  <div key={rev.id} className="bg-[#111] border border-white/5 p-6 rounded-3xl flex gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div className="w-12 h-12 bg-purple-600/20 rounded-full flex items-center justify-center flex-shrink-0 border border-purple-500/30">
+                      <User className="w-5 h-5 text-purple-400" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <h4 className="font-bold text-sm capitalize">{rev.user_name}</h4>
+                        <span className="text-xs text-gray-500">• {new Date(rev.created_at).toLocaleDateString()}</span>
+                      </div>
+                      <div className="flex gap-1 mb-3">
+                        {[...Array(5)].map((_, i) => (
+                          <Star key={i} className={`w-3 h-3 ${i < rev.rating ? 'text-yellow-500 fill-yellow-500' : 'text-gray-700'}`} />
+                        ))}
+                      </div>
+                      <p className="text-gray-300 text-sm leading-relaxed">{rev.comment}</p>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+
       </main>
 
       {/* 🔥 MOBILE FIXED BOTTOM BAR (Always visible on product page) */}
@@ -184,4 +302,3 @@ const ProductDetails = () => {
 };
 
 export default ProductDetails;
-                
