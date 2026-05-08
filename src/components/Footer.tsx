@@ -19,8 +19,23 @@ const Footer = () => {
             We Don’t Just Sell Perfume, We Create Identity. Discover your signature scent.
           </p>
           <div className="flex gap-4 pt-2">
-            <a href="#" className="hover:text-purple-400 transition-colors"><Instagram className="w-5 h-5"/></a>
-            <a href="#" className="hover:text-blue-400 transition-colors"><Facebook className="w-5 h-5"/></a>
+            <a 
+              href="https://www.instagram.com/prfectfumeofficial?igsh=ODh1bHdob2Uyb29l" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="hover:text-purple-400 transition-colors"
+            >
+              <Instagram className="w-5 h-5"/>
+            </a>
+            
+            <a 
+              href="YOUR_FACEBOOK_LINK_HERE" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="hover:text-blue-400 transition-colors"
+            >
+              <Facebook className="w-5 h-5"/>
+            </a>
           </div>
         </div>
 
