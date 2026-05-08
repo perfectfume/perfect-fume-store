@@ -2,7 +2,7 @@ import React from 'react';
 import { Instagram, Facebook, Mail, MapPin, Phone } from 'lucide-react';
 
 const Footer = () => {
-  // 🔥 Ekhane check kora hocche je partner route-e achhe kina
+  //  Ekhane check kora hocche je partner route-e achhe kina
   const isPartnerRoute = window.location.pathname.includes('/partner');
   if (isPartnerRoute) return null; // Partner page hole footer asbe na
 
