@@ -134,7 +134,7 @@ const Navbar = () => {
       const orderData = await res.json();
       
       const options = {
-        key: "rzp_test_ShGhsVZ58mGSle",
+        key: "rzp_live_Smt5e7RAdq62Yo",
         amount: orderData.amount,
         currency: "INR",
         name: "Perfect Fume",
