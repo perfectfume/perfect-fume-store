@@ -29,17 +29,17 @@ const Navbar = () => {
   // 🔥 Partner route check to hide Elements
   const isPartnerRoute = window.location.pathname.includes('/partner');
   
+  // 🔥 LOGO URL
+  const LOGO_URL = "https://i.ibb.co/Tqd6HpHL/image-1777222755377.jpg";
 
   // --- LOGIN LOGIC ---
   const handleSendOtp = async (e: any) => {
     e.preventDefault();
     if (!nameInput || !emailInput.includes('@') || phoneInput.length !== 10) {
-      return alert("⚠️ Sothik Name, Email ebong 10-digit Phone Number din!");
+      return alert("⚠️ Please provide a valid Name, Email and 10-digit Phone Number!");
     }
     
     setIsProcessing(true);
-    console.log("Attempting to send OTP to:", emailInput);
-
     try {
       const res = await fetch(`${API_URL}/api/order`, { 
         method: 'POST', 
@@ -48,21 +48,18 @@ const Navbar = () => {
       });
 
       if (res.ok) {
-        console.log("OTP Sent successfully");
         setLoginStep(2); 
       } else {
         const errorData = await res.json();
-        alert(`❌ OTP pathate somossya hoyeche: ${errorData.message || 'Server Error'}`);
+        alert(`❌ Error sending OTP: ${errorData.message || 'Server Error'}`);
       }
     } catch (err) {
-      console.error("Fetch Error:", err);
-      alert("⚠️ Backend server-er sathe connect kora jachhe na. Ektu pore try korun!");
+      alert("⚠️ Cannot connect to backend server!");
     } finally {
       setIsProcessing(false);
     }
   };
   
-  // 🔥 UPDATED FUNCTION: Name and Phone added to backend payload
   const handleVerifyOtp = async (e: any) => {
     e.preventDefault();
     setIsProcessing(true);
@@ -72,22 +69,21 @@ const Navbar = () => {
         body: JSON.stringify({ 
           email: emailInput, 
           otp: otpInput,
-          name: nameInput,   // NEW
-          phone: phoneInput  // NEW
+          name: nameInput,
+          phone: phoneInput
         }) 
       });
       const data = await res.json();
       if (data.success) {
         setUserAuth(nameInput, emailInput, phoneInput); 
         setIsAuthOpen(false); setLoginStep(1); setOtpInput('');
-      } else { alert("Vul OTP!"); }
+      } else { alert("Wrong OTP!"); }
     } catch (err) { alert("Network Error!"); }
     setIsProcessing(false);
   };
 
-  // --- CHECKOUT LOGIC ---
   const handleProceedToAddress = () => {
-    if (cart.length === 0) return alert("Jhhuri faka!");
+    if (cart.length === 0) return alert("Cart is empty!");
     setAddressForm({ ...addressForm, name: userName || '', phone: userPhone || '' });
     setIsCheckoutOpen(true);
     setCheckoutStep(1);
@@ -99,7 +95,6 @@ const Navbar = () => {
     setCheckoutStep(2); 
   };
 
-  // 💰 COD LOGIC
   const handleSelectCOD = async () => {
     setIsProcessing(true);
     try {
@@ -120,18 +115,16 @@ const Navbar = () => {
       const res = await fetch(`${API_URL}/api/verify-otp`, { method: 'POST', body: JSON.stringify({ email: userEmail, otp: checkoutOtp }) });
       const data = await res.json();
       if (data.success) {
-        // 🔥 DIRECT WHATSAPP REDIRECT (No Popup)
         let itemList = cart.map(item => `▪️ ${item.name} (${item.quantity} pcs) - ₹${item.price}`).join('%0A');
         let waText = `*New COD Order Received!* 🛍️%0A%0A*Customer Details:*%0A👤 Name: ${addressForm.name}%0A📞 Phone: ${addressForm.phone}%0A%0A*Delivery Address:*%0A🏠 ${addressForm.flat}, ${addressForm.area}%0A📍 ${addressForm.city} - ${addressForm.pincode}%0A%0A*Order Items:*%0A${itemList}%0A%0A*Total Amount:* 💰 ₹${total}%0A%0APlease confirm my order!`;
         
         setIsCheckoutOpen(false); setCheckoutOtp(''); clearCart(); 
         window.location.href = `https://wa.me/${ADMIN_WHATSAPP}?text=${waText}`; 
-      } else { alert("Vul OTP!"); }
+      } else { alert("Wrong OTP!"); }
     } catch (err) { alert("Network Error!"); }
     setIsProcessing(false);
   };
 
-  // 💳 RAZORPAY ONLINE PAYMENT LOGIC
   const handlePayOnline = async () => {
     setIsProcessing(true);
     try {
@@ -148,27 +141,20 @@ const Navbar = () => {
         description: "Premium Perfume Purchase",
         order_id: orderData.id,
         handler: async function (response: any) {
-          // 1. Backend-e payment confirm kora
           await fetch(`${API_URL}/api/confirm-online-order`, {
             method: 'POST', 
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email: userEmail, cart: cart, address: addressForm, paymentId: response.razorpay_payment_id })
           });
-
-          // 2. Clear Cart & Reset Steps
           setIsCheckoutOpen(false); 
           clearCart(); 
-
-          // 3. 🔥 DIRECT WHATSAPP REDIRECT (No Popup) 🔥
           let itemList = cart.map(item => `▪️ ${item.name} (${item.quantity} pcs) - ₹${item.price}`).join('%0A');
           let waText = `*New PAID Order!* 💳✅%0A%0A*Customer Details:*%0A👤 Name: ${addressForm.name}%0A📞 Phone: ${addressForm.phone}%0A%0A*Delivery Address:*%0A🏠 ${addressForm.flat}, ${addressForm.area}%0A📍 ${addressForm.city} - ${addressForm.pincode}%0A%0A*Order Items:*%0A${itemList}%0A%0A*Total Paid:* 💰 ₹${total}%0A*Payment ID:* ${response.razorpay_payment_id}%0A%0APlease process my order!`;
-          
           window.location.href = `https://wa.me/${ADMIN_WHATSAPP}?text=${waText}`; 
         },
         prefill: { name: addressForm.name, email: userEmail || '', contact: addressForm.phone },
         theme: { color: "#6b21a8" }
       };
-
       const rzp = new (window as any).Razorpay(options);
       rzp.open();
     } catch(err) { alert("Payment initiation failed!"); }
@@ -177,18 +163,19 @@ const Navbar = () => {
 
   return (
     <>
-      {/* 🔥 TOP NAVBAR */}
       <nav className="fixed top-0 w-full z-40 bg-black/80 backdrop-blur-lg border-b border-white/10 px-4 py-3">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4 relative">
           
-          {/* Left: Logo */}
-          <div className="flex items-center gap-2 cursor-pointer group" onClick={() => window.location.href = "/"}>
-            <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-600 bg-clip-text text-transparent italic tracking-wider group-hover:scale-105 transition-transform">
+          {/* 🔥 Left: Logo & Title Integrated */}
+          <div className="flex items-center gap-3 cursor-pointer group" onClick={() => window.location.href = "/"}>
+            <div className="w-8 h-8 md:w-10 md:h-10 rounded-full overflow-hidden border border-purple-500/30 group-hover:scale-110 transition-transform bg-white">
+               <img src={LOGO_URL} alt="Logo" className="w-full h-full object-contain" />
+            </div>
+            <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-600 bg-clip-text text-transparent italic tracking-wider">
               PERFECT FUME
             </h1>
           </div>
 
-          {/* Center: Desktop Menu */}
           <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 gap-8 items-center">
             <button onClick={() => window.location.href = "/"} className="text-sm font-bold text-gray-300 hover:text-purple-400 transition-colors">Home</button>
             <button onClick={() => window.location.href = "/shop"} className="text-sm font-bold text-gray-300 hover:text-purple-400 transition-colors">Shop</button>
@@ -196,13 +183,12 @@ const Navbar = () => {
             <button onClick={() => window.location.href = "/contact"} className="text-sm font-bold text-gray-300 hover:text-purple-400 transition-colors">Contact</button>
           </div>
 
-          {/* 🔥 Right: User & Cart Icons (Hides if on Partner Route) */}
           {!isPartnerRoute && (
             <div className="flex items-center gap-6 text-white ml-auto">
               {!userEmail ? (
                 <div id="nav-login-btn" onClick={() => setIsAuthOpen(true)} className="hidden md:flex flex-col items-center cursor-pointer hover:text-purple-400"><User className="w-6 h-6" /><span className="text-[10px] hidden md:block">Sign In</span></div>
               ) : (
-                <div onClick={() => { if(window.confirm("Logout korben?")) logout() }} className="hidden md:flex flex-col items-center cursor-pointer text-green-400"><LogOut className="w-6 h-6" /><span className="text-[10px] hidden md:block">Logout</span></div>
+                <div onClick={() => { if(window.confirm("Logout now?")) logout() }} className="hidden md:flex flex-col items-center cursor-pointer text-green-400"><LogOut className="w-6 h-6" /><span className="text-[10px] hidden md:block">Logout</span></div>
               )}
               <div onClick={toggleCart} className="flex flex-col items-center cursor-pointer relative"><ShoppingCart className="w-6 h-6" /><span className="text-[10px] hidden md:block">Cart</span>
                 {cartCount > 0 && <span className="absolute -top-1 -right-2 bg-pink-600 text-[10px] rounded-full w-4 h-4 flex items-center justify-center animate-pulse">{cartCount}</span>}
@@ -246,7 +232,6 @@ const Navbar = () => {
               </h2>
               <button onClick={() => setIsCheckoutOpen(false)} className="p-2 bg-gray-100 rounded-full"><X className="w-4 h-4" /></button>
             </div>
-            
             <div className="p-4 overflow-y-auto">
               {checkoutStep === 1 && (
                 <form onSubmit={handleProceedToPaymentOptions} className="space-y-4">
@@ -261,7 +246,6 @@ const Navbar = () => {
                   <button type="submit" className="w-full bg-blue-600 text-white font-bold py-3.5 rounded-lg shadow-lg">Proceed to Payment</button>
                 </form>
               )}
-
               {checkoutStep === 2 && (
                 <div className="space-y-4 py-4">
                   <div className="bg-purple-50 p-4 rounded-xl mb-4 border border-purple-100">
@@ -277,7 +261,6 @@ const Navbar = () => {
                   </button>
                 </div>
               )}
-
               {checkoutStep === 3 && (
                 <form onSubmit={handleVerifyCheckoutOtp}>
                   <p className="text-sm text-green-600 mb-4 text-center bg-green-50 p-2 rounded-lg">✅ OTP sent to {userEmail}</p>
@@ -295,7 +278,7 @@ const Navbar = () => {
       {/* LOGIN MODAL */}
       {isAuthOpen && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex justify-center items-center px-4">
-          <div className="bg-[#111] w-full max-w-sm rounded-2xl border border-white/10 p-6 relative shadow-2xl">
+          <div className="bg-[#111] w-full max-sm rounded-2xl border border-white/10 p-6 relative shadow-2xl">
             <button onClick={() => {setIsAuthOpen(false); setLoginStep(1);}} className="absolute top-4 right-4 text-gray-500 hover:text-white bg-white/5 p-2 rounded-full"><X className="w-4 h-4" /></button>
             <div className="text-center mb-6"><User className="w-12 h-12 text-purple-500 mx-auto mb-2 bg-purple-500/10 p-2 rounded-full" /><h2 className="text-2xl font-bold text-white italic">Sign In</h2></div>
             {loginStep === 1 ? (
@@ -315,7 +298,7 @@ const Navbar = () => {
         </div>
       )}
 
-      {/* 🔥 BOTTOM NAVBAR (Hides if on Partner Route) */}
+      {/* BOTTOM NAVBAR */}
       {!isPartnerRoute && (
         <div className="md:hidden fixed bottom-0 w-full bg-[#050505] border-t border-white/10 flex justify-around py-3 z-40 pb-safe">
           <button onClick={() => window.location.href = "/"} className={`flex flex-col items-center hover:text-purple-400 ${window.location.pathname === '/' ? 'text-purple-400' : 'text-gray-400'}`}>
