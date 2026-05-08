@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useStore } from '../store/useStore'; 
 import { Heart, Star } from 'lucide-react';
+import QuizModal from '../components/QuizModal';
+
 
 const HomePage = () => {
   const categories = ['All', 'Men', 'Women', 'Unisex', 'Luxury', 'Travel Size'];
@@ -11,6 +13,7 @@ const HomePage = () => {
 
   // 🔥 DYNAMIC BANNERS STATE
   const [banners, setBanners] = useState<string[]>([]);
+  const [isQuizOpen, setIsQuizOpen] = useState(false);
 
   const { userEmail, addToCart, isCartOpen, toggleCart, wishlist, toggleWishlist } = useStore();
   const API_URL = import.meta.env.VITE_API_URL || "https://perfect-fume-backend.perfectfumeofficial.workers.dev";
@@ -102,6 +105,19 @@ const HomePage = () => {
                 <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent opacity-90"></div>
               </div>
             ))}
+        {/* 🔥 Scent Discovery Quiz Button */}
+        <div className="px-4 mt-8">
+          <div onClick={() => setIsQuizOpen(true)} className="bg-gradient-to-r from-purple-900/40 to-indigo-900/40 border border-purple-500/30 p-6 rounded-3xl cursor-pointer hover:scale-[1.02] transition-all group overflow-hidden relative shadow-lg">
+            <div className="relative z-10">
+              <h3 className="text-xl font-bold italic flex items-center gap-2 mb-1 text-white">
+                <Sparkles className="w-5 h-5 text-yellow-400 animate-pulse" /> Scent Discovery Quiz
+              </h3>
+              <p className="text-xs text-gray-400">পারফেক্ট সুবাস খুঁজে পাচ্ছেন না? মাত্র ৩০ সেকেন্ডের কুইজটি খেলে আপনার জন্য সেরা পারফিউমটি বেছে নিন।</p>
+            </div>
+            <ArrowRight className="absolute right-6 top-1/2 -translate-y-1/2 w-8 h-8 text-white/10 group-hover:text-purple-500/50 group-hover:translate-x-2 transition-all" />
+          </div>
+        </div>
+            
             
             {/* Slider Dots */}
             {banners.length > 1 && (
@@ -183,6 +199,13 @@ const HomePage = () => {
             ))}
           </div>
         </div>
+        <QuizModal 
+          isOpen={isQuizOpen} 
+          onClose={() => setIsQuizOpen(false)} 
+          products={products} 
+          addToCart={addToCart} 
+        />
+        
       </main>
     </div>
   );
