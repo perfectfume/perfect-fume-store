@@ -26,17 +26,17 @@ const Navbar = () => {
   const API_URL = "https://perfect-fume-backend.perfectfumeofficial.workers.dev";
   const ADMIN_WHATSAPP = "918777789394"; 
   
-  // 🔥 Partner route check to hide Elements
+  // Partner route check to hide Elements
   const isPartnerRoute = window.location.pathname.includes('/partner');
   
-  // 🔥 LOGO URL
+  // LOGO URL
   const LOGO_URL = "https://i.ibb.co/Tqd6HpHL/image-1777222755377.jpg";
 
   // --- LOGIN LOGIC ---
   const handleSendOtp = async (e: any) => {
     e.preventDefault();
     if (!nameInput || !emailInput.includes('@') || phoneInput.length !== 10) {
-      return alert("⚠️ Please provide a valid Name, Email and 10-digit Phone Number!");
+      return alert("Please provide a valid Name, Email and 10-digit Phone Number!");
     }
     
     setIsProcessing(true);
@@ -51,10 +51,10 @@ const Navbar = () => {
         setLoginStep(2); 
       } else {
         const errorData = await res.json();
-        alert(`❌ Error sending OTP: ${errorData.message || 'Server Error'}`);
+        alert(`Error sending OTP: ${errorData.message || 'Server Error'}`);
       }
     } catch (err) {
-      alert("⚠️ Cannot connect to backend server!");
+      alert("Cannot connect to backend server!");
     } finally {
       setIsProcessing(false);
     }
@@ -116,7 +116,7 @@ const Navbar = () => {
       const data = await res.json();
       if (data.success) {
         let itemList = cart.map(item => `▪️ ${item.name} (${item.quantity} pcs) - ₹${item.price}`).join('%0A');
-        let waText = `*New COD Order Received!* 🛍️%0A%0A*Customer Details:*%0A👤 Name: ${addressForm.name}%0A📞 Phone: ${addressForm.phone}%0A%0A*Delivery Address:*%0A🏠 ${addressForm.flat}, ${addressForm.area}%0A📍 ${addressForm.city} - ${addressForm.pincode}%0A%0A*Order Items:*%0A${itemList}%0A%0A*Total Amount:* 💰 ₹${total}%0A%0APlease confirm my order!`;
+        let waText = `*New COD Order Received!* %0A%0A*Customer Details:*%0A Name: ${addressForm.name}%0A Phone: ${addressForm.phone}%0A%0A*Delivery Address:*%0A ${addressForm.flat}, ${addressForm.area}%0A ${addressForm.city} - ${addressForm.pincode}%0A%0A*Order Items:*%0A${itemList}%0A%0A*Total Amount:* ₹${total}%0A%0APlease confirm my order!`;
         
         setIsCheckoutOpen(false); setCheckoutOtp(''); clearCart(); 
         window.location.href = `https://wa.me/${ADMIN_WHATSAPP}?text=${waText}`; 
@@ -151,7 +151,7 @@ const Navbar = () => {
           setIsCheckoutOpen(false); 
           clearCart(); 
           let itemList = cart.map(item => `▪️ ${item.name} (${item.quantity} pcs) - ₹${item.price}`).join('%0A');
-          let waText = `*New PAID Order!* 💳✅%0A%0A*Customer Details:*%0A👤 Name: ${addressForm.name}%0A📞 Phone: ${addressForm.phone}%0A%0A*Delivery Address:*%0A🏠 ${addressForm.flat}, ${addressForm.area}%0A📍 ${addressForm.city} - ${addressForm.pincode}%0A%0A*Order Items:*%0A${itemList}%0A%0A*Total Paid:* 💰 ₹${total}%0A*Payment ID:* ${response.razorpay_payment_id}%0A%0APlease process my order!`;
+          let waText = `*New PAID Order!* %0A%0A*Customer Details:*%0A Name: ${addressForm.name}%0A📞 Phone: ${addressForm.phone}%0A%0A*Delivery Address:*%0A ${addressForm.flat}, ${addressForm.area}%0A ${addressForm.city} - ${addressForm.pincode}%0A%0A*Order Items:*%0A${itemList}%0A%0A*Total Paid:*  ₹${total}%0A*Payment ID:* ${response.razorpay_payment_id}%0A%0APlease process my order!`;
           window.location.href = `https://wa.me/${ADMIN_WHATSAPP}?text=${waText}`; 
         },
         prefill: { name: addressForm.name, email: userEmail || '', contact: addressForm.phone },
@@ -168,7 +168,7 @@ const Navbar = () => {
       <nav className="fixed top-0 w-full z-40 bg-black/80 backdrop-blur-lg border-b border-white/10 px-4 py-3">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4 relative">
           
-          {/* 🔥 Left: Logo & Title Integrated */}
+          {/* Left: Logo & Title Integrated */}
           <div className="flex items-center gap-3 cursor-pointer group" onClick={() => window.location.href = "/"}>
             <div className="w-8 h-8 md:w-10 md:h-10 rounded-full overflow-hidden border border-purple-500/30 group-hover:scale-110 transition-transform bg-white">
                <img src={LOGO_URL} alt="Logo" className="w-full h-full object-contain" />
