@@ -223,7 +223,7 @@ const AdminPanel = () => {
     
     try {
         // 🔥 Ekhane Tomar ImgBB API Key Boshabe 🔥
-        const apiKey = 'YOUR_IMGBB_API_KEY'; 
+        const apiKey = '2715aa5a54f1d4291d803afcfa3f831d'; 
         const res = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
             method: 'POST', body: formData
         });
