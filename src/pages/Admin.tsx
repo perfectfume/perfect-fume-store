@@ -36,7 +36,32 @@ const AdminPanel = () => {
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
   const [trackingLinks, setTrackingLinks] = useState<any>({}); 
-  const [isExporting, setIsExporting] = useState(false); // 🔥 NEW STATE FOR EXPORT BUTTON
+  const [isExporting, setIsExporting] = useState(false); // 🔥 NEW STATE FOR EXPORT BUTTONS 
+  // 🔥 BANNER STATES
+  const [banners, setBanners] = useState<string[]>([]);
+  const [isSavingBanners, setIsSavingBanners] = useState(false);
+
+  // Fetch Banners on load
+  useEffect(() => {
+    fetch(`${API_URL}/api/banners`).then(res => res.json()).then(data => {
+      if(data && data.length > 0) setBanners(data);
+      else setBanners(['']); // faka thakle ekta input box dekhabe
+    });
+  }, []);
+
+  const handleSaveBanners = async () => {
+    setIsSavingBanners(true);
+    const cleanBanners = banners.filter(url => url.trim() !== ''); // Faka link bad dewar jonno
+    try {
+      const res = await fetch(`${API_URL}/api/admin/update-banners`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(cleanBanners)
+      });
+      if((await res.json()).success) alert("✅ Banners Updated Successfully!");
+    } catch(e) { alert("Error saving banners"); }
+    setIsSavingBanners(false);
+  };
+  
   
   // 🔥 FILTER STATES
   const [dateFilter, setDateFilter] = useState('all'); 
@@ -416,6 +441,32 @@ const AdminPanel = () => {
               <div className="bg-black p-4 rounded-xl border border-purple-500/30 flex items-center gap-4"><div className="bg-purple-500/20 p-3 rounded-lg"><Truck className="text-purple-500 w-6 h-6"/></div><div><p className="text-gray-400 text-sm">Shipped</p><p className="text-2xl font-bold">{statusCounts.shipped}</p></div></div>
               <div className="bg-black p-4 rounded-xl border border-green-500/30 flex items-center gap-4"><div className="bg-green-500/20 p-3 rounded-lg"><CheckCircle className="text-green-500 w-6 h-6"/></div><div><p className="text-gray-400 text-sm">Delivered</p><p className="text-2xl font-bold">{statusCounts.delivered}</p></div></div>
             </div>
+            {/* 🔥 BANNER UPLOAD SECTION 🔥 */}
+            <div className="mt-8 bg-white/5 p-6 rounded-2xl border border-white/10">
+              <h3 className="text-xl font-bold italic mb-4 text-purple-400">Home Page Banners (16:9 Ratio)</h3>
+              <p className="text-xs text-gray-400 mb-4">Direct image link (URL) gulo ekhane paste korun. (Imbb ba Cloudinary theke link nite paren)</p>
+              
+              <div className="space-y-3">
+                {banners.map((url, index) => (
+                  <div key={index} className="flex gap-2 animate-in fade-in zoom-in-95 duration-200">
+                    <input 
+                      type="text" placeholder={`Banner URL ${index + 1}`} 
+                      value={url} onChange={(e) => { const newBanners = [...banners]; newBanners[index] = e.target.value; setBanners(newBanners); }} 
+                      className="w-full bg-black border border-white/10 rounded-lg p-3 text-sm outline-none focus:border-purple-500" 
+                    />
+                    <button onClick={() => setBanners(banners.filter((_, i) => i !== index))} className="bg-red-500/20 text-red-400 px-4 rounded-lg hover:bg-red-500 hover:text-white transition-all font-bold">✕</button>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="flex gap-4 mt-4">
+                <button onClick={() => setBanners([...banners, ''])} className="text-sm text-purple-400 font-bold hover:text-white transition-all">+ Add Banner</button>
+                <button onClick={handleSaveBanners} disabled={isSavingBanners} className="ml-auto bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-6 rounded-lg transition-all">
+                  {isSavingBanners ? 'Saving...' : '💾 Save Banners'}
+                </button>
+              </div>
+            </div>
+            
 
             {/* Low Stock Alert */}
             {lowStockProducts.length > 0 && (
