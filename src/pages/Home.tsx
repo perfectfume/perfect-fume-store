@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useStore } from '../store/useStore'; 
 import { Heart, Star, Sparkles, ArrowRight } from 'lucide-react';
-import QuizModal from '../components/QuizModal';
-
+import QuizModal from '../components/QuizModal'; 
 
 const HomePage = () => {
   const categories = ['All', 'Men', 'Women', 'Unisex', 'Luxury', 'Travel Size'];
@@ -11,7 +10,6 @@ const HomePage = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState('All');
 
-  // 🔥 DYNAMIC BANNERS STATE
   const [banners, setBanners] = useState<string[]>([]);
   const [isQuizOpen, setIsQuizOpen] = useState(false);
 
@@ -21,7 +19,6 @@ const HomePage = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
     
-    // 1. Fetch Products
     const fetchProducts = async () => {
       try {
         const res = await fetch(`${API_URL}/api/catalog`);
@@ -35,7 +32,6 @@ const HomePage = () => {
     };
     fetchProducts();
 
-    // 2. Fetch Banners (Admin Panel theke)
     const fetchBanners = async () => {
       try {
         const res = await fetch(`${API_URL}/api/banners`);
@@ -43,7 +39,6 @@ const HomePage = () => {
         if(data && data.length > 0) {
             setBanners(data);
         } else {
-            // Default image jodi DB te kichu na thake
             setBanners(["https://images.unsplash.com/photo-1594035910387-fea47794261f?q=80&w=1200&auto=format&fit=crop"]);
         }
       } catch (error) {
@@ -53,7 +48,6 @@ const HomePage = () => {
     fetchBanners();
   }, []);
 
-  // Slider Logic (4 seconds por por change hobe)
   useEffect(() => {
     if (banners.length <= 1) return;
     const timer = setInterval(() => {
@@ -63,13 +57,13 @@ const HomePage = () => {
   }, [banners.length]);
 
   const handleAddToCart = (product: any) => {
-    if (!userEmail) return alert("⚠️ Sobaiprothome upore 'Sign In'-e click kore Login korun!");
+    if (!userEmail) return alert("⚠️ Please Login first to add items to your cart!");
     addToCart(product);
-    alert(`✅ ${product.name} add hoyeche!`);
+    alert(`✅ ${product.name} added to cart!`);
   };
 
   const handleBuyNow = (product: any) => {
-    if (!userEmail) return alert("⚠️ Sobaiprothome upore 'Sign In'-e click kore Login korun!");
+    if (!userEmail) return alert("⚠️ Please Login first to buy items!");
     addToCart(product);
     if (!isCartOpen) toggleCart(); 
   };
@@ -97,29 +91,14 @@ const HomePage = () => {
 
         {/* 🔥 16:9 RATIO BANNER SECTION 🔥 */}
         {banners.length > 0 && (
-          <div className="relative w-full aspect-[16/9] md:aspect-[21/9] overflow-hidden mt-1 group bg-black shadow-2xl">
+          <div className="relative w-full aspect-[16/9] md:aspect-[21/9] overflow-hidden mt-1 bg-black shadow-2xl">
             {banners.map((imgUrl, index) => (
               <div key={index} className={`absolute inset-0 transition-opacity duration-1000 ${index === currentSlide ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}>
                 <img src={imgUrl} alt={`Banner ${index + 1}`} className="w-full h-full object-cover" />
-                {/* Overlay for better text visibility */}
                 <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent opacity-90"></div>
               </div>
             ))}
-        {/* 🔥 Scent Discovery Quiz Button */}
-        <div className="px-4 mt-8">
-          <div onClick={() => setIsQuizOpen(true)} className="bg-gradient-to-r from-purple-900/40 to-indigo-900/40 border border-purple-500/30 p-6 rounded-3xl cursor-pointer hover:scale-[1.02] transition-all group overflow-hidden relative shadow-lg">
-            <div className="relative z-10">
-              <h3 className="text-xl font-bold italic flex items-center gap-2 mb-1 text-white">
-                <Sparkles className="w-5 h-5 text-yellow-400 animate-pulse" /> Scent Discovery Quiz
-              </h3>
-              <p className="text-xs text-gray-400">পারফেক্ট সুবাস খুঁজে পাচ্ছেন না? মাত্র ৩০ সেকেন্ডের কুইজটি খেলে আপনার জন্য সেরা পারফিউমটি বেছে নিন।</p>
-            </div>
-            <ArrowRight className="absolute right-6 top-1/2 -translate-y-1/2 w-8 h-8 text-white/10 group-hover:text-purple-500/50 group-hover:translate-x-2 transition-all" />
-          </div>
-        </div>
             
-            
-            {/* Slider Dots */}
             {banners.length > 1 && (
                 <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-20">
                 {banners.map((_, i) => (
@@ -129,6 +108,19 @@ const HomePage = () => {
             )}
           </div>
         )}
+
+        {/* 🔥 SCENT DISCOVERY QUIZ BUTTON 🔥 */}
+        <div className="px-4 mt-8">
+          <div onClick={() => setIsQuizOpen(true)} className="bg-gradient-to-r from-purple-900/40 to-indigo-900/40 border border-purple-500/30 p-6 rounded-3xl cursor-pointer hover:scale-[1.02] transition-all group overflow-hidden relative shadow-lg">
+            <div className="relative z-10">
+              <h3 className="text-xl font-bold italic flex items-center gap-2 mb-1 text-white">
+                <Sparkles className="w-5 h-5 text-yellow-400 animate-pulse" /> Scent Discovery Quiz
+              </h3>
+              <p className="text-xs text-gray-400">Can't decide? Let our expert find your perfect perfume in 30 seconds.</p>
+            </div>
+            <ArrowRight className="absolute right-6 top-1/2 -translate-y-1/2 w-8 h-8 text-white/10 group-hover:text-purple-500/50 group-hover:translate-x-2 transition-all" />
+          </div>
+        </div>
 
         {/* TRENDING SECTION */}
         <div className="mt-8 px-4">
@@ -199,6 +191,8 @@ const HomePage = () => {
             ))}
           </div>
         </div>
+        
+        {/* 🔥 QUIZ MODAL COMPONENT 🔥 */}
         <QuizModal 
           isOpen={isQuizOpen} 
           onClose={() => setIsQuizOpen(false)} 
@@ -212,3 +206,4 @@ const HomePage = () => {
 };
 
 export default HomePage;
+                  
