@@ -125,11 +125,13 @@ const Navbar = () => {
     setIsProcessing(false);
   };
 
-  const handlePayOnline = async () => {
+    const handlePayOnline = async () => {
     setIsProcessing(true);
     try {
       const res = await fetch(`${API_URL}/api/create-razorpay-order`, {
-        method: 'POST', body: JSON.stringify({ amount: total })
+        method: 'POST', 
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount: total })
       });
       const orderData = await res.json();
       
