@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useStore } from '../store/useStore'; 
-import { Heart, Star } from 'lucide-react';
+import { Heart, Star, Sparkles, ArrowRight } from 'lucide-react';
 import QuizModal from '../components/QuizModal';
 
 
