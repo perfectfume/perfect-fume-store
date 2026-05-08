@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useStore } from '../store/useStore';
-import { Heart, Star, Filter } from 'lucide-react';
+import { Heart, Star, Filter, ChevronLeft, ChevronRight } from 'lucide-react'; // 🔥 Chevron icons added for pagination
 
 const Shop = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('All');
   
-  // 🔥 NOTUN: wishlist ar toggleWishlist add kora holo
+  // 🔥 PAGINATION STATES
+  const [currentPage, setCurrentPage] = useState(1);
+  const productsPerPage = 12; // 12 products per page
+  
   const { userEmail, addToCart, isCartOpen, toggleCart, wishlist, toggleWishlist } = useStore();
   const API_URL = import.meta.env.VITE_API_URL || "https://perfect-fume-backend.perfectfumeofficial.workers.dev";
   const categories = ['All', 'Men', 'Women', 'Unisex', 'Luxury', 'Travel Size'];
@@ -28,14 +31,19 @@ const Shop = () => {
     fetchProducts();
   }, []);
 
+  // Category change hole automatic page 1 e niye ashar logic
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedCategory]);
+
   const handleAddToCart = (product: any) => {
-    if (!userEmail) return alert("⚠️ Sobaiprothome upore 'Sign In'-e click kore Login korun!");
+    if (!userEmail) return alert("⚠️ Please Login first to add items to your cart!");
     addToCart(product);
-    alert(`✅ ${product.name} apnar Jhhuri-te (Cart) add hoyeche!`);
+    alert(`✅ ${product.name} added to cart!`);
   };
 
   const handleBuyNow = (product: any) => {
-    if (!userEmail) return alert("⚠️ Sobaiprothome upore 'Sign In'-e click kore Login korun!");
+    if (!userEmail) return alert("⚠️ Please Login first to buy items!");
     addToCart(product);
     if (!isCartOpen) toggleCart();
   };
@@ -43,6 +51,12 @@ const Shop = () => {
   const filteredProducts = selectedCategory === 'All' 
     ? products 
     : products.filter((p: any) => p.category?.toLowerCase() === selectedCategory.toLowerCase());
+
+  // 🔥 PAGINATION CALCULATION
+  const indexOfLastProduct = currentPage * productsPerPage;
+  const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
+  const currentProducts = filteredProducts.slice(indexOfFirstProduct, indexOfLastProduct);
+  const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
 
   return (
     <div className="min-h-screen bg-[#050505] text-white pt-24 pb-24 font-sans">
@@ -74,14 +88,16 @@ const Shop = () => {
 
           <div className="md:w-3/4">
             <div className="flex justify-between items-center mb-4">
-              <p className="text-sm text-gray-400">Showing <span className="text-white font-bold">{filteredProducts.length}</span> products</p>
+              <p className="text-sm text-gray-400">
+                Showing <span className="text-white font-bold">{currentProducts.length > 0 ? indexOfFirstProduct + 1 : 0}</span> to <span className="text-white font-bold">{Math.min(indexOfLastProduct, filteredProducts.length)}</span> of <span className="text-white font-bold">{filteredProducts.length}</span> products
+              </p>
             </div>
 
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
               {loading ? (
                 [1, 2, 3, 4, 5, 6].map((item) => <div key={item} className="h-72 rounded-xl bg-[#111] animate-pulse"></div>)
-              ) : filteredProducts.length > 0 ? (
-                filteredProducts.map((product: any) => (
+              ) : currentProducts.length > 0 ? (
+                currentProducts.map((product: any) => (
                   <div key={product.id} className="bg-[#111] border border-white/5 rounded-xl p-2.5 flex flex-col relative group hover:border-purple-500/50 transition-all">
                     
                     {/* 🔥 SMART HEART BUTTON (Wishlist Toggle) */}
@@ -106,8 +122,8 @@ const Shop = () => {
                     </div>
                     
                     <div className="flex gap-1.5 mt-auto relative z-20">
-                      <button onClick={() => handleAddToCart(product)} className="w-full bg-white/10 hover:bg-white/20 text-white text-[10px] font-bold py-2 rounded-lg transition-all">Cart</button>
-                      <button onClick={() => handleBuyNow(product)} className="w-full bg-purple-600 hover:bg-purple-700 text-white text-[10px] font-bold py-2 rounded-lg transition-all shadow-lg shadow-purple-900/20">Buy Now</button>
+                      <button onClick={() => handleAddToCart(product)} className="w-full bg-white/10 hover:bg-white/20 text-white text-[10px] font-bold py-2 rounded-lg transition-all uppercase tracking-wider">Cart</button>
+                      <button onClick={() => handleBuyNow(product)} className="w-full bg-purple-600 hover:bg-purple-700 text-white text-[10px] font-bold py-2 rounded-lg transition-all shadow-lg shadow-purple-900/20 uppercase tracking-wider">Buy Now</button>
                     </div>
                   </div>
                 ))
@@ -115,6 +131,57 @@ const Shop = () => {
                 <p className="text-gray-500 col-span-2 lg:col-span-3 text-center py-10">No products found in this category.</p>
               )}
             </div>
+
+            {/* 🔥 PAGINATION CONTROLS 🔥 */}
+            {totalPages > 1 && (
+              <div className="flex justify-center items-center gap-2 mt-12 mb-4">
+                <button
+                  onClick={() => {
+                    setCurrentPage(prev => Math.max(prev - 1, 1));
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  disabled={currentPage === 1}
+                  className="p-2 rounded-lg bg-[#111] border border-white/10 text-white disabled:opacity-50 hover:bg-white/5 transition-all"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+
+                {/* Page Numbers */}
+                <div className="flex gap-2">
+                  {[...Array(totalPages)].map((_, index) => {
+                    const pageNumber = index + 1;
+                    return (
+                      <button
+                        key={pageNumber}
+                        onClick={() => {
+                          setCurrentPage(pageNumber);
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
+                        className={`w-10 h-10 rounded-lg text-sm font-bold transition-all ${
+                          currentPage === pageNumber
+                            ? 'bg-purple-600 text-white border border-purple-500'
+                            : 'bg-[#111] border border-white/10 text-gray-400 hover:bg-white/10 hover:text-white'
+                        }`}
+                      >
+                        {pageNumber}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <button
+                  onClick={() => {
+                    setCurrentPage(prev => Math.min(prev + 1, totalPages));
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  disabled={currentPage === totalPages}
+                  className="p-2 rounded-lg bg-[#111] border border-white/10 text-white disabled:opacity-50 hover:bg-white/5 transition-all"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </div>
+            )}
+
           </div>
         </div>
       </div>
