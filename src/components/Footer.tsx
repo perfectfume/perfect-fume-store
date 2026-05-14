@@ -16,7 +16,7 @@ const Footer = () => {
             PERFECT FUME
           </h2>
           <p className="text-sm leading-relaxed">
-            We Don’t Just Sell Perfume, We Create Identity. Discover your signature scent.
+            We create identity, Discover your signature scent.
           </p>
           <div className="flex gap-4 pt-2">
             <a 
