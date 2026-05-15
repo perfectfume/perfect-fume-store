@@ -82,20 +82,15 @@ const Navbar = () => {
     setIsProcessing(false);
   };
 
-  // 🔥 UPDATE: AUTO FILL ADDRESS LOGIC 🔥
+  //  UPDATE: AUTO FILL ADDRESS LOGIC 
   const handleProceedToAddress = () => {
     if (cart.length === 0) return alert("Your cart is empty.");
     
-    let savedFlat = '', savedArea = '', savedPincode = '', savedCity = 'Kolkata';
-    try {
-      const storeData = JSON.parse(localStorage.getItem('perfume-store') || '{}');
-      if (storeData?.state?.userAddress) {
-        savedFlat = storeData.state.userAddress.flat || '';
-        savedArea = storeData.state.userAddress.area || '';
-        savedPincode = storeData.state.userAddress.pincode || '';
-        savedCity = storeData.state.userAddress.city || 'Kolkata';
-      }
-    } catch(e) {}
+    // Account.tsx থেকে সেভ করা ডাটাগুলো এখানে নিয়ে আসা হচ্ছে
+    const savedFlat = localStorage.getItem('userFlat') || '';
+    const savedArea = localStorage.getItem('userArea') || '';
+    const savedCity = localStorage.getItem('userCity') || 'Kolkata';
+    const savedPincode = localStorage.getItem('userPincode') || '';
 
     setAddressForm({
       ...addressForm,
@@ -111,7 +106,7 @@ const Navbar = () => {
     setCheckoutStep(1);
     toggleCart(); 
   };
-
+  
   const handleProceedToPaymentOptions = (e: any) => {
     e.preventDefault();
     setCheckoutStep(2); 
