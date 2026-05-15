@@ -82,9 +82,31 @@ const Navbar = () => {
     setIsProcessing(false);
   };
 
+  // 🔥 UPDATE: AUTO FILL ADDRESS LOGIC 🔥
   const handleProceedToAddress = () => {
     if (cart.length === 0) return alert("Your cart is empty.");
-    setAddressForm({ ...addressForm, name: userName || '', phone: userPhone || '' });
+    
+    let savedFlat = '', savedArea = '', savedPincode = '', savedCity = 'Kolkata';
+    try {
+      const storeData = JSON.parse(localStorage.getItem('perfume-store') || '{}');
+      if (storeData?.state?.userAddress) {
+        savedFlat = storeData.state.userAddress.flat || '';
+        savedArea = storeData.state.userAddress.area || '';
+        savedPincode = storeData.state.userAddress.pincode || '';
+        savedCity = storeData.state.userAddress.city || 'Kolkata';
+      }
+    } catch(e) {}
+
+    setAddressForm({
+      ...addressForm,
+      flat: savedFlat,
+      area: savedArea,
+      pincode: savedPincode,
+      city: savedCity,
+      name: userName || '',
+      phone: userPhone || ''
+    });
+
     setIsCheckoutOpen(true);
     setCheckoutStep(1);
     toggleCart(); 
@@ -266,7 +288,8 @@ const Navbar = () => {
               {checkoutStep === 3 && (
                 <form onSubmit={handleVerifyCheckoutOtp}>
                   <p className="text-sm text-green-600 mb-4 text-center bg-green-50 p-2 rounded-lg">OTP sent to {userEmail}</p>
-                  <input type="number" required value={checkoutOtp} onChange={(e) => setCheckoutOtp(e.target.value)} placeholder="Enter 6-digit OTP" className="w-full border border-gray-300 rounded-lg p-3 text-center tracking-[1em] font-bold text-xl focus:border-blue-600 mb-4" />
+                  {/* 🔥 UPDATE: tracking-widest kora hoyeche OTP Box-e 🔥 */}
+                  <input type="number" required value={checkoutOtp} onChange={(e) => setCheckoutOtp(e.target.value)} placeholder="Enter 6-digit OTP" className="w-full border border-gray-300 rounded-lg p-3 text-center tracking-widest font-bold text-xl focus:border-blue-600 mb-4" />
                   <button type="submit" disabled={isProcessing} className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3.5 rounded-lg shadow-lg">
                     {isProcessing ? 'Verifying...' : 'Verify & Place Order'}
                   </button>
@@ -292,7 +315,8 @@ const Navbar = () => {
               </form>
             ) : (
               <form onSubmit={handleVerifyOtp}>
-                <input type="number" required placeholder="Enter 6-digit OTP" value={otpInput} onChange={(e) => setOtpInput(e.target.value)} className="w-full bg-black border border-white/10 rounded-lg p-3 text-white text-center tracking-[1em] font-bold text-xl focus:border-green-500 mb-4" />
+                 {/* 🔥 UPDATE: tracking-widest kora hoyeche Login OTP Box-e 🔥 */}
+                <input type="number" required placeholder="Enter 6-digit OTP" value={otpInput} onChange={(e) => setOtpInput(e.target.value)} className="w-full bg-black border border-white/10 rounded-lg p-3 text-white text-center tracking-widest font-bold text-xl focus:border-green-500 mb-4" />
                 <button type="submit" disabled={isProcessing} className="w-full bg-green-600 text-white font-bold py-3 rounded-lg">Verify & Login</button>
               </form>
             )}
@@ -300,7 +324,7 @@ const Navbar = () => {
         </div>
       )}
 
-            {/* BOTTOM NAVBAR */}
+      {/* BOTTOM NAVBAR */}
       {!isPartnerRoute && (
         <div className="md:hidden fixed bottom-0 w-full bg-[#050505] border-t border-white/10 flex justify-around py-3 z-40 pb-safe">
           <button onClick={() => window.location.href = "/"} className={`flex flex-col items-center hover:text-purple-400 ${window.location.pathname === '/' ? 'text-purple-400' : 'text-gray-400'}`}>
