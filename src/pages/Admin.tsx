@@ -11,7 +11,7 @@ const AdminPanel = () => {
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [activeTab, setActiveTab] = useState('dashboard'); 
   
-  // 🔥 ADD PRODUCT STATES
+  //  ADD PRODUCT STATES
   const [title, setTitle] = useState('');
   const [price, setPrice] = useState('');
   const [category, setCategory] = useState('Men');
@@ -21,7 +21,7 @@ const AdminPanel = () => {
   const [extraImages, setExtraImages] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
 
-  // 🔥 EDIT PRODUCT STATES
+  //  EDIT PRODUCT STATES
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState('');
@@ -38,12 +38,12 @@ const AdminPanel = () => {
   const [trackingLinks, setTrackingLinks] = useState<any>({}); 
   const [isExporting, setIsExporting] = useState(false); 
 
-  // 🔥 SEARCH & IMAGE UPLOAD STATES (NEW)
+  //  SEARCH & IMAGE UPLOAD STATES (NEW)
   const [productSearch, setProductSearch] = useState('');
   const [orderSearch, setOrderSearch] = useState('');
   const [isImageUploading, setIsImageUploading] = useState(false);
 
-  // 🔥 BANNER STATES
+  //  BANNER STATES
   const [banners, setBanners] = useState<string[]>([]);
   const [isSavingBanners, setIsSavingBanners] = useState(false);
 
@@ -63,13 +63,13 @@ const AdminPanel = () => {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(cleanBanners)
       });
-      if((await res.json()).success) alert("✅ Banners Updated Successfully!");
+      if((await res.json()).success) alert(" Banners Updated Successfully!");
     } catch(e) { alert("Error saving banners"); }
     setIsSavingBanners(false);
   };
   
   
-  // 🔥 FILTER STATES
+  //  FILTER STATES
   const [dateFilter, setDateFilter] = useState('all'); 
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -81,11 +81,11 @@ const AdminPanel = () => {
   // --- LOGIN LOGIC ---
   const handleRequestOtp = async (e: any) => {
     e.preventDefault();
-    if (password !== ADMIN_SECRET || email !== ADMIN_EMAIL) return alert("⚠️ Vul Email ba Password!");
+    if (password !== ADMIN_SECRET || email !== ADMIN_EMAIL) return alert(" Wrong Email or Password!");
     setIsProcessing(true);
     try {
       const res = await fetch(`${API_URL}/api/order`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: ADMIN_EMAIL }) });
-      if (res.ok) { setLoginStep(2); alert(`✅ Secure OTP sent to ${ADMIN_EMAIL}`); }
+      if (res.ok) { setLoginStep(2); alert(` Secure OTP sent to ${ADMIN_EMAIL}`); }
     } catch (err) { alert("Network Error!"); }
     setIsProcessing(false);
   };
@@ -99,7 +99,7 @@ const AdminPanel = () => {
       if (data.success) {
         setIsAuthorized(true);
         fetchProducts(); fetchOrders();
-      } else { alert("⚠️ Vul OTP!"); }
+      } else { alert(" Vul OTP!"); }
     } catch (err) { alert("Network Error!"); }
     setIsProcessing(false);
   };
