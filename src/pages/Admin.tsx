@@ -533,7 +533,7 @@ const AdminPanel = () => {
                   <input type="number" placeholder="Price (₹)" value={price} onChange={(e) => setPrice(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg p-2.5 outline-none" />
                   <input type="number" placeholder="Stock (Qty)" value={stock} onChange={(e) => setStock(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg p-2.5 outline-none" />
                   <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg p-2.5 outline-none text-gray-300 md:bg-gray-900">
-                    <option value="Men">Men</option><option value="Women">Women</option><option value="Unisex">Unisex</option>
+                    <option value="Men">Men</option><option value="Women">Women</option><option value="Unisex">Unisex</option><option value="Luxury">Luxury</option><option value="Travel Size">Travel Size</option>
                   </select>
                 </div>
                 <textarea placeholder="Description" value={description} onChange={(e) => setDescription(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg p-2.5 h-20 outline-none" />
@@ -645,7 +645,7 @@ const AdminPanel = () => {
                 <input type="number" placeholder="Price (₹)" value={editPrice} onChange={(e) => setEditPrice(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg p-2.5 outline-none focus:border-blue-500" />
                 <input type="number" placeholder="Stock (Qty)" value={editStock} onChange={(e) => setEditStock(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg p-2.5 outline-none focus:border-blue-500" />
                 <select value={editCategory} onChange={(e) => setEditCategory(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg p-2.5 outline-none text-gray-300 md:bg-gray-900">
-                  <option value="Men">Men</option><option value="Women">Women</option><option value="Unisex">Unisex</option>
+                  <option value="Men">Men</option><option value="Women">Women</option><option value="Unisex">Unisex</option><option value="Luxury">Luxury</option><option value="Travel Size">Travel Size</option>
                 </select>
               </div>
               <textarea placeholder="Description" value={editDescription} onChange={(e) => setEditDescription(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg p-2.5 h-32 outline-none focus:border-blue-500" />
