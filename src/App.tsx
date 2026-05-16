@@ -18,6 +18,7 @@ import Wishlist from './pages/Wishlist';
 import PartnerAdmin from './pages/PartnerAdmin';
 import PartnerDashboard from './pages/PartnerDashboard';
 import SellerDashboard from './pages/SellerDashboard';
+import WarehouseAdmin from './pages/WarehouseAdmin';
 
 const App = () => {
   return (
@@ -42,6 +43,7 @@ const App = () => {
           <Route path="/partnerhost5566" element={<PartnerAdmin />} />
           <Route path="/partner" element={<PartnerDashboard />} />
           <Route path="/brand-portal" element={<SellerDashboard />} />
+          <Route path="/warehouse-control" element={<WarehouseAdmin />} />
         </Routes>
       </div>
 
