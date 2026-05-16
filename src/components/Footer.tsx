@@ -1,10 +1,13 @@
 import React from 'react';
 import { Instagram, Facebook, Mail, MapPin, Phone } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
 
 const Footer = () => {
-  //  Ekhane check kora hocche je partner route-e achhe kina
   const isPartnerRoute = window.location.pathname.includes('/partner');
   if (isPartnerRoute) return null; // Partner page hole footer asbe na
+  const location = useLocation();
+  if (location.pathname === '/brand-portal') return null;
+  
 
   return (
     <footer className="bg-[#050505] border-t border-white/10 pt-16 pb-24 md:pb-8 text-gray-400 font-sans z-30 relative">
