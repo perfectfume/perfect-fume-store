@@ -181,8 +181,7 @@ const Navbar = () => {
     } catch(err) { alert("Payment initiation failed. Please try again."); }
     setIsProcessing(false);
   };
-  if (location.pathname === '/brand-portal') return null;
-
+  if (location.pathname === '/brand-portal' || location.pathname === '/warehouse-control') return null;
   return (
     <>
       <nav className="fixed top-0 w-full z-40 bg-black/80 backdrop-blur-lg border-b border-white/10 px-4 py-3">
