@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { Search, ShoppingCart, User, X, Trash2, LogOut, MapPin, CreditCard, Banknote, Heart } from 'lucide-react'; 
 import { useStore } from '../store/useStore';
+import { useLocation } from 'react-router-dom';
 
 const Navbar = () => {
+  const location = useLocation();
   const { cart, isCartOpen, toggleCart, removeFromCart, getTotals, userName, userEmail, userPhone, setUserAuth, logout, clearCart } = useStore();
   const { total } = getTotals();
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
@@ -179,6 +181,7 @@ const Navbar = () => {
     } catch(err) { alert("Payment initiation failed. Please try again."); }
     setIsProcessing(false);
   };
+  if (location.pathname === '/brand-portal') return null;
 
   return (
     <>
