@@ -6,7 +6,7 @@ const Footer = () => {
   const isPartnerRoute = window.location.pathname.includes('/partner');
   if (isPartnerRoute) return null; // Partner page hole footer asbe na
   const location = useLocation();
-  if (location.pathname === '/brand-portal') return null;
+  if (location.pathname === '/brand-portal' || location.pathname === '/warehouse-control') return null;
   
 
   return (
