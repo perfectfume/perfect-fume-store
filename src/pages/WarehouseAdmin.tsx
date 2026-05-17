@@ -45,11 +45,15 @@ export default function WarehouseAdmin() {
     }
   };
 
-  const fetchWarehouseOrders = async () => {
+    const fetchWarehouseOrders = async () => {
     try {
       const res = await fetch(`${API_BASE_URL}/api/admin/warehouse-orders`);
       const data = await res.json();
-      if (Array.isArray(data)) setWarehouseOrders(data);
+      if (Array.isArray(data)) {
+        // Ghost order ba incomplete order gulo hide korar jonno filter kora holo
+        const realOrders = data.filter((o: any) => o.status !== 'pending' && o.status !== 'expired' && o.email);
+        setWarehouseOrders(realOrders);
+      }
     } catch (err) {
       console.error("Failed to fetch orders");
     }
@@ -112,7 +116,29 @@ export default function WarehouseAdmin() {
     if (!trackingId) return alert("Please enter a tracking ID first.");
     alert(`Tracking ID ${trackingId} linked to Order #OR-${orderId}. Notification sent to customer.`);
   };
+    const handleToggleSellerStatus = async (email: string, currentStatus: string) => {
+    const newStatus = currentStatus === 'approved' ? 'suspended' : 'approved';
+    alert(`${email} status changed to ${newStatus}. (Backend connection pending)`);
+    fetchSellers(); 
+  };
 
+  const handleApprovePayout = async (id: number) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/admin/approve-payout`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert("Payout marked as paid successfully!");
+        fetchPayouts(); 
+      }
+    } catch (err) {
+      alert("Error approving payout.");
+    }
+  };
+  
   // --- LOGIN HANDLERS ---
   const handleRequestOtp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -237,10 +263,16 @@ export default function WarehouseAdmin() {
             </div>
           )}
 
-          {/* TAB: SELLER MANAGEMENT */}
+                    {/* TAB: SELLER MANAGEMENT */}
           {activeTab === "sellers" && (
             <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-              <h2 className="text-xl font-bold mb-6 text-white">Platform Sellers</h2>
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-bold text-white">Platform Sellers</h2>
+                <button onClick={() => alert("Add Seller Modal will open here!")} className="bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-bold">
+                  + Add New Seller
+                </button>
+              </div>
+
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm border-collapse">
                   <thead>
@@ -254,7 +286,7 @@ export default function WarehouseAdmin() {
                   <tbody>
                     {sellersList.map((seller: any, idx) => (
                       <tr key={idx} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                        <td className="py-4捷 pl-2 font-medium text-white flex items-center gap-1">
+                        <td className="py-4 pl-2 font-medium text-white flex items-center gap-1">
                           {seller.brand_name}
                           {seller.badge && <ShieldCheck className="w-4 h-4 text-blue-400 inline"/>}
                         </td>
@@ -269,7 +301,10 @@ export default function WarehouseAdmin() {
                         </td>
                         <td className="py-4 text-right pr-2 space-x-2">
                           <button onClick={() => alert("Verification badge toggled")} className="text-xs text-blue-400 hover:underline">Toggle Badge</button>
-                          <button onClick={() => alert("Seller account suspended")} className="text-xs text-red-400 hover:underline">Suspend</button>
+                          <button onClick={() => handleToggleSellerStatus(seller.email, seller.status)} className={`text-xs hover:underline font-bold ${seller.status === 'approved' ? 'text-red-400 hover:text-red-300' : 'text-green-400 hover:text-green-300'}`}>
+                            {seller.status === 'approved' ? 'Suspend' : 'Unsuspend'}
+                          </button>
+
                         </td>
                       </tr>
                     ))}
@@ -365,9 +400,12 @@ export default function WarehouseAdmin() {
                         <button onClick={() => handleUpdateOrderTracking(order.id)} className="bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-3 py-2 rounded-lg transition-all">
                           Ship Package
                         </button>
-                        <button onClick={() => alert("Printing system layout invoice layout document...")} className="bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 text-xs px-3 py-2 rounded-lg transition-all">
+                        
+                        {/* Ekhane Print Slip Button Ta Boshano Hoyeche */}
+                        <button onClick={() => window.print()} className="bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 text-xs px-3 py-2 rounded-lg transition-all">
                           Slip
                         </button>
+
                       </div>
                     </div>
                   ))}
@@ -397,9 +435,9 @@ export default function WarehouseAdmin() {
                         <td className="py-4 text-green-400 font-bold">₹{req.amount}</td>
                         <td className="py-4 text-gray-500 text-xs">{req.requested_at}</td>
                         <td className="py-4 text-right pr-2">
-                          <button onClick={() => alert("Payout finalized and marked paid via direct ledger integration.")} className="bg-green-600/20 text-green-400 hover:bg-green-600 hover:text-white px-3 py-1 rounded text-xs font-bold transition-all">
-                            Mark As Paid
-                          </button>
+                          <button onClick={() => handleApprovePayout(req.id)} className="bg-green-600/20 text-green-400 hover:bg-green-600 hover:text-white px-3 py-1 rounded text-xs font-bold transition-all">
+  Mark As Paid
+</button>
                         </td>
                       </tr>
                     ))}
