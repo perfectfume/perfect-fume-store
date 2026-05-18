@@ -107,6 +107,108 @@ export default function WarehouseAdmin() {
     if (!trackingId) return alert("Please enter a tracking ID first.");
     alert("Tracking ID " + trackingId + " linked to Order #OR-" + orderId + ". Notification sent to customer.");
   };
+    const handlePrintSlip = (order: any) => {
+    // Database theke address aar cart details ber kora
+    let address = { name: "N/A", phone: "N/A", flat: "", area: "", city: "", pincode: "" };
+    let items: any[] = [];
+    
+    try { if (order.address_details) address = JSON.parse(order.address_details); } catch(e){}
+    try { if (order.cart_details) items = JSON.parse(order.cart_details); } catch(e){}
+
+    // Print-er jonno ekta notun choto window toiri kora
+    const printWindow = window.open('', '', 'width=800,height=600');
+    if (!printWindow) return alert("Popup blocked! Please allow popups to print invoices.");
+
+    // Invoice er proper HTML Design
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Packing Slip - #OR-${order.id}</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 40px; color: #111; line-height: 1.6; }
+            .header { text-align: center; border-bottom: 2px solid #111; padding-bottom: 20px; margin-bottom: 30px; }
+            .header h1 { margin: 0; font-size: 28px; letter-spacing: 2px; }
+            .header p { margin: 5px 0 0; color: #555; }
+            .info-section { display: flex; justify-content: space-between; margin-bottom: 30px; }
+            .info-box { width: 45%; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+            th { background-color: #f8f8f8; font-weight: bold; text-transform: uppercase; font-size: 12px; }
+            .total-row { font-weight: bold; font-size: 16px; }
+            .footer { text-align: center; margin-top: 50px; font-size: 12px; color: #777; border-top: 1px solid #ddd; padding-top: 20px; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>PERFECT FUME</h1>
+            <p>Official Packing Slip & Invoice</p>
+          </div>
+          
+          <div class="info-section">
+            <div class="info-box">
+              <h3>Shipping To:</h3>
+              <p>
+                <strong>${address.name}</strong><br>
+                ${address.flat ? address.flat + ', ' : ''}${address.area}<br>
+                ${address.city} - ${address.pincode}<br>
+                Phone: ${address.phone}
+              </p>
+            </div>
+            <div class="info-box">
+              <h3>Order Details:</h3>
+              <p>
+                <strong>Order ID:</strong> #OR-${order.id}<br>
+                <strong>Date:</strong> ${new Date(order.created_at || Date.now()).toLocaleDateString()}<br>
+                <strong>Customer Email:</strong> ${order.email}<br>
+                <strong>Payment Status:</strong> ${order.status.toUpperCase()}
+              </p>
+            </div>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Item Name</th>
+                <th>Quantity</th>
+                <th>Price</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${items.length > 0 ? items.map(item => `
+                <tr>
+                  <td>${item.name || 'Perfume Bottle'}</td>
+                  <td>${item.quantity || item.qty || 1}</td>
+                  <td>Rs. ${item.price}</td>
+                  <td>Rs. ${(item.price * (item.quantity || item.qty || 1))}</td>
+                </tr>
+              `).join('') : '<tr><td colspan="4" style="text-align:center;">Item details strictly confidential or not provided.</td></tr>'}
+              ${items.length > 0 ? `
+                <tr class="total-row">
+                  <td colspan="3" style="text-align:right;">Grand Total:</td>
+                  <td>Rs. ${items.reduce((acc, item) => acc + (item.price * (item.quantity || item.qty || 1)), 0)}</td>
+                </tr>
+              ` : ''}
+            </tbody>
+          </table>
+
+          <div class="footer">
+            <p>Thank you for shopping with Perfect Fume! If you have any questions, please contact us.</p>
+          </div>
+        </body>
+      </html>
+    `);
+    
+    printWindow.document.close();
+    printWindow.focus();
+    
+    
+    setTimeout(() => {
+      printWindow.print();
+      printWindow.close();
+    }, 250);
+  };
+  
 
   const handleToggleSellerStatus = (email: string, currentStatus: string) => {
     const newStatus = currentStatus === 'approved' ? 'suspended' : 'approved';
@@ -411,9 +513,10 @@ export default function WarehouseAdmin() {
                         <button onClick={() => handleUpdateOrderTracking(order.id)} className="bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-3 py-2 rounded-lg transition-all">
                           Ship Package
                         </button>
-                        <button onClick={() => window.print()} className="bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 text-xs px-3 py-2 rounded-lg transition-all">
+                        <button onClick={() => handlePrintSlip(order)} className="bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 text-xs px-3 py-2 rounded-lg transition-all">
                           Slip
                         </button>
+                        
                       </div>
                     </div>
                   ))}
