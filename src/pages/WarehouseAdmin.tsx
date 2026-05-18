@@ -19,18 +19,24 @@ export default function WarehouseAdmin() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [pendingProducts, setPendingProducts] = useState([]);
   const [warehouseOrders, setWarehouseOrders] = useState([]);
-  const [sellersList, setSellersList] = useState([]);
-  const [payoutRequests, setPayoutRequests] = useState([]);
+  const [sellersList, setSellersList] = useState([
+    { email: "vendor1@email.com", brand_name: "Oud Majestic", owner_name: "Ayan Chatterjee", phone: "9876543210", status: "approved", badge: true }
+  ]);
+  const [payoutRequests, setPayoutRequests] = useState([
+    { id: 1, seller_email: "vendor1@email.com", amount: 4500, status: "pending", requested_at: "2026-05-15" }
+  ]);
   const [stockInput, setStockInput] = useState<{ [key: string]: number }>({});
   const [trackingInputs, setTrackingInputs] = useState<{ [key: string]: string }>({});
   const [commissionRule, setCommissionRule] = useState(10);
+
+  // --- MODAL AND INTERACTIVE SELLER STATES ---
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [newSeller, setNewSeller] = useState({ brand_name: '', owner_name: '', email: '', phone: '' });
 
   useEffect(() => {
     if (isAuthorized) {
       if (activeTab === "approvals" || activeTab === "warehouse") fetchPendingProducts();
       if (activeTab === "orders") fetchWarehouseOrders();
-      if (activeTab === "sellers") fetchSellers();
-      if (activeTab === "payouts") fetchPayouts();
     }
   }, [activeTab, isAuthorized]);
 
@@ -45,32 +51,17 @@ export default function WarehouseAdmin() {
     }
   };
 
-    const fetchWarehouseOrders = async () => {
+  const fetchWarehouseOrders = async () => {
     try {
       const res = await fetch(`${API_BASE_URL}/api/admin/warehouse-orders`);
       const data = await res.json();
       if (Array.isArray(data)) {
-        // Ghost order ba incomplete order gulo hide korar jonno filter kora holo
         const realOrders = data.filter((o: any) => o.status !== 'pending' && o.status !== 'expired' && o.email);
         setWarehouseOrders(realOrders);
       }
     } catch (err) {
       console.error("Failed to fetch orders");
     }
-  };
-
-  const fetchSellers = async () => {
-    // Dynamic api endpoint for listing sellers will go here
-    // Fallback static structure matching user list fields
-    setSellersList([
-      { email: "vendor1@email.com", brand_name: "Oud Majestic", owner_name: "Ayan Chatterjee", phone: "9876543210", status: "approved", badge: true }
-    ]);
-  };
-
-  const fetchPayouts = async () => {
-    setPayoutRequests([
-      { id: 1, seller_email: "vendor1@email.com", amount: 4500, status: "pending", requested_at: "2026-05-15" }
-    ]);
   };
 
   // --- ACTIONS ---
@@ -83,7 +74,7 @@ export default function WarehouseAdmin() {
       });
       const data = await res.json();
       if (data.success) {
-        alert("Product Approved!");
+        alert("Product Approved Successfully!");
         fetchPendingProducts();
       }
     } catch (err) {
@@ -114,12 +105,15 @@ export default function WarehouseAdmin() {
   const handleUpdateOrderTracking = async (orderId: string) => {
     const trackingId = trackingInputs[orderId];
     if (!trackingId) return alert("Please enter a tracking ID first.");
-    alert(`Tracking ID ${trackingId} linked to Order #OR-${orderId}. Notification sent to customer.`);
+    alert("Tracking ID " + trackingId + " linked to Order #OR-" + orderId + ". Notification sent to customer.");
   };
-    const handleToggleSellerStatus = async (email: string, currentStatus: string) => {
+
+  const handleToggleSellerStatus = (email: string, currentStatus: string) => {
     const newStatus = currentStatus === 'approved' ? 'suspended' : 'approved';
-    alert(`${email} status changed to ${newStatus}. (Backend connection pending)`);
-    fetchSellers(); 
+    setSellersList(prev => prev.map(seller => 
+      seller.email === email ? { ...seller, status: newStatus } : seller
+    ));
+    alert("Status changed to " + newStatus + " successfully!");
   };
 
   const handleApprovePayout = async (id: number) => {
@@ -132,13 +126,31 @@ export default function WarehouseAdmin() {
       const data = await res.json();
       if (data.success) {
         alert("Payout marked as paid successfully!");
-        fetchPayouts(); 
+        setPayoutRequests(prev => prev.map(req => 
+          req.id === id ? { ...req, status: 'paid' } : req
+        ));
       }
     } catch (err) {
       alert("Error approving payout.");
     }
   };
-  
+
+  const handleAddSellerSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newSeller.brand_name || !newSeller.email) return alert("Please fill all details");
+    
+    setSellersList(prev => [...prev, { ...newSeller, status: 'approved', badge: false }]);
+    setIsAddModalOpen(false);
+    setNewSeller({ brand_name: '', owner_name: '', email: '', phone: '' });
+    alert("New Seller Added Successfully!");
+  };
+
+  const handleToggleBadge = (email: string) => {
+    setSellersList(prev => prev.map(seller => 
+      seller.email === email ? { ...seller, badge: !seller.badge } : seller
+    ));
+  };
+
   // --- LOGIN HANDLERS ---
   const handleRequestOtp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -150,7 +162,7 @@ export default function WarehouseAdmin() {
         headers: { 'Content-Type': 'application/json' }, 
         body: JSON.stringify({ email: ADMIN_EMAIL }) 
       });
-      if (res.ok) { setLoginStep(2); alert(`Secure OTP sent to ${ADMIN_EMAIL}`); }
+      if (res.ok) { setLoginStep(2); alert("Secure OTP sent to " + ADMIN_EMAIL); }
     } catch (err) { alert("Network Error!"); }
     setIsProcessing(false);
   };
@@ -190,7 +202,7 @@ export default function WarehouseAdmin() {
             <form onSubmit={handleVerifyOtp} className="space-y-4">
               <p className="text-xs text-green-400 mb-4 bg-green-900/20 p-2 rounded-lg border border-green-500/20 text-center">Master OTP Sent to Admin Mail</p>
               <input type="number" required placeholder="Enter 4-Digit OTP" className="w-full bg-black border border-white/10 rounded-lg py-3 px-4 outline-none text-center tracking-[1em] font-bold text-xl focus:border-green-500" value={otp} onChange={(e) => setOtp(e.target.value)} />
-              <button type="submit" disabled={isProcessing} className="w-full bg-green-600 hover:bg-green-700 py-3 rounded-lg font-bold shadow-lg transition-all text-white">{isProcessing ? 'Unlocking...' : 'Verify & Enter'}</button>
+              <button type="submit" disabled={isProcessing} className="w-full bg-red-600 hover:bg-red-700 py-3 rounded-lg font-bold shadow-lg transition-all text-white">{isProcessing ? 'Unlocking...' : 'Verify & Enter'}</button>
             </form>
           )}
         </div>
@@ -203,7 +215,7 @@ export default function WarehouseAdmin() {
       <div className="bg-red-900/20 backdrop-blur-xl border border-red-500/20 rounded-2xl p-6 mb-8 flex justify-between items-center shadow-2xl">
         <div>
           <h1 className="text-3xl font-bold text-red-400">Warehouse Control Hub</h1>
-          <p className="text-gray-400 mt-1">Multi-Vendor Fulfillment Center</p>
+          <p className="text-gray-400 mt-1">Multi-Vendor Management System</p>
         </div>
         <button onClick={() => setIsAuthorized(false)} className="text-sm bg-white/5 border border-white/10 px-4 py-2 rounded-lg hover:bg-white/10">Lock Center</button>
       </div>
@@ -245,7 +257,7 @@ export default function WarehouseAdmin() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="bg-white/5 border border-white/10 p-5 rounded-2xl">
                   <h3 className="text-gray-400 text-xs uppercase mb-2">Total Sellers</h3>
-                  <p className="text-3xl font-bold text-white">{sellersList.length || 1}</p>
+                  <p className="text-3xl font-bold text-white">{sellersList.length}</p>
                 </div>
                 <div className="bg-white/5 border border-white/10 p-5 rounded-2xl">
                   <h3 className="text-gray-400 text-xs uppercase mb-2">Pending Approvals</h3>
@@ -263,12 +275,12 @@ export default function WarehouseAdmin() {
             </div>
           )}
 
-                    {/* TAB: SELLER MANAGEMENT */}
+          {/* TAB: SELLER MANAGEMENT */}
           {activeTab === "sellers" && (
             <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-bold text-white">Platform Sellers</h2>
-                <button onClick={() => alert("Add Seller Modal will open here!")} className="bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-bold">
+                <button onClick={() => setIsAddModalOpen(true)} className="bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-bold">
                   + Add New Seller
                 </button>
               </div>
@@ -295,16 +307,15 @@ export default function WarehouseAdmin() {
                           <p className="text-xs text-gray-500">{seller.email} | {seller.phone}</p>
                         </td>
                         <td className="py-4">
-                          <span className="bg-green-500/20 text-green-400 border border-green-500/30 px-2 py-0.5 rounded text-xs uppercase font-bold tracking-wider">
+                          <span className={`px-2 py-0.5 rounded text-xs uppercase font-bold tracking-wider ${seller.status === 'approved' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-red-500/20 text-red-400 border border-red-500/30'}`}>
                             {seller.status}
                           </span>
                         </td>
                         <td className="py-4 text-right pr-2 space-x-2">
-                          <button onClick={() => alert("Verification badge toggled")} className="text-xs text-blue-400 hover:underline">Toggle Badge</button>
+                          <button onClick={() => handleToggleBadge(seller.email)} className="text-xs text-blue-400 hover:underline">Toggle Badge</button>
                           <button onClick={() => handleToggleSellerStatus(seller.email, seller.status)} className={`text-xs hover:underline font-bold ${seller.status === 'approved' ? 'text-red-400 hover:text-red-300' : 'text-green-400 hover:text-green-300'}`}>
                             {seller.status === 'approved' ? 'Suspend' : 'Unsuspend'}
                           </button>
-
                         </td>
                       </tr>
                     ))}
@@ -331,7 +342,7 @@ export default function WarehouseAdmin() {
                         <p className="text-sm text-fuchsia-400 mt-2 font-bold">Base Price: ₹{p.price}</p>
                       </div>
                       <button onClick={() => handleApproveProduct(p.id)} className="w-full mt-4 bg-green-600 hover:bg-green-500 text-white py-2 rounded-lg text-xs font-bold transition-colors">
-                        Approve & Live
+                        Approve Product
                       </button>
                     </div>
                   ))}
@@ -347,10 +358,10 @@ export default function WarehouseAdmin() {
               <p className="text-xs text-gray-400 mb-6">Receive perfumes physically at your hub to instantly update marketplace inventory listings.</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {pendingProducts.map((p: any) => (
-                  <div key={p.id} className="bg-black/40 p-4 rounded-xl border border-white/5 flex flex-col justify-between gap-3">
+                  <div key={p.id} className="bg-black/40 p-4 rounded-xl border border-white/5 flex flex-col gap-4">
                     <div>
                       <h4 className="font-bold text-white">{p.name}</h4>
-                      <p className="text-xs text-gray-500 mt-1">Available Stock: {p.stock} units</p>
+                      <p className="text-xs text-gray-400">Current Stock: {p.stock} units</p>
                     </div>
                     <div className="flex gap-2">
                       <input 
@@ -400,12 +411,9 @@ export default function WarehouseAdmin() {
                         <button onClick={() => handleUpdateOrderTracking(order.id)} className="bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-3 py-2 rounded-lg transition-all">
                           Ship Package
                         </button>
-                        
-                        {/* Ekhane Print Slip Button Ta Boshano Hoyeche */}
                         <button onClick={() => window.print()} className="bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 text-xs px-3 py-2 rounded-lg transition-all">
                           Slip
                         </button>
-
                       </div>
                     </div>
                   ))}
@@ -435,9 +443,13 @@ export default function WarehouseAdmin() {
                         <td className="py-4 text-green-400 font-bold">₹{req.amount}</td>
                         <td className="py-4 text-gray-500 text-xs">{req.requested_at}</td>
                         <td className="py-4 text-right pr-2">
-                          <button onClick={() => handleApprovePayout(req.id)} className="bg-green-600/20 text-green-400 hover:bg-green-600 hover:text-white px-3 py-1 rounded text-xs font-bold transition-all">
-  Mark As Paid
-</button>
+                          {req.status === 'pending' ? (
+                            <button onClick={() => handleApprovePayout(req.id)} className="bg-green-600/20 text-green-400 hover:bg-green-600 hover:text-white px-3 py-1 rounded text-xs font-bold transition-all">
+                              Mark As Paid
+                            </button>
+                          ) : (
+                            <span className="text-gray-500 text-xs font-bold uppercase">Paid</span>
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -463,7 +475,7 @@ export default function WarehouseAdmin() {
                       onChange={(e) => setCommissionRule(parseInt(e.target.value))}
                       className="bg-black border border-white/10 rounded-lg p-3 text-white text-sm outline-none focus:border-red-500 w-full"
                     />
-                    <button onClick={() => alert(`Global platform distribution commission rate updated to ${commissionRule}%`)} className="bg-red-600 hover:bg-red-700 font-bold text-xs text-white px-4 rounded-lg transition-all whitespace-nowrap">
+                    <button onClick={() => alert("Global platform distribution commission rate updated to " + commissionRule + "%")} className="bg-red-600 hover:bg-red-700 font-bold text-xs text-white px-4 rounded-lg transition-all whitespace-nowrap">
                       Update Rule
                     </button>
                   </div>
@@ -474,6 +486,40 @@ export default function WarehouseAdmin() {
 
         </div>
       </div>
+
+      {/* ADD SELLER POPUP MODAL */}
+      {isAddModalOpen && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex justify-center items-center px-4">
+          <div className="bg-[#111] w-full max-w-md rounded-2xl border border-white/10 p-6 relative shadow-2xl text-white">
+            <button onClick={() => setIsAddModalOpen(false)} className="absolute top-4 right-4 text-gray-500 hover:text-white bg-white/5 p-2 rounded-full">✕</button>
+            <h2 className="text-xl font-bold text-red-400 mb-6 italic">Add New Brand / Seller</h2>
+            
+            <form onSubmit={handleAddSellerSubmit} className="space-y-4 text-sm">
+              <div>
+                <label className="block text-gray-400 mb-1">Brand Name</label>
+                <input type="text" required value={newSeller.brand_name} onChange={e => setNewSeller({...newSeller, brand_name: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-lg p-2.5 outline-none focus:border-red-500" placeholder="e.g. Oud Majestic" />
+              </div>
+              <div>
+                <label className="block text-gray-400 mb-1">Owner Name</label>
+                <input type="text" required value={newSeller.owner_name} onChange={e => setNewSeller({...newSeller, owner_name: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-lg p-2.5 outline-none focus:border-red-500" placeholder="Ayan Chatterjee" />
+              </div>
+              <div>
+                <label className="block text-gray-400 mb-1">Email Address</label>
+                <input type="email" required value={newSeller.email} onChange={e => setNewSeller({...newSeller, email: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-lg p-2.5 outline-none focus:border-red-500" placeholder="vendor@email.com" />
+              </div>
+              <div>
+                <label className="block text-gray-400 mb-1">Phone Number</label>
+                <input type="text" required value={newSeller.phone} onChange={e => setNewSeller({...newSeller, phone: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-lg p-2.5 outline-none focus:border-red-500" placeholder="9876543210" />
+              </div>
+              <div className="flex gap-4 mt-6">
+                <button type="button" onClick={() => setIsAddModalOpen(false)} className="w-full bg-white/5 hover:bg-white/10 py-2.5 rounded-lg font-bold">Cancel</button>
+                <button type="submit" className="w-full bg-red-600 hover:bg-red-700 py-2.5 rounded-lg font-bold text-white shadow-lg shadow-red-900/30">Save Seller</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
