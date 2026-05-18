@@ -56,13 +56,22 @@ export default function WarehouseAdmin() {
       const res = await fetch(`${API_BASE_URL}/api/admin/warehouse-orders`);
       const data = await res.json();
       if (Array.isArray(data)) {
-        const realOrders = data.filter((o: any) => o.status !== 'pending' && o.status !== 'expired' && o.email);
+        // Strict filter: Sudhu matro jader cart e product ache taderkei dekhabe, faka OTP order gulo hide korbe
+        const realOrders = data.filter((o: any) => 
+          o.status !== 'pending' && 
+          o.status !== 'expired' && 
+          o.email && 
+          o.cart_details && 
+          o.cart_details !== "null" && 
+          o.cart_details !== "[]"
+        );
         setWarehouseOrders(realOrders);
       }
     } catch (err) {
       console.error("Failed to fetch orders");
     }
   };
+  
 
   // --- ACTIONS ---
   const handleApproveProduct = async (id: string) => {
@@ -107,20 +116,19 @@ export default function WarehouseAdmin() {
     if (!trackingId) return alert("Please enter a tracking ID first.");
     alert("Tracking ID " + trackingId + " linked to Order #OR-" + orderId + ". Notification sent to customer.");
   };
-    const handlePrintSlip = (order: any) => {
-    // Database theke address aar cart details ber kora
+      const handlePrintSlip = (order: any) => {
     let address = { name: "N/A", phone: "N/A", flat: "", area: "", city: "", pincode: "" };
     let items: any[] = [];
     
     try { if (order.address_details) address = JSON.parse(order.address_details); } catch(e){}
     try { if (order.cart_details) items = JSON.parse(order.cart_details); } catch(e){}
 
-    // Print-er jonno ekta notun choto window toiri kora
-    const printWindow = window.open('', '', 'width=800,height=600');
-    if (!printWindow) return alert("Popup blocked! Please allow popups to print invoices.");
+    // Mobile support er jonno invisible iframe toiri kora
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
 
-    // Invoice er proper HTML Design
-    printWindow.document.write(`
+    const htmlContent = `
       <html>
         <head>
           <title>Packing Slip - #OR-${order.id}</title>
@@ -143,7 +151,6 @@ export default function WarehouseAdmin() {
             <h1>PERFECT FUME</h1>
             <p>Official Packing Slip & Invoice</p>
           </div>
-          
           <div class="info-section">
             <div class="info-box">
               <h3>Shipping To:</h3>
@@ -164,7 +171,6 @@ export default function WarehouseAdmin() {
               </p>
             </div>
           </div>
-
           <table>
             <thead>
               <tr>
@@ -191,25 +197,30 @@ export default function WarehouseAdmin() {
               ` : ''}
             </tbody>
           </table>
-
           <div class="footer">
-            <p>Thank you for shopping with Perfect Fume! If you have any questions, please contact us.</p>
+            <p>Thank you for shopping with Perfect Fume!</p>
           </div>
         </body>
       </html>
-    `);
-    
-    printWindow.document.close();
-    printWindow.focus();
-    
-    
+    `;
+
+    const doc = iframe.contentWindow?.document || iframe.contentDocument;
+    if (doc) {
+      doc.open();
+      doc.write(htmlContent);
+      doc.close();
+    }
     setTimeout(() => {
-      printWindow.print();
-      printWindow.close();
-    }, 250);
+      if (iframe.contentWindow) {
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
+      }
+      setTimeout(() => {
+        document.body.removeChild(iframe);
+      }, 1000);
+    }, 500);
   };
   
-
   const handleToggleSellerStatus = (email: string, currentStatus: string) => {
     const newStatus = currentStatus === 'approved' ? 'suspended' : 'approved';
     setSellersList(prev => prev.map(seller => 
